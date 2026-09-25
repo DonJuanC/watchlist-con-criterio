@@ -1,5 +1,6 @@
 // src/server.js
-// CINE-03: Servidor principal Express, con CORS abierto para el frontend (dev local).
+// CINE-05: Servidor principal Express. CORS restringido a los orígenes permitidos
+// (frontend en Vercel + localhost para dev), configurable vía FRONTEND_URL.
 
 require('dotenv').config();
 const express = require('express');
@@ -10,9 +11,26 @@ const apiRouter = require('./routes/api');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// CORS abierto — en dev local no hay restricción de origen; ajustar en producción
-// (Render/Fly.io) a la URL real del frontend en Vercel/Cloudflare Pages.
-app.use(cors());
+const DEFAULT_ALLOWED_ORIGINS = [
+    'https://frontend-inky-two-2rypkrcnmd.vercel.app',
+    'http://localhost:5173',
+];
+
+const allowedOrigins = process.env.FRONTEND_URL
+    ? [...DEFAULT_ALLOWED_ORIGINS, process.env.FRONTEND_URL]
+    : DEFAULT_ALLOWED_ORIGINS;
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Permite requests sin origin (curl, health checks de Render) y los orígenes listados.
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS bloqueado para origin: ${origin}`));
+        }
+    },
+    methods: ['GET', 'POST'],
+}));
 app.use(express.json());
 
 app.get('/health', (req, res) => {
