@@ -3,7 +3,7 @@
 // los que no coinciden con una búsqueda activa, sin nunca reiniciar la simulación
 // física (no se remonta el componente al buscar; solo cambia matchedMovieIds).
 
-import { forwardRef, useImperativeHandle, useRef, useCallback, useMemo } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useCallback, useMemo, useState, useEffect } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import useCineStore, { useFilteredLinks } from '../store/useCineStore';
 
@@ -16,6 +16,14 @@ const CENTER_DURATION_MS = 600;
 
 const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
     const internalRef = useRef(null);
+    const containerRef = useRef(null);
+    // CINE-05 (fix en vivo): react-force-graph-2d mide el tamaño de su contenedor
+    // vía getBoundingClientRect al montar. El div padre (sin height explícito,
+    // solo heredando de .h-screen sin flex/h-full) resolvía a height:0 en el
+    // primer render, así que el canvas quedaba en 0x0 y el grafo era invisible
+    // aunque los datos sí llegaban. Se mide explícitamente con ResizeObserver y
+    // se le pasan width/height al componente en vez de dejarlo auto-detectar.
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const rawNodes = useCineStore((s) => s.rawGraph.nodes);
     const filteredLinks = useFilteredLinks(); // CINE-04B: subset en memoria según los controles
     const matchedMovieIds = useCineStore((s) => s.matchedMovieIds);
@@ -23,6 +31,21 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
 
     // Expone el ref interno de ForceGraph2D hacia el padre si lo necesita.
     useImperativeHandle(forwardedRef, () => internalRef.current);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const updateSize = () => {
+            const { width, height } = el.getBoundingClientRect();
+            setDimensions({ width, height });
+        };
+
+        updateSize();
+        const observer = new ResizeObserver(updateSize);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
     // `rawNodes` mantiene siempre la misma referencia de array/objetos entre
     // renders (solo cambia al llegar un grafo nuevo de la API), así que filtrar
@@ -83,8 +106,11 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
     );
 
     return (
+        <div ref={containerRef} className="absolute inset-0">
         <ForceGraph2D
             ref={internalRef}
+            width={dimensions.width}
+            height={dimensions.height}
             graphData={graphData}
             backgroundColor="#0a0a0a"
             nodeId="id"
@@ -101,6 +127,7 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
             onNodeClick={handleNodeClick}
             cooldownTicks={100}
         />
+        </div>
     );
 });
 
