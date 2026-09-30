@@ -5,14 +5,19 @@
 
 import { forwardRef, useImperativeHandle, useRef, useCallback, useMemo, useState, useEffect } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
+import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import useCineStore, { useFilteredLinks } from '../store/useCineStore';
 
 const BASE_NODE_COLOR = '#8b8b8b';
 const MATCH_RING_COLOR = '#22d3ee'; // cyan brillante para nodos que matchean la búsqueda
+const DIRECTOR_LINK_COLOR = 'rgba(59, 130, 246, 0.55)'; // azul sólido — CINE-07
+const SEMANTIC_LINK_COLOR = 'rgba(34, 211, 238, 0.55)'; // cian punteado/brillante — CINE-07
 const DIMMED_ALPHA = 0.15;
 const FULL_ALPHA = 1.0;
 const CENTER_ZOOM = 4;
 const CENTER_DURATION_MS = 600;
+const CAMERA_ANIMATION_MS = 400;
+const ZOOM_STEP_FACTOR = 1.5;
 
 const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
     const internalRef = useRef(null);
@@ -28,6 +33,8 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
     const filteredLinks = useFilteredLinks(); // CINE-04B: subset en memoria según los controles
     const matchedMovieIds = useCineStore((s) => s.matchedMovieIds);
     const setSelectedMovie = useCineStore((s) => s.setSelectedMovie);
+    const focusNodeId = useCineStore((s) => s.focusNodeId); // CINE-07
+    const clearFocusNode = useCineStore((s) => s.clearFocusNode);
 
     // Expone el ref interno de ForceGraph2D hacia el padre si lo necesita.
     useImperativeHandle(forwardedRef, () => internalRef.current);
@@ -46,6 +53,19 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
         observer.observe(el);
         return () => observer.disconnect();
     }, []);
+
+    // CINE-07: reacciona a una petición de foco externa (ej. clic en "Conexiones
+    // directas" del MovieDetailDrawer) centrando la cámara en el nodo pedido.
+    useEffect(() => {
+        if (focusNodeId == null) return;
+        const fg = internalRef.current;
+        const node = rawNodes.find((n) => n.id === focusNodeId);
+        if (fg && node && typeof node.x === 'number' && typeof node.y === 'number') {
+            fg.centerAt(node.x, node.y, CENTER_DURATION_MS);
+            fg.zoom(CENTER_ZOOM, CENTER_DURATION_MS);
+        }
+        clearFocusNode();
+    }, [focusNodeId, rawNodes, clearFocusNode]);
 
     // `rawNodes` mantiene siempre la misma referencia de array/objetos entre
     // renders (solo cambia al llegar un grafo nuevo de la API), así que filtrar
@@ -105,6 +125,27 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
         [setSelectedMovie]
     );
 
+    // CINE-07: controles de cámara flotantes — el usuario del portafolio no tiene por
+    // qué saber que puede hacer scroll/drag para navegar el grafo si no se lo decimos.
+    const handleZoomIn = useCallback(() => {
+        const fg = internalRef.current;
+        if (!fg) return;
+        fg.zoom(fg.zoom() * ZOOM_STEP_FACTOR, CAMERA_ANIMATION_MS);
+    }, []);
+
+    const handleZoomOut = useCallback(() => {
+        const fg = internalRef.current;
+        if (!fg) return;
+        fg.zoom(fg.zoom() / ZOOM_STEP_FACTOR, CAMERA_ANIMATION_MS);
+    }, []);
+
+    const handleResetView = useCallback(() => {
+        const fg = internalRef.current;
+        if (!fg) return;
+        // zoomToFit encuadra y centra todos los nodos visibles — es el "home" de la cámara.
+        fg.zoomToFit(600, 60);
+    }, []);
+
     return (
         <div ref={containerRef} className="absolute inset-0">
         <ForceGraph2D
@@ -122,11 +163,58 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
                 ctx.arc(node.x, node.y, 6, 0, 2 * Math.PI, false);
                 ctx.fill();
             }}
-            linkColor={(link) => (link.type === 'same_director' ? 'rgba(250,204,21,0.35)' : 'rgba(34,211,238,0.35)')}
+            linkColor={(link) => (link.type === 'same_director' ? DIRECTOR_LINK_COLOR : SEMANTIC_LINK_COLOR)}
             linkWidth={(link) => (link.type === 'same_director' ? 1.5 : 1)}
+            linkLineDash={(link) => (link.type === 'semantic_similarity' ? [3, 2] : null)}
             onNodeClick={handleNodeClick}
             cooldownTicks={100}
         />
+
+        {/* CINE-07: controles de cámara flotantes (esquina inferior derecha). */}
+        <div className="absolute bottom-6 right-6 z-20 flex flex-col items-end gap-3">
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-xs text-neutral-300 shadow-2xl backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                    <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: DIRECTOR_LINK_COLOR }} />
+                    Mismo director
+                </div>
+                <div className="mt-1.5 flex items-center gap-2">
+                    <span
+                        className="h-0.5 w-4"
+                        style={{
+                            backgroundImage: `repeating-linear-gradient(to right, ${SEMANTIC_LINK_COLOR} 0 3px, transparent 3px 5px)`,
+                        }}
+                    />
+                    Afinidad semántica
+                </div>
+            </div>
+
+            <div className="flex flex-col overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/80 shadow-2xl backdrop-blur-md">
+                <button
+                    type="button"
+                    onClick={handleZoomIn}
+                    aria-label="Acercar"
+                    className="p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                >
+                    <ZoomIn size={16} />
+                </button>
+                <button
+                    type="button"
+                    onClick={handleZoomOut}
+                    aria-label="Alejar"
+                    className="border-t border-neutral-800 p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                >
+                    <ZoomOut size={16} />
+                </button>
+                <button
+                    type="button"
+                    onClick={handleResetView}
+                    aria-label="Restablecer vista"
+                    className="border-t border-neutral-800 p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                >
+                    <Maximize2 size={16} />
+                </button>
+            </div>
+        </div>
         </div>
     );
 });

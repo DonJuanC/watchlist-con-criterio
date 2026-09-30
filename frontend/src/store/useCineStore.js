@@ -35,6 +35,12 @@ const useCineStore = create((set) => ({
     // --- Selección / detalle ---
     selectedMovie: null, // nodo completo del grafo, o null
 
+    // --- Navegación de cámara (CINE-07) ---
+    // Petición desacoplada de "enfoca este nodo": quien pide el foco (ej. la lista de
+    // conexiones directas en MovieDetailDrawer) no necesita una referencia directa al
+    // ForceGraph2D — solo escribe aquí, y GraphCanvas reacciona vía useEffect.
+    focusNodeId: null,
+
     // --- Acciones: grafo ---
     setRawGraph: (graph) => set({ rawGraph: graph, graphError: null }),
     setLoading: (isLoading) => set({ isLoading }),
@@ -61,6 +67,10 @@ const useCineStore = create((set) => ({
     // --- Acciones: selección ---
     setSelectedMovie: (selectedMovie) => set({ selectedMovie }),
     clearSelectedMovie: () => set({ selectedMovie: null }),
+
+    // --- Acciones: navegación de cámara ---
+    focusNode: (focusNodeId) => set({ focusNodeId }),
+    clearFocusNode: () => set({ focusNodeId: null }),
 }));
 
 export default useCineStore;

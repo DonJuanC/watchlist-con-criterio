@@ -82,7 +82,7 @@ export default function GraphControls() {
                         <LinkTypeChip
                             active={showDirectorLinks}
                             onClick={toggleDirectorLinks}
-                            colorClass="bg-amber-400"
+                            colorClass="bg-blue-500"
                             label="Mismo director"
                         />
                         <LinkTypeChip

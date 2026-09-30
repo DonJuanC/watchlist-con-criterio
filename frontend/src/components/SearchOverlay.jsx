@@ -8,6 +8,14 @@ import { Search, X, Loader2 } from 'lucide-react';
 import useCineStore from '../store/useCineStore';
 import { semanticSearch } from '../services/api';
 
+// CINE-07: chips de ejemplo para que un visitante nuevo del portafolio pruebe la
+// búsqueda semántica con un clic, sin tener que pensar un prompt desde cero.
+const SUGGESTED_QUERIES = [
+    'Atmósfera noir y aislamiento urbano',
+    'Venganza y violencia estilizada',
+    'Surrealismo y crisis de identidad',
+];
+
 export default function SearchOverlay() {
     const [inputValue, setInputValue] = useState('');
     const searchQuery = useCineStore((s) => s.searchQuery);
@@ -20,10 +28,9 @@ export default function SearchOverlay() {
     const setMatchedMovieIds = useCineStore((s) => s.setMatchedMovieIds);
     const clearSearch = useCineStore((s) => s.clearSearch);
 
-    const handleSubmit = useCallback(
-        async (e) => {
-            e.preventDefault();
-            const trimmed = inputValue.trim();
+    const runSearch = useCallback(
+        async (rawQuery) => {
+            const trimmed = rawQuery.trim();
             if (!trimmed) return;
 
             setIsSearching(true);
@@ -40,7 +47,23 @@ export default function SearchOverlay() {
                 setIsSearching(false);
             }
         },
-        [inputValue, setIsSearching, setSearchError, setSearchQuery, setMatchedMovieIds]
+        [setIsSearching, setSearchError, setSearchQuery, setMatchedMovieIds]
+    );
+
+    const handleSubmit = useCallback(
+        (e) => {
+            e.preventDefault();
+            runSearch(inputValue);
+        },
+        [inputValue, runSearch]
+    );
+
+    const handleChipClick = useCallback(
+        (chipQuery) => {
+            setInputValue(chipQuery);
+            runSearch(chipQuery);
+        },
+        [runSearch]
     );
 
     const handleClear = useCallback(() => {
@@ -87,6 +110,21 @@ export default function SearchOverlay() {
                     </button>
                 )}
             </form>
+
+            {!hasActiveSearch && (
+                <div className="mt-2 flex flex-wrap justify-center gap-2">
+                    {SUGGESTED_QUERIES.map((chip) => (
+                        <button
+                            key={chip}
+                            type="button"
+                            onClick={() => handleChipClick(chip)}
+                            className="rounded-full border border-white/10 bg-neutral-900/70 px-3 py-1 text-xs text-neutral-300 backdrop-blur transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white"
+                        >
+                            {chip}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {searchError && (
                 <p className="mt-2 text-center text-xs text-red-400">{searchError}</p>

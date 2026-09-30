@@ -18,6 +18,7 @@ export default function MovieDetailDrawer() {
     const clearSelectedMovie = useCineStore((s) => s.clearSelectedMovie);
     const setMatchedMovieIds = useCineStore((s) => s.setMatchedMovieIds);
     const setSelectedMovie = useCineStore((s) => s.setSelectedMovie);
+    const focusNode = useCineStore((s) => s.focusNode); // CINE-07
 
     const connections = useMemo(() => {
         if (!selectedMovie) return [];
@@ -111,7 +112,12 @@ export default function MovieDetailDrawer() {
                         {connections.map(({ node, type }) => (
                             <li key={node.id}>
                                 <button
-                                    onClick={() => setSelectedMovie(node)}
+                                    onClick={() => {
+                                        // CINE-07: seleccionar la conexión Y enfocar la cámara hacia
+                                        // ella en el grafo — antes solo cambiaba el panel de detalle.
+                                        setSelectedMovie(node);
+                                        focusNode(node.id);
+                                    }}
                                     className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm text-neutral-300 hover:bg-white/10"
                                 >
                                     <span>{node.title}</span>
