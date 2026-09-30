@@ -2,7 +2,7 @@
 // CINE-04: Panel lateral con el detalle del nodo seleccionado y sus conexiones directas.
 
 import { useMemo, useCallback } from 'react';
-import { X, Network } from 'lucide-react';
+import { X, Network, Crosshair } from 'lucide-react';
 import useCineStore from '../store/useCineStore';
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
@@ -108,26 +108,45 @@ export default function MovieDetailDrawer() {
                 </button>
 
                 {connections.length > 0 && (
-                    <ul className="space-y-1 border-t border-white/10 pt-3">
-                        {connections.map(({ node, type }) => (
-                            <li key={node.id}>
-                                <button
-                                    onClick={() => {
-                                        // CINE-07: seleccionar la conexión Y enfocar la cámara hacia
-                                        // ella en el grafo — antes solo cambiaba el panel de detalle.
-                                        setSelectedMovie(node);
-                                        focusNode(node.id);
-                                    }}
-                                    className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm text-neutral-300 hover:bg-white/10"
+                    <div className="border-t border-white/10 pt-3">
+                        <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                            Puentes hacia otras películas
+                        </h4>
+                        <ul className="space-y-1">
+                            {connections.map(({ node, type, weight }) => (
+                                <li
+                                    key={node.id}
+                                    className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-white/10"
                                 >
-                                    <span>{node.title}</span>
-                                    <span className="text-xs text-neutral-500">
-                                        {type === 'same_director' ? 'mismo director' : 'afinidad semántica'}
-                                    </span>
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+                                    <button
+                                        onClick={() => setSelectedMovie(node)}
+                                        className="min-w-0 flex-1 text-left"
+                                    >
+                                        <span className="block truncate text-sm text-neutral-300">{node.title}</span>
+                                        <span className="text-xs text-neutral-500">
+                                            {type === 'same_director'
+                                                ? '🎥 Del mismo director'
+                                                : `✨ ${Math.round((weight ?? 0) * 100)}% misma atmósfera`}
+                                        </span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            // CINE-08: botón explícito de foco — antes el clic en toda
+                                            // la fila seleccionaba Y enfocaba de forma implícita.
+                                            setSelectedMovie(node);
+                                            focusNode(node.id);
+                                        }}
+                                        aria-label={`Enfocar ${node.title} en el mapa`}
+                                        title="Enfocar en el mapa"
+                                        className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 px-2 py-1 text-[11px] text-neutral-400 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                                    >
+                                        <Crosshair size={12} />
+                                        Enfocar en el mapa
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 )}
             </div>
         </aside>

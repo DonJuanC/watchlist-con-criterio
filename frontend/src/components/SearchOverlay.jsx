@@ -10,10 +10,14 @@ import { semanticSearch } from '../services/api';
 
 // CINE-07: chips de ejemplo para que un visitante nuevo del portafolio pruebe la
 // búsqueda semántica con un clic, sin tener que pensar un prompt desde cero.
+// CINE-08: chips temáticos — el label es la etiqueta emoji que ve el usuario,
+// query es el texto real que se envía a semanticSearch (más rico/específico
+// que el label para mejorar el recall del embedding).
 const SUGGESTED_QUERIES = [
-    'Atmósfera noir y aislamiento urbano',
-    'Venganza y violencia estilizada',
-    'Surrealismo y crisis de identidad',
+    { label: '🌧️ Melancolía y luces de neón', query: 'melancolía nocturna y luces de neón' },
+    { label: '🧠 Paranoia y laberintos mentales', query: 'thriller psicológico paranoia identidad' },
+    { label: '🔪 Venganza estilizada y silenciosa', query: 'venganza fría estilizada violencia' },
+    { label: '🌌 Ciencia ficción reflexiva', query: 'ciencia ficción existencial soledad' },
 ];
 
 export default function SearchOverlay() {
@@ -96,7 +100,7 @@ export default function SearchOverlay() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Busca por tema, tono o sensación (ej. 'thriller psicológico sobre identidad')..."
+                    placeholder="Ej: Tokio de noche, soledad, obsesión, paranoia..."
                     className="flex-1 bg-transparent text-sm text-neutral-100 placeholder:text-neutral-500 outline-none"
                 />
                 {hasActiveSearch && (
@@ -115,12 +119,12 @@ export default function SearchOverlay() {
                 <div className="mt-2 flex flex-wrap justify-center gap-2">
                     {SUGGESTED_QUERIES.map((chip) => (
                         <button
-                            key={chip}
+                            key={chip.label}
                             type="button"
-                            onClick={() => handleChipClick(chip)}
+                            onClick={() => handleChipClick(chip.query)}
                             className="rounded-full border border-white/10 bg-neutral-900/70 px-3 py-1 text-xs text-neutral-300 backdrop-blur transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white"
                         >
-                            {chip}
+                            {chip.label}
                         </button>
                     ))}
                 </div>

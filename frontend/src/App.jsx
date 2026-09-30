@@ -8,6 +8,7 @@ import GraphCanvas from './components/GraphCanvas';
 import GraphControls from './components/GraphControls';
 import SearchOverlay from './components/SearchOverlay';
 import MovieDetailDrawer from './components/MovieDetailDrawer';
+import OnboardingHint from './components/OnboardingHint';
 import useCineStore from './store/useCineStore';
 import { fetchGraph } from './services/api';
 
@@ -77,6 +78,7 @@ export default function App() {
                 <>
                     <GraphCanvas ref={graphCanvasRef} />
                     {rawGraph.nodes.length > 0 && <GraphControls />}
+                    {rawGraph.nodes.length > 0 && <OnboardingHint />}
                 </>
             )}
         </div>

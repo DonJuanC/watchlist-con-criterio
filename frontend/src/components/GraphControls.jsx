@@ -48,7 +48,7 @@ export default function GraphControls() {
             >
                 <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-neutral-300">
                     <SlidersHorizontal size={14} />
-                    Controles del grafo
+                    Ajustes del Mapa
                 </span>
                 {collapsed ? (
                     <ChevronUp size={16} className="text-neutral-500" />
@@ -61,7 +61,7 @@ export default function GraphControls() {
                 <div className="mt-3 space-y-3">
                     <div>
                         <div className="mb-1 flex items-center justify-between text-xs text-neutral-400">
-                            <label htmlFor="min-similarity">Afinidad semántica mínima</label>
+                            <label htmlFor="min-similarity">Nivel de afinidad</label>
                             <span className="font-mono text-neutral-200">
                                 {Math.round(minSimilarity * 100)}%
                             </span>
@@ -76,6 +76,10 @@ export default function GraphControls() {
                             onChange={(e) => setMinSimilarity(parseFloat(e.target.value))}
                             className="w-full accent-cyan-500"
                         />
+                        <div className="mt-1 flex items-center justify-between text-[10px] text-neutral-500">
+                            <span>Más variedad</span>
+                            <span>Muy parecidas</span>
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -83,13 +87,13 @@ export default function GraphControls() {
                             active={showDirectorLinks}
                             onClick={toggleDirectorLinks}
                             colorClass="bg-blue-500"
-                            label="Mismo director"
+                            label="Ver películas del mismo director"
                         />
                         <LinkTypeChip
                             active={showSemanticLinks}
                             onClick={toggleSemanticLinks}
-                            colorClass="bg-cyan-400"
-                            label="Afinidad semántica"
+                            colorClass="bg-cyan-400 shadow-[0_0_6px_2px_rgba(34,211,238,0.7)]"
+                            label="Ver películas con misma atmósfera"
                         />
                     </div>
 
