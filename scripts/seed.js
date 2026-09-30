@@ -6,9 +6,10 @@ const { query, pool } = require('../src/db');
 const { searchMovie, getMovieDetails } = require('../src/services/tmdb');
 const { generateEmbedding } = require('../src/services/embeddings');
 
-// Lista inicial de referencia: cine de autor, thrillers psicológicos y cine diverso,
-// pensada para generar conexiones semánticas ricas en el grafo (director, DoP, tono, tema).
+// CINE-06: dataset ampliado a ~114 títulos agrupados por clúster temático/autoral,
+// para maximizar aristas densas por 'same_director' y 'semantic_similarity' en el grafo.
 const SEED_TITLES = [
+    // --- Base original (CINE-02) ---
     'Parasite',
     'Oldboy',
     'Memories of Murder',
@@ -39,6 +40,116 @@ const SEED_TITLES = [
     'Moonlight',
     'Portrait of a Lady on Fire',
     'Drive',
+
+    // --- Clúster: Christopher Nolan (thriller estructural / no-lineal) ---
+    'Memento',
+    'Insomnia',
+    'The Prestige',
+    'Inception',
+    'Interstellar',
+    'Dunkirk',
+
+    // --- Clúster: David Fincher ---
+    'Gone Girl',
+    'The Social Network',
+    'The Game',
+    'Panic Room',
+
+    // --- Clúster: Denis Villeneuve ---
+    'Sicario',
+    'Incendies',
+    'Dune',
+    'Polytechnique',
+
+    // --- Clúster: Bong Joon-ho ---
+    'Mother',
+    'The Host',
+    'Snowpiercer',
+
+    // --- Clúster: Yorgos Lanthimos ---
+    'The Lobster',
+    'The Favourite',
+    'Dogtooth',
+    'Poor Things',
+    'The Killing of a Sacred Deer',
+
+    // --- Clúster: David Lynch ---
+    'Blue Velvet',
+    'Lost Highway',
+    'Eraserhead',
+    'Twin Peaks: Fire Walk with Me',
+    'Wild at Heart',
+
+    // --- Clúster: Sci-fi reflexivo ---
+    'Ex Machina',
+    'Her',
+    'Under the Skin',
+    'Annihilation',
+    'Solaris',
+    'Stalker',
+    '2001: A Space Odyssey',
+    'Children of Men',
+    'Moon',
+    'Coherence',
+    'Primer',
+    'A Clockwork Orange',
+
+    // --- Clúster: Drama de autor contemporáneo ---
+    'Manchester by the Sea',
+    'A Separation',
+    'The Father',
+    'Nomadland',
+    'Synecdoche, New York',
+    'Boyhood',
+    'Marriage Story',
+    'Call Me by Your Name',
+    'The Tree of Life',
+    'Aftersun',
+    'The Worst Person in the World',
+    'Anatomy of a Fall',
+    'The Zone of Interest',
+    'Perfect Days',
+    'Past Lives',
+
+    // --- Clúster: Noir y crimen ---
+    'L.A. Confidential',
+    'Chinatown',
+    'The Third Man',
+    'Blood Simple',
+    'Nightcrawler',
+    'A History of Violence',
+    'Brick',
+    'Sin City',
+    'Uncut Gems',
+    'Heat',
+
+    // --- Clúster: Wong Kar-wai / Park Chan-wook (extensión) ---
+    'Fallen Angels',
+    '2046',
+    'Happy Together',
+    'Lady Vengeance',
+    'Thirst',
+    'Decision to Leave',
+
+    // --- Clúster: Haneke / cine europeo de autor ---
+    'Funny Games',
+    'The White Ribbon',
+    'Toni Erdmann',
+    'Force Majeure',
+    'The Square',
+
+    // --- Clúster: Terror psicológico / atmosférico ---
+    'Hereditary',
+    'Midsommar',
+    'The Witch',
+    'It Follows',
+    'The Others',
+    'Get Out',
+
+    // --- Clúster: Kubrick (extensión) ---
+    'Barry Lyndon',
+    'Full Metal Jacket',
+    'Eyes Wide Shut',
 ];
 
 const RATE_LIMIT_DELAY_MS = 300;
@@ -94,11 +205,11 @@ async function seedOne(titleQuery) {
     return { ok: true, title: movie.title };
 }
 
-async function seed() {
-    console.log(`Iniciando seed de ${SEED_TITLES.length} títulos...\n`);
+async function seed(titles = SEED_TITLES) {
+    console.log(`Iniciando seed de ${titles.length} títulos...\n`);
     const results = { ok: 0, failed: 0 };
 
-    for (const title of SEED_TITLES) {
+    for (const title of titles) {
         try {
             const res = await seedOne(title);
             res.ok ? results.ok++ : results.failed++;
@@ -113,8 +224,18 @@ async function seed() {
     console.log(`\nSeed finalizado. OK: ${results.ok} | Fallidas: ${results.failed}`);
 }
 
+// CINE-06: soporta ejecución en lotes por rango de índice — `node scripts/seed.js <start> <end>` —
+// para caber dentro de límites de tiempo de ejecución (ej. shells con timeout corto).
+// UPSERT en `movies` es idempotente por `tmdb_id`, así que los lotes se pueden re-correr sin duplicar.
 if (require.main === module) {
-    seed()
+    const [startArg, endArg] = process.argv.slice(2);
+    const start = startArg !== undefined ? parseInt(startArg, 10) : 0;
+    const end = endArg !== undefined ? parseInt(endArg, 10) : SEED_TITLES.length;
+    const batch = SEED_TITLES.slice(start, end);
+
+    console.log(`Lote: índices [${start}, ${end}) de ${SEED_TITLES.length} — ${batch.length} títulos.\n`);
+
+    seed(batch)
         .catch((err) => {
             console.error('Error fatal en el seed:', err);
             process.exitCode = 1;
