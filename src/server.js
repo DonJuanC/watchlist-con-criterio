@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 4000;
 // Orígenes exactos siempre permitidos.
 const DEFAULT_ALLOWED_ORIGINS = [
   "https://frontend-inky-two-2rypkrcnmd.vercel.app", // preview deploy inicial
-  "https://frontend-juan-selector.vercel.app", // dominio de producción del proyecto en Vercel
+  "https://watchlistconcriterio.vercel.app", // dominio de producción público", // dominio de producción del proyecto en Vercel
   "http://localhost:5173",
 ];
 
