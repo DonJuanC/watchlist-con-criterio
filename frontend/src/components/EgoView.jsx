@@ -1,8 +1,10 @@
 // src/components/EgoView.jsx
 // CINE-09: vista principal "una película y sus vecinas". Sin física, sin zoom, sin arrastre: la película elegida va al centro y, alrededor, hasta 6 películas conectadas. Tocar una vecina la pasa al centro. Cada vecina dice en palabras simples por qué está ahí. El mapa completo (GraphCanvas) queda como vista secundaria.
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useEgoGraph } from "../store/useCineStore";
+import MovieInfo from "./MovieInfo";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w185";
 const RING_RADIUS = 37; // % del lado del contenedor cuadrado
@@ -43,6 +45,8 @@ function Poster({ movie, className }) {
 
 export default function EgoView({ centerId, onSelect }) {
   const { center, neighbors } = useEgoGraph(centerId);
+
+  const [showInfo, setShowInfo] = useState(false);
 
   // Posiciones en círculo, repartidas parejo según cuántas vecinas haya (1 a 6).
   const placed = useMemo(
@@ -100,13 +104,20 @@ export default function EgoView({ centerId, onSelect }) {
           ))}
         </svg>
 
-        {/* Centro: solo el póster; el título va en el encabezado para no chocar con las vecinas */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        {/* Centro: tocar el póster abre/cierra la ficha */}
+        <button
+          type="button"
+          onClick={() => setShowInfo((v) => !v)}
+          aria-expanded={showInfo}
+          aria-controls="ego-movie-info"
+          aria-label={`${showInfo ? "Ocultar" : "Ver"} ficha de ${center.title}`}
+          className="group absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full focus:outline-none"
+        >
           <Poster
             movie={center}
-            className="h-24 w-24 ring-2 ring-cyan-400/70 sm:h-28 sm:w-28"
+            className="h-24 w-24 ring-2 ring-cyan-400/70 transition group-hover:scale-105 group-focus-visible:ring-4 sm:h-28 sm:w-28"
           />
-        </div>
+        </button>
 
         {/* Vecinas */}
         {placed.map((p) => (
@@ -140,6 +151,29 @@ export default function EgoView({ centerId, onSelect }) {
         <p className="mt-2 text-center text-sm text-neutral-400">
           Toca una película para seguir explorando
         </p>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setShowInfo((v) => !v)}
+        aria-expanded={showInfo}
+        aria-controls="ego-movie-info"
+        className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/10 px-4 py-2 text-sm text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+      >
+        Sobre esta película
+        <ChevronDown
+          size={16}
+          className={`transition-transform ${showInfo ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {showInfo && (
+        <div
+          id="ego-movie-info"
+          className="mb-10 mt-4 w-full rounded-xl border border-white/10 bg-neutral-900/60 p-4"
+        >
+          <MovieInfo movieId={center.id} />
+        </div>
       )}
     </section>
   );
