@@ -102,3 +102,67 @@ export function useFilteredLinks() {
         });
     }, [links, minSimilarity, showDirectorLinks, showSemanticLinks]);
 }
+
+// CINE-09: vista "una película y sus vecinas". Dado un grafo y una película central,
+// devuelve como máximo `limit` vecinas, mezclando afinidad semántica (las más cercanas)
+// y mismo director (las de año más próximo) para que la vista no se llene de un solo tipo.
+// Es una función pura: no toca el store ni la simulación del grafo completo.
+export const EGO_DEFAULT_LIMIT = 6;
+
+function egoEndpointId(endpoint) {
+    return typeof endpoint === 'object' && endpoint !== null ? endpoint.id : endpoint;
+}
+
+export function buildEgoGraph(graph, centerId, limit = EGO_DEFAULT_LIMIT) {
+    const empty = { center: null, neighbors: [], nodes: [], links: [] };
+    if (centerId == null) return empty;
+
+    const nodesById = new Map(graph.nodes.map((n) => [n.id, n]));
+    const center = nodesById.get(centerId);
+    if (!center) return empty;
+
+    // Un solo vínculo por vecina: gana el de mayor peso (mismo director pesa 1).
+    const byNeighbor = new Map();
+    for (const link of graph.links) {
+        const s = egoEndpointId(link.source);
+        const t = egoEndpointId(link.target);
+        if (s !== centerId && t !== centerId) continue;
+        const otherId = s === centerId ? t : s;
+        const other = nodesById.get(otherId);
+        if (!other || otherId === centerId) continue;
+        const weight = link.type === 'same_director' ? 1 : link.weight ?? 0;
+        const prev = byNeighbor.get(otherId);
+        if (!prev || weight > prev.weight) {
+            byNeighbor.set(otherId, { node: other, type: link.type, weight });
+        }
+    }
+
+    const semantic = [];
+    const director = [];
+    for (const entry of byNeighbor.values()) {
+        (entry.type === 'same_director' ? director : semantic).push(entry);
+    }
+    semantic.sort((a, b) => b.weight - a.weight);
+    const yearGap = (e) => Math.abs((e.node.release_year ?? 0) - (center.release_year ?? 0));
+    director.sort((a, b) => yearGap(a) - yearGap(b));
+
+    const half = Math.ceil(limit / 2);
+    const picked = [...semantic.slice(0, half), ...director.slice(0, limit - half)];
+    const leftovers = [...semantic.slice(half), ...director.slice(limit - half)];
+    picked.push(...leftovers.slice(0, Math.max(0, limit - picked.length)));
+
+    // Copias superficiales: ForceGraph2D escribe x/y en los nodos, y no queremos
+    // contaminar las posiciones del mapa completo.
+    return {
+        center,
+        neighbors: picked,
+        nodes: [{ ...center }, ...picked.map((p) => ({ ...p.node }))],
+        links: picked.map((p) => ({ source: centerId, target: p.node.id, type: p.type, weight: p.weight })),
+    };
+}
+
+/** Hook: vecinas de `centerId`, memoizado para que la referencia solo cambie si cambia el grafo o el centro. */
+export function useEgoGraph(centerId, limit = EGO_DEFAULT_LIMIT) {
+    const rawGraph = useCineStore((s) => s.rawGraph);
+    return useMemo(() => buildEgoGraph(rawGraph, centerId, limit), [rawGraph, centerId, limit]);
+}
