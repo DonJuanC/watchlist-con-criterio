@@ -20,7 +20,7 @@ async function getGraph(req, res) {
     const nodesSql = `
             SELECT id, title, release_year, poster_path, director,
                    genres[1] AS main_genre
-            FROM movies;
+            FROM movies
             WHERE status = 'seen';
         `;
 
@@ -28,7 +28,7 @@ async function getGraph(req, res) {
             SELECT m1.id AS source, m2.id AS target, 'same_director' AS type, 2 AS weight
             FROM movies m1
             JOIN movies m2 ON m1.director = m2.director AND m1.id < m2.id
-            WHERE m1.director IS NOT NULL;
+            WHERE m1.director IS NOT NULL
                 AND m1.status = 'seen' AND m2.status = 'seen';
         `;
 
