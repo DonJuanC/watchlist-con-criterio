@@ -69,3 +69,13 @@ export function semanticSearch(query, limit = 10) {
 export function fetchMovie(id) {
   return fetchWithColdStartHandling(`/api/movies/${id}`, { method: "GET" });
 }
+
+/** GET /api/movies/:id/neighbors — vecinas con criterio (🔴 fuera, 🟢 sube, tope de director). */
+export function fetchNeighbors(id, limit = 6) {
+  return fetchWithColdStartHandling(
+    `/api/movies/${id}/neighbors?limit=${limit}`,
+    {
+      method: "GET",
+    },
+  );
+}

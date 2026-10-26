@@ -5,9 +5,11 @@ import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useEgoGraph } from "../store/useCineStore";
 import MovieInfo from "./MovieInfo";
+import useNeighbors from "../hooks/useNeighbors";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w185";
 const RING_RADIUS = 37; // % del lado del contenedor cuadrado
+const NO_NEIGHBORS = []; // referencia estable para que useMemo no recalcule en cada render
 
 // Lenguaje cotidiano: nada de "afinidad semántica" ni "arista".
 const REASON_LABEL = {
@@ -44,7 +46,11 @@ function Poster({ movie, className }) {
  */
 
 export default function EgoView({ centerId, onSelect }) {
-  const { center, neighbors } = useEgoGraph(centerId);
+  // Centro: del grafo en memoria (instantáneo). Vecinas: del backend, con criterio.
+  // Si el endpoint falla, se usa el cálculo local como respaldo.
+  const { center, neighbors: localNeighbors } = useEgoGraph(centerId);
+  const { data: remoteNeighbors, loading, error } = useNeighbors(centerId);
+  const neighbors = remoteNeighbors ?? (error ? localNeighbors : NO_NEIGHBORS);
 
   const [showInfo, setShowInfo] = useState(false);
 
@@ -143,7 +149,11 @@ export default function EgoView({ centerId, onSelect }) {
         ))}
       </div>
 
-      {placed.length === 0 ? (
+      {loading ? (
+        <p className="mt-4 text-center text-sm text-neutral-400">
+          Buscando conexiones…
+        </p>
+      ) : placed.length === 0 ? (
         <p className="mt-4 text-center text-sm text-neutral-400">
           Esta película todavía no tiene conexiones. Prueba con otra.
         </p>
