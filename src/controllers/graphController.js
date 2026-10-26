@@ -32,25 +32,33 @@ async function getGraph(req, res) {
                 AND m1.status = 'seen' AND m2.status = 'seen';
         `;
 
-    // k-NN vía CROSS JOIN LATERAL: para cada película, sus SEMANTIC_TOP_K vecinos
-    // más cercanos por distancia coseno. El filtro `m1.id < knn.id` evita duplicar
-    // el par en ambas direcciones; como efecto secundario, un par donde solo uno
-    // de los dos lo tiene como top-K y m1.id > knn.id puede quedar fuera — trade-off
-    // aceptado a cambio de simplicidad (no deduplicación por UNION/DISTINCT).
+    // k-NN vía CROSS JOIN LATERAL: para cada película vista, sus SEMANTIC_TOP_K vecinos más
+    // cercanos por distancia coseno.
+    // CINE-10b: (1) la vecina #1 siempre entra aunque esté bajo el piso → ninguna película
+    // queda aislada; (2) el par se normaliza con LEAST/GREATEST + DISTINCT ON, en vez del
+    // viejo filtro m1.id < knn.id que descartaba pares válidos.
     const semanticEdgesSql = `
-            SELECT m1.id AS source, knn.id AS target, 'semantic_similarity' AS type,
-                   ROUND((1 - (m1.embedding <=> knn.embedding))::numeric, 3) AS weight
-            FROM movies m1
-            CROSS JOIN LATERAL (
-                SELECT m2.id, m2.embedding
-                FROM movies m2
-                WHERE m2.id <> m1.id AND m2.status = 'seen'
-                ORDER BY m1.embedding <=> m2.embedding ASC
-                LIMIT $1
-            ) knn
-            WHERE m1.status = 'seen'
-                AND (1 - (m1.embedding <=> knn.embedding)) >= $2
-                AND m1.id < knn.id;
+            WITH knn AS (
+                SELECT m1.id AS a, k.id AS b,
+                       1 - (m1.embedding <=> k.embedding) AS sim, k.rk
+                FROM movies m1
+                CROSS JOIN LATERAL (
+                    SELECT m2.id, m2.embedding,
+                           ROW_NUMBER() OVER (ORDER BY m1.embedding <=> m2.embedding) AS rk
+                    FROM movies m2
+                    WHERE m2.id <> m1.id AND m2.status = 'seen'
+                    ORDER BY m1.embedding <=> m2.embedding
+                    LIMIT $1
+                ) k
+                WHERE m1.status = 'seen'
+            )
+            SELECT DISTINCT ON (LEAST(a, b), GREATEST(a, b))
+                   LEAST(a, b) AS source, GREATEST(a, b) AS target,
+                   'semantic_similarity' AS type,
+                   ROUND(sim::numeric, 3) AS weight
+            FROM knn
+            WHERE sim >= $2 OR rk = 1
+            ORDER BY LEAST(a, b), GREATEST(a, b), sim DESC;
         `;
 
     const [nodesResult, directorEdgesResult, semanticEdgesResult] =
