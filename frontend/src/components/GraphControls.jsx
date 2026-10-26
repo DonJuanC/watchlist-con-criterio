@@ -98,8 +98,8 @@ export default function GraphControls() {
                     </div>
 
                     <p className="text-xs text-neutral-500">
-                        {visibleLinksCount} conexión{visibleLinksCount !== 1 ? 'es' : ''} activa
-                        {visibleLinksCount !== 1 ? 's' : ''}
+                        {visibleLinksCount}{' '}
+                        {visibleLinksCount === 1 ? 'conexión activa' : 'conexiones activas'}
                     </p>
                 </div>
             )}
