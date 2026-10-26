@@ -4,9 +4,9 @@
 // resolvió: Parasite, Mother, The Host, Thirst, Fallen Angels, A Separation.
 
 require('dotenv').config();
-const { query, pool } = require('../src/db');
-const { getMovieDetails } = require('../src/services/tmdb');
-const { generateEmbedding } = require('../src/services/embeddings');
+const { query, pool } = require('../../src/db');
+const { getMovieDetails } = require('../../src/services/tmdb');
+const { generateEmbedding } = require('../../src/services/embeddings');
 
 const FIXES = [
     { wrongTmdbId: null, correctTmdbId: 496243, label: 'Parasite (2019, Bong Joon Ho)' },

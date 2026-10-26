@@ -4,7 +4,7 @@
 // y los 3 pares con mayor afinidad semántica.
 
 require('dotenv').config();
-const { query, pool } = require('../src/db');
+const { query, pool } = require('../../src/db');
 
 const SEMANTIC_MIN_SIMILARITY = 0.65;
 const SEMANTIC_TOP_K = 2;

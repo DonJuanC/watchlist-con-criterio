@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "test:db": "node src/db.js",
-    "seed": "node scripts/seed.js",
+    "seed:legacy": "node scripts/legacy/seed.js",
     "dev": "node src/server.js",
     "sync": "node scripts/sync-notion.js"
   },

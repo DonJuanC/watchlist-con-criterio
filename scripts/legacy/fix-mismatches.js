@@ -8,9 +8,9 @@
 // (tmdb_id equivocado) y se inserta la correcta.
 
 require('dotenv').config();
-const { query, pool } = require('../src/db');
-const { getMovieDetails } = require('../src/services/tmdb');
-const { generateEmbedding } = require('../src/services/embeddings');
+const { query, pool } = require('../../src/db');
+const { getMovieDetails } = require('../../src/services/tmdb');
+const { generateEmbedding } = require('../../src/services/embeddings');
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const API_KEY = process.env.TMDB_API_KEY;

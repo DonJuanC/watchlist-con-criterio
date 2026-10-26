@@ -1,28 +1,33 @@
 -- Watchlist con Criterio — schema.sql
--- CINE-01: Setup Base de Datos Neon (PostgreSQL + pgvector)
+-- Estado actual de la base (CINE-01 + migraciones 001 y 002).
+-- Para una base nueva: correr este archivo. Para una base existente: migrations/ en orden.
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE IF NOT EXISTS movies (
     id SERIAL PRIMARY KEY,
     tmdb_id INT UNIQUE,
-    title VARCHAR(255),
+    title VARCHAR(255),              -- título que muestra la app (= display_title)
+    title_en VARCHAR(255),
+    title_es VARCHAR(255),
+    original_title VARCHAR(255),
+    original_language VARCHAR(10),
+    display_title VARCHAR(255),      -- regla: inglés, salvo películas en español → original
     overview TEXT,
     release_year INT,
     poster_path VARCHAR(255),
     director VARCHAR(255),
     cinematographer VARCHAR(255),
     genres TEXT[],
-    embedding vector(768),
+    embedding vector(768),           -- gemini-embedding-001, truncado a 768 dims
+    status VARCHAR(10) NOT NULL DEFAULT 'seen' CHECK (status IN ('seen', 'pending')),
+    recommend SMALLINT CHECK (recommend IN (-1, 0, 1)),  -- 🔴 / 🟡 / 🟢
+    rating SMALLINT CHECK (rating BETWEEN 1 AND 5),      -- ⭐ 1-5
+    review TEXT,
+    notion_page_id UUID UNIQUE,      -- fila de origen en Notion
+    notion_edited_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX ON movies USING hnsw (embedding vector_cosine_ops);
-
-CREATE TABLE IF NOT EXISTS movie_relations (
-    id SERIAL PRIMARY KEY,
-    source_movie_id INT REFERENCES movies(id) ON DELETE CASCADE,
-    target_movie_id INT REFERENCES movies(id) ON DELETE CASCADE,
-    relation_type VARCHAR(50),
-    weight FLOAT DEFAULT 1.0
-);
+CREATE INDEX IF NOT EXISTS movies_embedding_idx ON movies USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS movies_status_idx ON movies (status);

@@ -2,9 +2,9 @@
 // CINE-02: Pipeline de ingesta por lotes — TMDB -> embedding -> UPSERT en Neon.
 
 require('dotenv').config();
-const { query, pool } = require('../src/db');
-const { searchMovie, getMovieDetails } = require('../src/services/tmdb');
-const { generateEmbedding } = require('../src/services/embeddings');
+const { query, pool } = require('../../src/db');
+const { searchMovie, getMovieDetails } = require('../../src/services/tmdb');
+const { generateEmbedding } = require('../../src/services/embeddings');
 
 // CINE-06: dataset ampliado a ~114 títulos agrupados por clúster temático/autoral,
 // para maximizar aristas densas por 'same_director' y 'semantic_similarity' en el grafo.
