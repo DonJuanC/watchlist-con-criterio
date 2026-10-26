@@ -1,154 +1,145 @@
 // src/components/MovieDetailDrawer.jsx
 // CINE-04: Panel lateral con el detalle del nodo seleccionado y sus conexiones directas.
 
-import { useMemo, useCallback } from 'react';
-import { X, Network, Crosshair } from 'lucide-react';
-import useCineStore from '../store/useCineStore';
+import { useMemo, useCallback } from "react";
+import { X, Network, Crosshair } from "lucide-react";
+import useCineStore from "../store/useCineStore";
+import MovieInfo from "./MovieInfo";
 
-const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 /** Normaliza source/target de un link: puede ser un id crudo o el nodo ya resuelto por la simulación. */
 function linkEndpointId(endpoint) {
-    return typeof endpoint === 'object' && endpoint !== null ? endpoint.id : endpoint;
+  return typeof endpoint === "object" && endpoint !== null
+    ? endpoint.id
+    : endpoint;
 }
 
 export default function MovieDetailDrawer() {
-    const selectedMovie = useCineStore((s) => s.selectedMovie);
-    const rawGraph = useCineStore((s) => s.rawGraph);
-    const clearSelectedMovie = useCineStore((s) => s.clearSelectedMovie);
-    const setMatchedMovieIds = useCineStore((s) => s.setMatchedMovieIds);
-    const setSelectedMovie = useCineStore((s) => s.setSelectedMovie);
-    const focusNode = useCineStore((s) => s.focusNode); // CINE-07
+  const selectedMovie = useCineStore((s) => s.selectedMovie);
+  const rawGraph = useCineStore((s) => s.rawGraph);
+  const clearSelectedMovie = useCineStore((s) => s.clearSelectedMovie);
+  const setMatchedMovieIds = useCineStore((s) => s.setMatchedMovieIds);
+  const setSelectedMovie = useCineStore((s) => s.setSelectedMovie);
+  const focusNode = useCineStore((s) => s.focusNode); // CINE-07
 
-    const connections = useMemo(() => {
-        if (!selectedMovie) return [];
-        const nodesById = new Map(rawGraph.nodes.map((n) => [n.id, n]));
+  const connections = useMemo(() => {
+    if (!selectedMovie) return [];
+    const nodesById = new Map(rawGraph.nodes.map((n) => [n.id, n]));
 
-        return rawGraph.links
-            .filter((link) => {
-                const sourceId = linkEndpointId(link.source);
-                const targetId = linkEndpointId(link.target);
-                return sourceId === selectedMovie.id || targetId === selectedMovie.id;
-            })
-            .map((link) => {
-                const sourceId = linkEndpointId(link.source);
-                const targetId = linkEndpointId(link.target);
-                const otherId = sourceId === selectedMovie.id ? targetId : sourceId;
-                return { node: nodesById.get(otherId), type: link.type, weight: link.weight };
-            })
-            .filter((c) => c.node);
-    }, [selectedMovie, rawGraph]);
+    return rawGraph.links
+      .filter((link) => {
+        const sourceId = linkEndpointId(link.source);
+        const targetId = linkEndpointId(link.target);
+        return sourceId === selectedMovie.id || targetId === selectedMovie.id;
+      })
+      .map((link) => {
+        const sourceId = linkEndpointId(link.source);
+        const targetId = linkEndpointId(link.target);
+        const otherId = sourceId === selectedMovie.id ? targetId : sourceId;
+        return {
+          node: nodesById.get(otherId),
+          type: link.type,
+          weight: link.weight,
+        };
+      })
+      .filter((c) => c.node);
+  }, [selectedMovie, rawGraph]);
 
-    const handleExploreConnections = useCallback(() => {
-        // Resalta en el grafo (vía matchedMovieIds) los nodos conectados directamente,
-        // reutilizando el mismo mecanismo de atenuación que usa la búsqueda semántica.
-        const results = connections.map((c) => ({
-            id: c.node.id,
-            similarity: c.type === 'semantic_similarity' ? c.weight ?? 0.65 : 1,
-        }));
-        setMatchedMovieIds(results);
-    }, [connections, setMatchedMovieIds]);
+  const handleExploreConnections = useCallback(() => {
+    // Resalta en el grafo (vía matchedMovieIds) los nodos conectados directamente,
+    // reutilizando el mismo mecanismo de atenuación que usa la búsqueda semántica.
+    const results = connections.map((c) => ({
+      id: c.node.id,
+      similarity: c.type === "semantic_similarity" ? (c.weight ?? 0.65) : 1,
+    }));
+    setMatchedMovieIds(results);
+  }, [connections, setMatchedMovieIds]);
 
-    if (!selectedMovie) return null;
+  if (!selectedMovie) return null;
 
-    const { title, release_year, director, cinematographer, genres, overview, poster_path } = selectedMovie;
+  const { title, poster_path } = selectedMovie;
 
-    return (
-        <aside className="fixed right-0 top-0 z-30 h-full w-96 overflow-y-auto border-l border-white/10 bg-neutral-900/95 shadow-2xl backdrop-blur">
-            <div className="flex items-center justify-between border-b border-white/10 p-4">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Detalle</h2>
-                <button
-                    onClick={clearSelectedMovie}
-                    aria-label="Cerrar panel"
-                    className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
+  return (
+    <aside className="fixed right-0 top-0 z-30 h-full w-96 overflow-y-auto border-l border-white/10 bg-neutral-900/95 shadow-2xl backdrop-blur">
+      <div className="flex items-center justify-between border-b border-white/10 p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+          Detalle
+        </h2>
+        <button
+          onClick={clearSelectedMovie}
+          aria-label="Cerrar panel"
+          className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      {poster_path && (
+        <img
+          src={`${TMDB_IMAGE_BASE}${poster_path}`}
+          alt={title}
+          className="h-72 w-full object-cover"
+        />
+      )}
+
+      <div className="space-y-3 p-4">
+        <MovieInfo movieId={selectedMovie.id} />
+
+        <button
+          onClick={handleExploreConnections}
+          disabled={connections.length === 0}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600/20 px-3 py-2 text-sm font-medium text-cyan-300 hover:bg-cyan-600/30 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Network size={16} />
+          Explorar {connections.length}{" "}
+          {connections.length === 1 ? "conexión directa" : "conexiones directas"}
+        </button>
+
+        {connections.length > 0 && (
+          <div className="border-t border-white/10 pt-3">
+            <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              Puentes hacia otras películas
+            </h4>
+            <ul className="space-y-1">
+              {connections.map(({ node, type, weight }) => (
+                <li
+                  key={node.id}
+                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-white/10"
                 >
-                    <X size={18} />
-                </button>
-            </div>
-
-            {poster_path && (
-                <img
-                    src={`${TMDB_IMAGE_BASE}${poster_path}`}
-                    alt={title}
-                    className="h-72 w-full object-cover"
-                />
-            )}
-
-            <div className="space-y-3 p-4">
-                <h3 className="text-lg font-bold text-white">
-                    {title} {release_year ? <span className="text-neutral-400">({release_year})</span> : null}
-                </h3>
-
-                {director && <p className="text-sm text-neutral-300">Dir. {director}</p>}
-                {cinematographer && (
-                    <p className="text-sm text-neutral-400">Fotografía: {cinematographer}</p>
-                )}
-                {Array.isArray(genres) && genres.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                        {genres.map((g) => (
-                            <span
-                                key={g}
-                                className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-neutral-300"
-                            >
-                                {g}
-                            </span>
-                        ))}
-                    </div>
-                )}
-                {overview && <p className="text-sm leading-relaxed text-neutral-300">{overview}</p>}
-
-                <button
-                    onClick={handleExploreConnections}
-                    disabled={connections.length === 0}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600/20 px-3 py-2 text-sm font-medium text-cyan-300 hover:bg-cyan-600/30 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                    <Network size={16} />
-                    Explorar {connections.length} conexión{connections.length !== 1 ? 'es' : ''} directa
-                    {connections.length !== 1 ? 's' : ''}
-                </button>
-
-                {connections.length > 0 && (
-                    <div className="border-t border-white/10 pt-3">
-                        <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                            Puentes hacia otras películas
-                        </h4>
-                        <ul className="space-y-1">
-                            {connections.map(({ node, type, weight }) => (
-                                <li
-                                    key={node.id}
-                                    className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-white/10"
-                                >
-                                    <button
-                                        onClick={() => setSelectedMovie(node)}
-                                        className="min-w-0 flex-1 text-left"
-                                    >
-                                        <span className="block truncate text-sm text-neutral-300">{node.title}</span>
-                                        <span className="text-xs text-neutral-500">
-                                            {type === 'same_director'
-                                                ? '🎥 Del mismo director'
-                                                : `✨ ${Math.round((weight ?? 0) * 100)}% misma atmósfera`}
-                                        </span>
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            // CINE-08: botón explícito de foco — antes el clic en toda
-                                            // la fila seleccionaba Y enfocaba de forma implícita.
-                                            setSelectedMovie(node);
-                                            focusNode(node.id);
-                                        }}
-                                        aria-label={`Enfocar ${node.title} en el mapa`}
-                                        title="Enfocar en el mapa"
-                                        className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 px-2 py-1 text-[11px] text-neutral-400 hover:border-white/20 hover:bg-white/10 hover:text-white"
-                                    >
-                                        <Crosshair size={12} />
-                                        Enfocar en el mapa
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-            </div>
-        </aside>
-    );
+                  <button
+                    onClick={() => setSelectedMovie(node)}
+                    className="min-w-0 flex-1 text-left"
+                  >
+                    <span className="block truncate text-sm text-neutral-300">
+                      {node.title}
+                    </span>
+                    <span className="text-xs text-neutral-500">
+                      {type === "same_director"
+                        ? "🎥 Del mismo director"
+                        : `✨ ${Math.round((weight ?? 0) * 100)}% misma atmósfera`}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      // CINE-08: botón explícito de foco — antes el clic en toda
+                      // la fila seleccionaba Y enfocaba de forma implícita.
+                      setSelectedMovie(node);
+                      focusNode(node.id);
+                    }}
+                    aria-label={`Enfocar ${node.title} en el mapa`}
+                    title="Enfocar en el mapa"
+                    className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 px-2 py-1 text-[11px] text-neutral-400 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  >
+                    <Crosshair size={12} />
+                    Enfocar en el mapa
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
 }
