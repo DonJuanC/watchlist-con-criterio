@@ -31,3 +31,14 @@ CREATE TABLE IF NOT EXISTS movies (
 
 CREATE INDEX IF NOT EXISTS movies_embedding_idx ON movies USING hnsw (embedding vector_cosine_ops);
 CREATE INDEX IF NOT EXISTS movies_status_idx ON movies (status);
+
+-- CINE-10 (migración 003): caché de embeddings de películas fuera del catálogo.
+CREATE TABLE IF NOT EXISTS external_embeddings (
+    tmdb_id INT PRIMARY KEY,
+    title VARCHAR(255),
+    release_year INT,
+    poster_path VARCHAR(255),
+    director VARCHAR(255),
+    embedding vector(768) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
