@@ -4,13 +4,11 @@
 // 🔴 nunca es vecina, 🟢 sube en el ranking semántico, director con tope.
 
 const { query } = require("../db");
+const { pickNeighbors } = require("../services/neighborRanking");
 
 const DEFAULT_LIMIT = 6;
 const MAX_LIMIT = 12;
 const SEMANTIC_POOL = 20; // candidatas semánticas antes de rankear
-const MAX_DIRECTOR = 2; // tope de vecinas por mismo director
-const GREEN_BOOST = 0.05; // 🟢 suma esto al score semántico
-
 const NODE_FIELDS = `m.id, m.title, m.release_year, m.poster_path, m.director,
                      m.genres[1] AS main_genre, m.recommend, m.rating`;
 
@@ -68,61 +66,13 @@ async function getNeighbors(req, res) {
         : Promise.resolve({ rows: [] }),
     ]);
 
-    const toNode = ({ sim, ...node }) => node;
-    const semById = new Map(semResult.rows.map((r) => [r.id, Number(r.sim)]));
-    const yearGap = (r) =>
-      Math.abs((r.release_year ?? 0) - (center.release_year ?? 0));
-
-    // Director: 🟢 primero, luego las que también son semánticas (más similares
-    // primero), luego año más cercano.
-    const director = [...dirResult.rows].sort(
-      (a, b) =>
-        (b.recommend === 1) - (a.recommend === 1) ||
-        (semById.get(b.id) ?? -1) - (semById.get(a.id) ?? -1) ||
-        yearGap(a) - yearGap(b),
-    );
-
-    // Semántica: score = similitud + bonus 🟢.
-    const score = (r) => Number(r.sim) + (r.recommend === 1 ? GREEN_BOOST : 0);
-    const semantic = [...semResult.rows].sort((a, b) => score(b) - score(a));
-
-    const picked = [];
-    const pickedIds = new Set();
-    const pushDirector = (r) => {
-      const reasons = semById.has(r.id)
-        ? ["same_director", "semantic_similarity"]
-        : ["same_director"];
-      picked.push({
-        node: toNode(r),
-        type: "same_director",
-        weight: 1,
-        reasons,
-      });
-      pickedIds.add(r.id);
-    };
-
-    // 1) Cupo de director (máx. MAX_DIRECTOR, sin pasarse de limit).
-    director.slice(0, Math.min(MAX_DIRECTOR, limit)).forEach(pushDirector);
-
-    // 2) Semánticas hasta completar.
-    for (const r of semantic) {
-      if (picked.length >= limit) break;
-      if (pickedIds.has(r.id)) continue;
-      if (center.director && r.director === center.director) continue;
-      picked.push({
-        node: toNode(r),
-        type: "semantic_similarity",
-        weight: Math.round(Number(r.sim) * 1000) / 1000,
-        reasons: ["semantic_similarity"],
-      });
-      pickedIds.add(r.id);
-    }
-
-    // 3) Si faltan, relleno con más del mismo director.
-    for (const r of director) {
-      if (picked.length >= limit) break;
-      if (!pickedIds.has(r.id)) pushDirector(r);
-    }
+    const picked = pickNeighbors({
+      semanticRows: semResult.rows,
+      directorRows: dirResult.rows,
+      centerDirector: center.director,
+      centerYear: center.release_year,
+      limit,
+    });
 
     return res.status(200).json({ centerId: id, neighbors: picked });
   } catch (err) {
