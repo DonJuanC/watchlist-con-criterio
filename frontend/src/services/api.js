@@ -79,3 +79,20 @@ export function fetchNeighbors(id, limit = 6) {
     },
   );
 }
+
+/** GET /api/movies/search — búsqueda abierta en TMDB, marcando qué está en el catálogo. */
+export function searchTmdb(q) {
+  return fetchWithColdStartHandling(
+    `/api/movies/search?q=${encodeURIComponent(q)}`,
+    { method: "GET" },
+  );
+}
+
+/** POST /api/recommend — "si te gustó X…" para cualquier película de TMDB. */
+export function fetchRecommend(tmdbId) {
+  return fetchWithColdStartHandling("/api/recommend", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tmdbId }),
+  });
+}

@@ -8,12 +8,14 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { Search, Loader2, Dices, Sparkles } from "lucide-react";
 import { semanticSearch } from "../services/api";
 import useCineStore from "../store/useCineStore";
+import useTmdbSuggestions from "../hooks/useTmdbSuggestions";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w185";
 const RESULTS_LIMIT = 6;
 const SURPRISE_MAX_TRIES = 3;
 const SUGGESTIONS_LIMIT = 5;
 const SUGGESTIONS_MIN_CHARS = 2;
+const EXTERNAL_LIMIT = 4; // sugerencias de TMDB fuera de lo ya listado del catálogo
 
 // label: lo que ve la persona. query: el texto real que se manda a la búsqueda semántica
 // (más rico que el label, para mejorar el recall del embedding).
@@ -119,9 +121,10 @@ function PosterThumb({ movie, className = "h-20 w-20" }) {
 }
 
 /**
- * @param {{ onPick: (id: number) => void, onShowMap: () => void }} props
+ * @param {{ onPick: (id: number) => void, onPickExternal: (movie: object) => void,
+ *           onShowMap: () => void }} props
  */
-export default function HomeSearch({ onPick, onShowMap }) {
+export default function HomeSearch({ onPick, onPickExternal, onShowMap }) {
   const catalog = useCineStore((s) => s.rawGraph.nodes);
   const [inputValue, setInputValue] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
@@ -138,6 +141,21 @@ export default function HomeSearch({ onPick, onShowMap }) {
     [catalog, inputValue, suggestOpen],
   );
   const showDropdown = suggestOpen && inputValue.trim().length >= 1;
+
+  // CINE-10: además del catálogo, cualquier película de TMDB. Las vistas que ya aparecen
+  // arriba (match por título) no se repiten.
+  const { results: tmdbResults, loading: tmdbLoading } = useTmdbSuggestions(
+    inputValue,
+    suggestOpen,
+  );
+  const externalSuggestions = useMemo(() => {
+    const shownIds = new Set(suggestions.map((m) => m.id));
+    return tmdbResults
+      .filter((r) => !(r.in_catalog && shownIds.has(r.in_catalog.id)))
+      .slice(0, EXTERNAL_LIMIT);
+  }, [tmdbResults, suggestions]);
+  // Orden de filas para el teclado: catálogo, luego TMDB, luego "Buscar por sensación".
+  const semanticIndex = suggestions.length + externalSuggestions.length;
 
   // Devuelve las filas, o null si falló o quedó obsoleta (otra búsqueda la reemplazó).
   const search = useCallback(async (query, label) => {
@@ -181,6 +199,18 @@ export default function HomeSearch({ onPick, onShowMap }) {
     [onPick],
   );
 
+  const handlePickExternal = useCallback(
+    (movie) => {
+      setSuggestOpen(false);
+      setActiveIndex(-1);
+      setInputValue(movie.title);
+      // Si ya la vi (aunque el título escrito no coincidiera con el del catálogo), su EgoView.
+      if (movie.in_catalog?.status === "seen") onPick(movie.in_catalog.id);
+      else onPickExternal(movie);
+    },
+    [onPick, onPickExternal],
+  );
+
   const handleInputChange = useCallback((e) => {
     setInputValue(e.target.value);
     setSuggestOpen(true);
@@ -189,8 +219,8 @@ export default function HomeSearch({ onPick, onShowMap }) {
 
   const handleKeyDown = useCallback(
     (e) => {
-      // La última fila del menú es siempre "Buscar por sensación" (índice = suggestions.length).
-      const lastIndex = suggestions.length;
+      // La última fila del menú es siempre "Buscar por sensación" (índice = semanticIndex).
+      const lastIndex = semanticIndex;
       if (e.key === "Escape") {
         setSuggestOpen(false);
         setActiveIndex(-1);
@@ -204,14 +234,26 @@ export default function HomeSearch({ onPick, onShowMap }) {
         e.key === "Enter" &&
         showDropdown &&
         activeIndex >= 0 &&
-        activeIndex < suggestions.length
+        activeIndex < semanticIndex
       ) {
         e.preventDefault();
-        handlePickSuggestion(suggestions[activeIndex]);
+        if (activeIndex < suggestions.length) {
+          handlePickSuggestion(suggestions[activeIndex]);
+        } else {
+          handlePickExternal(externalSuggestions[activeIndex - suggestions.length]);
+        }
       }
       // En cualquier otro Enter, el formulario hace la búsqueda por sensación.
     },
-    [suggestions, showDropdown, activeIndex, handlePickSuggestion],
+    [
+      suggestions,
+      externalSuggestions,
+      semanticIndex,
+      showDropdown,
+      activeIndex,
+      handlePickSuggestion,
+      handlePickExternal,
+    ],
   );
 
   const handleChip = useCallback(
@@ -318,7 +360,7 @@ export default function HomeSearch({ onPick, onShowMap }) {
                 role="option"
                 aria-selected={activeIndex === i}
                 onClick={() => handlePickSuggestion(movie)}
-                onMouseEnter={() => setActiveIndex(i)}
+                onMouseMove={() => setActiveIndex(i)}
                 className={`group flex cursor-pointer items-center gap-3 px-4 py-2 ${
                   activeIndex === i ? "bg-white/10" : ""
                 }`}
@@ -336,16 +378,58 @@ export default function HomeSearch({ onPick, onShowMap }) {
                 </span>
               </li>
             ))}
+            {(externalSuggestions.length > 0 || tmdbLoading) && (
+              <li
+                role="presentation"
+                className={`flex items-center gap-2 px-4 pb-1 pt-3 text-[11px] text-neutral-500 ${
+                  suggestions.length > 0 ? "mt-1 border-t border-white/10" : ""
+                }`}
+              >
+                Otras películas
+                {tmdbLoading && <Loader2 size={12} className="animate-spin" />}
+              </li>
+            )}
+            {externalSuggestions.map((movie, j) => {
+              const i = suggestions.length + j;
+              const badge =
+                movie.in_catalog?.status === "seen"
+                  ? "Vista"
+                  : movie.in_catalog?.status === "pending"
+                    ? "Pendiente"
+                    : null;
+              return (
+                <li
+                  key={`tmdb-${movie.tmdb_id}`}
+                  role="option"
+                  aria-selected={activeIndex === i}
+                  onClick={() => handlePickExternal(movie)}
+                  onMouseMove={() => setActiveIndex(i)}
+                  className={`group flex cursor-pointer items-center gap-3 px-4 py-2 ${
+                    activeIndex === i ? "bg-white/10" : ""
+                  }`}
+                >
+                  <PosterThumb movie={movie} className="h-8 w-8" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm text-neutral-100">
+                      {movie.title}
+                    </span>
+                    <span className="block truncate text-xs text-neutral-500">
+                      {[movie.release_year, badge].filter(Boolean).join(" · ")}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
             <li
               role="option"
-              aria-selected={activeIndex === suggestions.length}
+              aria-selected={activeIndex === semanticIndex}
               onClick={() =>
                 search(inputValue.trim(), `“${inputValue.trim()}”`)
               }
-              onMouseEnter={() => setActiveIndex(suggestions.length)}
+              onMouseMove={() => setActiveIndex(semanticIndex)}
               className={`flex cursor-pointer items-center gap-3 px-4 py-3 ${
-                suggestions.length > 0 ? "mt-1 border-t border-white/10" : ""
-              } ${activeIndex === suggestions.length ? "bg-white/10" : ""}`}
+                semanticIndex > 0 || tmdbLoading ? "mt-1 border-t border-white/10" : ""
+              } ${activeIndex === semanticIndex ? "bg-white/10" : ""}`}
             >
               <Sparkles size={18} className="shrink-0 text-cyan-300" />
               <span className="min-w-0">

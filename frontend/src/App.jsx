@@ -4,7 +4,7 @@
 // el mapa completo como vista secundaria. La carga del grafo arranca al abrir la app, así
 // el servidor ya está despierto cuando la persona termina de elegir qué buscar.
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Loader2,
   ServerCog,
@@ -19,6 +19,7 @@ import MovieDetailDrawer from "./components/MovieDetailDrawer";
 import OnboardingHint from "./components/OnboardingHint";
 import HomeSearch from "./components/HomeSearch";
 import EgoView from "./components/EgoView";
+import ExternalView from "./components/ExternalView";
 import useCineStore from "./store/useCineStore";
 import { fetchGraph } from "./services/api";
 
@@ -62,8 +63,9 @@ const PILL_BUTTON =
 
 export default function App() {
   const graphCanvasRef = useRef(null);
-  const [view, setView] = useState("home"); // home | ego | map
+  const [view, setView] = useState("home"); // home | ego | external | map
   const [centerId, setCenterId] = useState(null);
+  const [externalMovie, setExternalMovie] = useState(null); // CINE-10: película fuera del catálogo
 
   const isLoading = useCineStore((s) => s.isLoading);
   const graphError = useCineStore((s) => s.graphError);
@@ -95,10 +97,16 @@ export default function App() {
     };
   }, [setRawGraph, setLoading, setGraphError]);
 
-  const handlePick = (id) => {
+  // useCallback: ExternalView lo usa como dependencia de su effect.
+  const handlePick = useCallback((id) => {
     setCenterId(id);
     setView("ego");
-  };
+  }, []);
+
+  const handlePickExternal = useCallback((movie) => {
+    setExternalMovie(movie);
+    setView("external");
+  }, []);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-neutral-950">
@@ -106,8 +114,28 @@ export default function App() {
 
       {/* Inicio: siempre montado (solo oculto) para no perder la búsqueda al volver. */}
       <div className={view === "home" ? "h-full overflow-y-auto" : "hidden"}>
-        <HomeSearch onPick={handlePick} onShowMap={() => setView("map")} />
+        <HomeSearch
+          onPick={handlePick}
+          onPickExternal={handlePickExternal}
+          onShowMap={() => setView("map")}
+        />
       </div>
+
+      {view === "external" && externalMovie && (
+        <div className="h-full overflow-y-auto">
+          <nav className="mx-auto flex w-full max-w-xl items-center px-4 pt-4">
+            <button
+              type="button"
+              onClick={() => setView("home")}
+              className={PILL_BUTTON}
+            >
+              <ArrowLeft size={14} />
+              Volver
+            </button>
+          </nav>
+          <ExternalView movie={externalMovie} onPick={handlePick} />
+        </div>
+      )}
 
       {view === "ego" && (
         <div className="h-full overflow-y-auto">
