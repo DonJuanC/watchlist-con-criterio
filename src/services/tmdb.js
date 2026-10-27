@@ -134,4 +134,43 @@ async function searchMovies(query, limit = 8) {
     }));
 }
 
-module.exports = { searchMovie, getMovieDetails, searchMovies };
+/**
+ * CINE-10: detalle de una película fuera del catálogo, con la misma forma y el mismo
+ * idioma que usa scripts/sync-notion.js (es-MX + título en inglés por traducciones),
+ * para que su embedding sea comparable con los del catálogo.
+ * Nota: duplica getDetails() de sync-notion.js; unificar cuando el sync use este servicio.
+ * @param {number} tmdbId
+ */
+async function getMovieForEmbedding(tmdbId) {
+  const url = `${TMDB_BASE_URL}/movie/${tmdbId}?api_key=${API_KEY}&language=es-MX&append_to_response=credits,translations`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = new Error(`TMDB detalle falló (${res.status}) para tmdb_id=${tmdbId}`);
+    err.status = res.status; // el controller distingue 404 (no existe) de otros fallos
+    throw err;
+  }
+  const d = await res.json();
+  const en = d.translations?.translations?.find(
+    (t) => t.iso_639_1 === "en" && t.iso_3166_1 === "US",
+  )?.data;
+  const titleEn = en?.title || d.original_title;
+  const crew = d.credits?.crew || [];
+  return {
+    tmdb_id: d.id,
+    title_es: d.title,
+    // Regla de la app: título en inglés, salvo películas en español → original.
+    display_title: d.original_language === "es" ? d.original_title : titleEn,
+    overview: d.overview || en?.overview || "",
+    release_year: d.release_date ? Number(d.release_date.slice(0, 4)) : null,
+    poster_path: d.poster_path,
+    genres: (d.genres || []).map((g) => g.name),
+    director: crew.find((c) => c.job === "Director")?.name ?? null,
+  };
+}
+
+module.exports = {
+  searchMovie,
+  getMovieDetails,
+  searchMovies,
+  getMovieForEmbedding,
+};
