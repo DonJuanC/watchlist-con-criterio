@@ -1,13 +1,13 @@
 // src/services/tmdb.js
 // CINE-02: Ingesta de datos desde TMDB (búsqueda + detalles con créditos).
 
-require('dotenv').config();
+require("dotenv").config();
 
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const API_KEY = process.env.TMDB_API_KEY;
 
 if (!API_KEY) {
-    throw new Error('Falta TMDB_API_KEY en el archivo .env');
+  throw new Error("Falta TMDB_API_KEY en el archivo .env");
 }
 
 /**
@@ -30,36 +30,41 @@ if (!API_KEY) {
  * @returns {Promise<object|null>} resultado crudo de TMDB o null si no hay match
  */
 async function searchMovie(title) {
-    const url = `${TMDB_BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(title)}&language=es-MX&include_adult=false`;
-    const res = await fetch(url);
-    if (!res.ok) {
-        throw new Error(`TMDB search falló (${res.status}) para "${title}"`);
-    }
-    const data = await res.json();
-    const results = data.results || [];
-    if (results.length === 0) return null;
+  const url = `${TMDB_BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(title)}&language=es-MX&include_adult=false`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`TMDB search falló (${res.status}) para "${title}"`);
+  }
+  const data = await res.json();
+  const results = data.results || [];
+  if (results.length === 0) return null;
 
-    // Nota: algunos títulos "buscables" en inglés no son el `original_title` real
-    // de la película (ej. "The Piano Teacher" → original_title "La Pianiste", en
-    // francés). En esos casos, el único resultado con match exacto de texto puede
-    // ser una entrada casi vacía (sin póster, popularidad ~1) y no la película real.
-    // Por eso el match exacto solo se acepta si además supera un piso mínimo de
-    // popularidad; si no, se cae al ranking general por popularidad+póster.
-    const MIN_EXACT_MATCH_POPULARITY = 3;
-    const normalizedQuery = title.trim().toLowerCase();
-    const isExactMatch = (r) =>
-        (r.title || '').trim().toLowerCase() === normalizedQuery ||
-        (r.original_title || '').trim().toLowerCase() === normalizedQuery;
+  // Nota: algunos títulos "buscables" en inglés no son el `original_title` real
+  // de la película (ej. "The Piano Teacher" → original_title "La Pianiste", en
+  // francés). En esos casos, el único resultado con match exacto de texto puede
+  // ser una entrada casi vacía (sin póster, popularidad ~1) y no la película real.
+  // Por eso el match exacto solo se acepta si además supera un piso mínimo de
+  // popularidad; si no, se cae al ranking general por popularidad+póster.
+  const MIN_EXACT_MATCH_POPULARITY = 3;
+  const normalizedQuery = title.trim().toLowerCase();
+  const isExactMatch = (r) =>
+    (r.title || "").trim().toLowerCase() === normalizedQuery ||
+    (r.original_title || "").trim().toLowerCase() === normalizedQuery;
 
-    const exactMatches = results.filter(
-        (r) => isExactMatch(r) && (r.popularity || 0) >= MIN_EXACT_MATCH_POPULARITY
-    );
+  const exactMatches = results.filter(
+    (r) => isExactMatch(r) && (r.popularity || 0) >= MIN_EXACT_MATCH_POPULARITY,
+  );
 
-    const withPoster = results.filter((r) => r.poster_path);
-    const pool = exactMatches.length > 0 ? exactMatches : withPoster.length > 0 ? withPoster : results;
-    pool.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+  const withPoster = results.filter((r) => r.poster_path);
+  const pool =
+    exactMatches.length > 0
+      ? exactMatches
+      : withPoster.length > 0
+        ? withPoster
+        : results;
+  pool.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
 
-    return pool[0];
+  return pool[0];
 }
 
 /**
@@ -68,35 +73,65 @@ async function searchMovie(title) {
  * @param {number} tmdbId
  */
 async function getMovieDetails(tmdbId) {
-    const fetchDetails = async (lang) => {
-        const url = `${TMDB_BASE_URL}/movie/${tmdbId}?api_key=${API_KEY}&append_to_response=credits&language=${lang}`;
-        const res = await fetch(url);
-        if (!res.ok) {
-            throw new Error(`TMDB getMovieDetails falló (${res.status}) para tmdb_id=${tmdbId}`);
-        }
-        return res.json();
-    };
-
-    let data = await fetchDetails('es-MX');
-    if (!data.overview) {
-        // Fallback a inglés cuando no hay sinopsis traducida.
-        data = await fetchDetails('en-US');
+  const fetchDetails = async (lang) => {
+    const url = `${TMDB_BASE_URL}/movie/${tmdbId}?api_key=${API_KEY}&append_to_response=credits&language=${lang}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(
+        `TMDB getMovieDetails falló (${res.status}) para tmdb_id=${tmdbId}`,
+      );
     }
+    return res.json();
+  };
 
-    const crew = (data.credits && data.credits.crew) || [];
-    const director = crew.find((c) => c.job === 'Director');
-    const cinematographer = crew.find((c) => c.job === 'Director of Photography');
+  let data = await fetchDetails("es-MX");
+  if (!data.overview) {
+    // Fallback a inglés cuando no hay sinopsis traducida.
+    data = await fetchDetails("en-US");
+  }
 
-    return {
-        tmdb_id: data.id,
-        title: data.title,
-        overview: data.overview || '',
-        release_year: data.release_date ? parseInt(data.release_date.slice(0, 4), 10) : null,
-        poster_path: data.poster_path || null,
-        genres: (data.genres || []).map((g) => g.name),
-        director: director ? director.name : null,
-        cinematographer: cinematographer ? cinematographer.name : null,
-    };
+  const crew = (data.credits && data.credits.crew) || [];
+  const director = crew.find((c) => c.job === "Director");
+  const cinematographer = crew.find((c) => c.job === "Director of Photography");
+
+  return {
+    tmdb_id: data.id,
+    title: data.title,
+    overview: data.overview || "",
+    release_year: data.release_date
+      ? parseInt(data.release_date.slice(0, 4), 10)
+      : null,
+    poster_path: data.poster_path || null,
+    genres: (data.genres || []).map((g) => g.name),
+    director: director ? director.name : null,
+    cinematographer: cinematographer ? cinematographer.name : null,
+  };
 }
 
-module.exports = { searchMovie, getMovieDetails };
+/**
+ * CINE-10: búsqueda abierta en TMDB para sugerencias mientras se escribe.
+ * Títulos con la regla de la app: inglés por defecto, original si es en español.
+ * @param {string} query
+ * @param {number} limit
+ */
+async function searchMovies(query, limit = 8) {
+  const url = `${TMDB_BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=en-US&include_adult=false`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`TMDB search falló (${res.status}) para "${query}"`);
+  }
+  const data = await res.json();
+  return (data.results || [])
+    // Fuera entradas casi vacías: sin póster o con muy pocos votos (cortos/homónimos).
+    .filter((r) => r.poster_path && (r.vote_count || 0) >= 20)
+    .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+    .slice(0, limit)
+    .map((r) => ({
+      tmdb_id: r.id,
+      title: r.original_language === "es" ? r.original_title : r.title,
+      release_year: r.release_date ? Number(r.release_date.slice(0, 4)) : null,
+      poster_path: r.poster_path,
+    }));
+}
+
+module.exports = { searchMovie, getMovieDetails, searchMovies };

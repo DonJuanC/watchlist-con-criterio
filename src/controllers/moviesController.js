@@ -3,7 +3,7 @@
 // sigue liviano (no carga 295 sinopsis de golpe).
 
 const { query } = require("../db");
-
+const { searchMovies } = require("../services/tmdb");
 /**
  * GET /api/movies/:id
  * Devuelve la ficha de una película del catálogo, incluido el criterio personal.
@@ -35,4 +35,39 @@ async function getMovieById(req, res) {
   }
 }
 
-module.exports = { getMovieById };
+/**
+ * GET /api/movies/search?q=texto
+ * Resultados de TMDB, marcando cuáles ya están en el catálogo.
+ * Respuesta: { results: [{ tmdb_id, title, release_year, poster_path, in_catalog: { id, status } | null }] }
+ */
+async function searchExternal(req, res) {
+  const q = String(req.query.q || "").trim();
+  if (q.length < 2) {
+    return res.status(400).json({ error: "Escribe al menos 2 caracteres." });
+  }
+
+  try {
+    const results = await searchMovies(q);
+    if (results.length === 0) return res.status(200).json({ results: [] });
+
+    const { rows } = await query(
+      `SELECT id, tmdb_id, status FROM movies WHERE tmdb_id = ANY($1::int[])`,
+      [results.map((r) => r.tmdb_id)],
+    );
+    const byTmdb = new Map(
+      rows.map((r) => [r.tmdb_id, { id: r.id, status: r.status }]),
+    );
+
+    return res.status(200).json({
+      results: results.map((r) => ({
+        ...r,
+        in_catalog: byTmdb.get(r.tmdb_id) ?? null,
+      })),
+    });
+  } catch (err) {
+    console.error("❌ Error en searchExternal:", err.message);
+    return res.status(502).json({ error: "No se pudo buscar en TMDB." });
+  }
+}
+
+module.exports = { getMovieById, searchExternal };
