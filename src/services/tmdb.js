@@ -123,8 +123,9 @@ async function searchMovies(query, limit = 8) {
   const data = await res.json();
   return (data.results || [])
     // Fuera entradas casi vacías: sin póster o con muy pocos votos (cortos/homónimos).
+    // Se respeta el orden de relevancia de TMDB: ordenar por popularidad subía resultados
+    // que solo coinciden de lejos (ej. "dune" → Anatomy of a Fall antes que Dune 1984).
     .filter((r) => r.poster_path && (r.vote_count || 0) >= 20)
-    .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
     .slice(0, limit)
     .map((r) => ({
       tmdb_id: r.id,
