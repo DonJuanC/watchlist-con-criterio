@@ -5,7 +5,7 @@
 // resultados como 6 pósters. Al tocar uno, el padre abre EgoView con esa película.
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Search, Loader2, Dices, Sparkles } from "lucide-react";
+import { Search, Loader2, Dices, Sparkles, Popcorn } from "lucide-react";
 import { semanticSearch } from "../services/api";
 import useCineStore from "../store/useCineStore";
 import useTmdbSuggestions from "../hooks/useTmdbSuggestions";
@@ -122,9 +122,14 @@ function PosterThumb({ movie, className = "h-20 w-20" }) {
 
 /**
  * @param {{ onPick: (id: number) => void, onPickExternal: (movie: object) => void,
- *           onShowMap: () => void }} props
+ *           onShowNextUp: () => void, onShowMap: () => void }} props
  */
-export default function HomeSearch({ onPick, onPickExternal, onShowMap }) {
+export default function HomeSearch({
+  onPick,
+  onPickExternal,
+  onShowNextUp,
+  onShowMap,
+}) {
   const catalog = useCineStore((s) => s.rawGraph.nodes);
   const [inputValue, setInputValue] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
@@ -460,15 +465,25 @@ export default function HomeSearch({ onPick, onPickExternal, onShowMap }) {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleSurprise}
-        disabled={isLoading}
-        className="mt-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/40 px-4 py-2 text-sm text-cyan-300 transition-colors hover:bg-cyan-400/10 disabled:opacity-50"
-      >
-        <Dices size={16} />
-        Sorpréndeme
-      </button>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        <button
+          type="button"
+          onClick={handleSurprise}
+          disabled={isLoading}
+          className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 px-4 py-2 text-sm text-cyan-300 transition-colors hover:bg-cyan-400/10 disabled:opacity-50"
+        >
+          <Dices size={16} />
+          Sorpréndeme
+        </button>
+        <button
+          type="button"
+          onClick={onShowNextUp}
+          className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 px-4 py-2 text-sm text-emerald-300 transition-colors hover:bg-emerald-400/10"
+        >
+          <Popcorn size={16} />
+          ¿Qué veo hoy?
+        </button>
+      </div>
 
       {status === "error" && (
         <p className="mt-6 max-w-sm text-sm text-red-400">

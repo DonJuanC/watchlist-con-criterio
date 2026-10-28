@@ -20,6 +20,7 @@ import OnboardingHint from "./components/OnboardingHint";
 import HomeSearch from "./components/HomeSearch";
 import EgoView from "./components/EgoView";
 import ExternalView from "./components/ExternalView";
+import NextUpView from "./components/NextUpView";
 import useCineStore from "./store/useCineStore";
 import { fetchGraph } from "./services/api";
 
@@ -63,7 +64,7 @@ const PILL_BUTTON =
 
 export default function App() {
   const graphCanvasRef = useRef(null);
-  const [view, setView] = useState("home"); // home | ego | external | map
+  const [view, setView] = useState("home"); // home | ego | external | next | map
   const [centerId, setCenterId] = useState(null);
   const [externalMovie, setExternalMovie] = useState(null); // CINE-10: película fuera del catálogo
 
@@ -117,6 +118,7 @@ export default function App() {
         <HomeSearch
           onPick={handlePick}
           onPickExternal={handlePickExternal}
+          onShowNextUp={() => setView("next")}
           onShowMap={() => setView("map")}
         />
       </div>
@@ -134,6 +136,22 @@ export default function App() {
             </button>
           </nav>
           <ExternalView movie={externalMovie} onPick={handlePick} />
+        </div>
+      )}
+
+      {view === "next" && (
+        <div className="h-full overflow-y-auto">
+          <nav className="mx-auto flex w-full max-w-xl items-center px-4 pt-4">
+            <button
+              type="button"
+              onClick={() => setView("home")}
+              className={PILL_BUTTON}
+            >
+              <ArrowLeft size={14} />
+              Volver
+            </button>
+          </nav>
+          <NextUpView />
         </div>
       )}
 

@@ -56,12 +56,12 @@ export function fetchGraph() {
   return fetchWithColdStartHandling("/api/graph", { method: "GET" });
 }
 
-/** POST /api/search/semantic */
-export function semanticSearch(query, limit = 10) {
+/** POST /api/search/semantic — scope 'seen' (catálogo visto) o 'pending' (mi lista por ver). */
+export function semanticSearch(query, limit = 10, scope = "seen", offset = 0) {
   return fetchWithColdStartHandling("/api/search/semantic", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, limit }),
+    body: JSON.stringify({ query, limit, scope, offset }),
   });
 }
 
@@ -94,5 +94,12 @@ export function fetchRecommend(tmdbId) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ tmdbId }),
+  });
+}
+
+/** GET /api/recommend/next — "¿Qué veo hoy?": pendientes que mejor encajan con mis 🟢. */
+export function fetchNextUp(limit = 6, offset = 0) {
+  return fetchWithColdStartHandling(`/api/recommend/next?limit=${limit}&offset=${offset}`, {
+    method: "GET",
   });
 }
