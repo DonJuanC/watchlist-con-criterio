@@ -103,3 +103,11 @@ export function fetchNextUp(limit = 6, offset = 0) {
     method: "GET",
   });
 }
+
+/** GET /api/watch/:tmdbId — dónde ver una película en un país (datos de JustWatch vía TMDB). */
+export function fetchWatchProviders(tmdbId, country) {
+  return fetchWithColdStartHandling(
+    `/api/watch/${tmdbId}?country=${encodeURIComponent(country)}`,
+    { method: "GET" },
+  );
+}

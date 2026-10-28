@@ -4,6 +4,7 @@
 
 import { Loader2, Star } from "lucide-react";
 import useMovieDetail from "../hooks/useMovieDetail";
+import WatchProviders from "./WatchProviders";
 
 const RECOMMEND_LABEL = {
   1: "🟢 La recomiendo sin dudarlo",
@@ -138,6 +139,8 @@ export default function MovieInfo({ movieId }) {
         recommend={movie.recommend}
         review={movie.review}
       />
+
+      <WatchProviders tmdbId={movie.tmdb_id} />
 
       <TmdbAttribution />
     </div>
