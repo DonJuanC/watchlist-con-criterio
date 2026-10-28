@@ -13,6 +13,7 @@ const {
 } = require("../controllers/moviesController");
 const { getNeighbors } = require("../controllers/neighborsController");
 const { recommend } = require("../controllers/recommendController");
+const { getNextUp } = require("../controllers/nextUpController");
 
 router.get("/movies/search", searchExternal);
 router.get("/movies/:id/neighbors", getNeighbors);
@@ -20,5 +21,6 @@ router.post("/search/semantic", semanticSearch);
 router.get("/graph", getGraph);
 router.get("/movies/:id", getMovieById);
 router.post("/recommend", recommend);
+router.get("/recommend/next", getNextUp);
 
 module.exports = router;
