@@ -139,10 +139,11 @@ export default function EgoView({ centerId, onSelect }) {
               movie={p.node}
               className="h-16 w-16 ring-1 ring-white/20 transition group-hover:scale-110 group-hover:ring-cyan-400 group-focus-visible:ring-2 group-focus-visible:ring-cyan-400 sm:h-[72px] sm:w-[72px]"
             />
-            <span className="mt-1 line-clamp-2 text-xs leading-tight text-neutral-100">
+            {/* Fondo bajo las etiquetas: así las líneas del anillo no las atraviesan. */}
+            <span className="mt-1 line-clamp-2 rounded bg-neutral-950/80 px-1 text-xs leading-tight text-neutral-100">
               {p.node.title}
             </span>
-            <span className="mt-0.5 text-[10px] leading-none text-neutral-500">
+            <span className="mt-0.5 rounded bg-neutral-950/80 px-1 py-0.5 text-[10px] leading-none text-neutral-500">
               {REASON_LABEL[p.type] ?? "Conectada"}
             </span>
           </button>
@@ -158,7 +159,8 @@ export default function EgoView({ centerId, onSelect }) {
           Esta película todavía no tiene conexiones. Prueba con otra.
         </p>
       ) : (
-        <p className="mt-2 text-center text-sm text-neutral-400">
+        // mt-10: la vecina de abajo (póster + 2 líneas) sobresale del cuadro del anillo.
+        <p className="mt-10 text-center text-sm text-neutral-400">
           Toca una película para seguir explorando
         </p>
       )}

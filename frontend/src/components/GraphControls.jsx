@@ -27,7 +27,14 @@ function LinkTypeChip({ active, onClick, colorClass, label }) {
 }
 
 export default function GraphControls() {
-    const [collapsed, setCollapsed] = useState(false);
+    // En mobile arranca cerrado: abierto tapa media pantalla del mapa.
+    const [collapsed, setCollapsed] = useState(() => {
+        try {
+            return window.matchMedia('(max-width: 639px)').matches;
+        } catch {
+            return false;
+        }
+    });
 
     const minSimilarity = useCineStore((s) => s.minSimilarity);
     const showDirectorLinks = useCineStore((s) => s.showDirectorLinks);
@@ -39,7 +46,7 @@ export default function GraphControls() {
     const visibleLinksCount = useFilteredLinks().length;
 
     return (
-        <div className="fixed bottom-6 left-6 z-20 w-64 rounded-xl border border-neutral-800 bg-neutral-900/80 p-3 shadow-2xl backdrop-blur-md">
+        <div className="fixed bottom-3 left-3 z-20 w-64 max-w-[calc(100%-5rem)] rounded-xl sm:bottom-6 sm:left-6 border border-neutral-800 bg-neutral-900/80 p-3 shadow-2xl backdrop-blur-md">
             <button
                 type="button"
                 onClick={() => setCollapsed((c) => !c)}

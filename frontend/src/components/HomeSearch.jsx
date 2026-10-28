@@ -331,7 +331,7 @@ export default function HomeSearch({
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Una película que te gustó, o cómo quieres sentirte"
+            placeholder="Una película, o cómo quieres sentirte"
             aria-label="Escribe una película o describe qué quieres ver"
             role="combobox"
             aria-expanded={showDropdown}

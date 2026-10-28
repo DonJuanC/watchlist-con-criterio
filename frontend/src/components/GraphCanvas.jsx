@@ -171,8 +171,9 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
         />
 
         {/* CINE-07: controles de cámara flotantes (esquina inferior derecha). */}
-        <div className="absolute bottom-6 right-6 z-20 flex flex-col items-end gap-3">
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-xs text-neutral-300 shadow-2xl backdrop-blur-md">
+        <div className="absolute bottom-3 right-3 z-20 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+            {/* La leyenda se oculta en mobile: no cabe junto al panel de ajustes. */}
+            <div className="hidden rounded-lg border border-neutral-800 sm:block bg-neutral-900/80 px-3 py-2 text-xs text-neutral-300 shadow-2xl backdrop-blur-md">
                 <div className="flex items-center gap-2">
                     <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: DIRECTOR_LINK_COLOR }} />
                     Mismo director

@@ -100,7 +100,7 @@ export default function SearchOverlay() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Ej: Tokio de noche, soledad, obsesión, paranoia..."
+                    placeholder="Ej: soledad, obsesión, paranoia…"
                     className="flex-1 bg-transparent text-sm text-neutral-100 placeholder:text-neutral-500 outline-none"
                 />
                 {hasActiveSearch && (

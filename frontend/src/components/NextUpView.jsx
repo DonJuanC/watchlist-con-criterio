@@ -185,7 +185,10 @@ export default function NextUpView() {
                 </span>
               )}
               {because?.length > 0 && (
-                <span className="mt-1 line-clamp-2 text-[10px] leading-tight text-emerald-400/90">
+                <span
+                  title={`Porque me gustó ${because[0].title}`}
+                  className="mt-1 line-clamp-2 max-w-full text-[10px] leading-tight text-emerald-400/90"
+                >
                   Porque me gustó {because[0].title}
                 </span>
               )}

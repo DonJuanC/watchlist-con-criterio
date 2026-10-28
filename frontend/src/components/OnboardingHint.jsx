@@ -27,7 +27,9 @@ export default function OnboardingHint() {
     };
 
     return (
-        <div className="fixed left-6 top-6 z-20 max-w-xs rounded-xl border border-white/10 bg-neutral-900/90 px-4 py-3 text-xs leading-relaxed text-neutral-300 shadow-2xl backdrop-blur">
+        // Mobile: abajo, encima del panel de ajustes y sin tapar el zoom (arriba está la búsqueda).
+        // Desktop: arriba a la izquierda. z-10 en mobile: si se abre el panel de ajustes, queda por encima del aviso.
+        <div className="fixed bottom-[4.5rem] left-3 right-16 z-10 rounded-xl sm:bottom-auto sm:left-6 sm:right-auto sm:top-6 sm:z-20 sm:max-w-xs border border-white/10 bg-neutral-900/90 px-4 py-3 text-xs leading-relaxed text-neutral-300 shadow-2xl backdrop-blur">
             <button
                 onClick={handleDismiss}
                 aria-label="Cerrar sugerencia"
