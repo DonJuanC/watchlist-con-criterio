@@ -12,6 +12,55 @@ const RECOMMEND_LABEL = {
   "-1": "🔴 No la recomendaría",
 };
 
+// Notas de la crítica (OMDb). Contexto junto a "Mi criterio": no entran al ranking.
+function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
+  const parts = [
+    rtScore != null && { label: "🍅", value: `${rtScore}%`, title: "Rotten Tomatoes (Tomatometer)" },
+    imdbRating != null && { label: "IMDb", value: Number(imdbRating).toFixed(1), title: "IMDb" },
+    metascore != null && { label: "Metascore", value: metascore, title: "Metacritic" },
+  ].filter(Boolean);
+  if (parts.length === 0) return null;
+
+  return (
+    <section className="rounded-lg border border-white/10 p-3">
+      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-300">
+        La crítica
+      </h4>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-200">
+        {parts.map((p) => (
+          <span key={p.title} title={p.title}>
+            <span className="text-neutral-500">{p.label}</span> {p.value}
+          </span>
+        ))}
+      </div>
+      <p className="mt-2 text-[10px] text-neutral-500">
+        Notas vía{" "}
+        <a
+          href="https://www.omdbapi.com"
+          target="_blank"
+          rel="noreferrer"
+          className="underline-offset-2 hover:text-neutral-300 hover:underline"
+        >
+          OMDb
+        </a>
+        {imdbId && (
+          <>
+            {" · "}
+            <a
+              href={`https://www.imdb.com/title/${imdbId}/`}
+              target="_blank"
+              rel="noreferrer"
+              className="underline-offset-2 hover:text-neutral-300 hover:underline"
+            >
+              Ver en IMDb
+            </a>
+          </>
+        )}
+      </p>
+    </section>
+  );
+}
+
 function MyCriteria({ rating, recommend, review }) {
   const hasCriteria = rating != null || recommend != null || review;
   if (!hasCriteria) return null;
@@ -133,6 +182,13 @@ export default function MovieInfo({ movieId }) {
           {movie.overview}
         </p>
       )}
+
+      <CriticScores
+        rtScore={movie.rt_score}
+        imdbRating={movie.imdb_rating}
+        metascore={movie.metascore}
+        imdbId={movie.imdb_id}
+      />
 
       <MyCriteria
         rating={movie.rating}
