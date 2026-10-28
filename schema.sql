@@ -1,5 +1,5 @@
 -- Watchlist con Criterio — schema.sql
--- Estado actual de la base (CINE-01 + migraciones 001 y 002).
+-- Estado actual de la base (CINE-01 + migraciones 001 a 004).
 -- Para una base nueva: correr este archivo. Para una base existente: migrations/ en orden.
 
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -26,6 +26,11 @@ CREATE TABLE IF NOT EXISTS movies (
     review TEXT,
     notion_page_id UUID UNIQUE,      -- fila de origen en Notion
     notion_edited_at TIMESTAMPTZ,
+    imdb_id VARCHAR(12),                                         -- migración 004 (OMDb)
+    rt_score SMALLINT CHECK (rt_score BETWEEN 0 AND 100),        -- 🍅 Tomatometer %
+    imdb_rating NUMERIC(3, 1) CHECK (imdb_rating BETWEEN 0 AND 10),
+    metascore SMALLINT CHECK (metascore BETWEEN 0 AND 100),
+    ratings_fetched_at TIMESTAMPTZ,                              -- ya consultada en OMDb
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

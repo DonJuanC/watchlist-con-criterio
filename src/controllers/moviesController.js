@@ -20,7 +20,8 @@ async function getMovieById(req, res) {
     const { rows } = await query(
       `SELECT id, tmdb_id, display_title AS title, original_title, title_es,
                     release_year, poster_path, director, cinematographer, genres, overview,
-                    status, recommend, rating, review
+                    status, recommend, rating, review,
+                    imdb_id, rt_score, imdb_rating, metascore
              FROM movies
              WHERE id = $1`,
       [id],
