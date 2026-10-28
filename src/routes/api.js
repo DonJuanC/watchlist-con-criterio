@@ -14,6 +14,7 @@ const {
 const { getNeighbors } = require("../controllers/neighborsController");
 const { recommend } = require("../controllers/recommendController");
 const { getNextUp } = require("../controllers/nextUpController");
+const { getWatch } = require("../controllers/watchController");
 
 router.get("/movies/search", searchExternal);
 router.get("/movies/:id/neighbors", getNeighbors);
@@ -22,5 +23,6 @@ router.get("/graph", getGraph);
 router.get("/movies/:id", getMovieById);
 router.post("/recommend", recommend);
 router.get("/recommend/next", getNextUp);
+router.get("/watch/:tmdbId", getWatch);
 
 module.exports = router;

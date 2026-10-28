@@ -169,9 +169,27 @@ async function getMovieForEmbedding(tmdbId) {
   };
 }
 
+/**
+ * Dónde ver una película, por país (datos de JustWatch vía TMDB).
+ * @param {number} tmdbId
+ * @returns {Promise<object>} { CO: { link, flatrate, rent, buy, free, ads }, US: … }
+ */
+async function getWatchProviders(tmdbId) {
+  const url = `${TMDB_BASE_URL}/movie/${tmdbId}/watch/providers?api_key=${API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = new Error(`TMDB watch/providers falló (${res.status}) para tmdb_id=${tmdbId}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
+  return data.results || {};
+}
+
 module.exports = {
   searchMovie,
   getMovieDetails,
   searchMovies,
   getMovieForEmbedding,
+  getWatchProviders,
 };
