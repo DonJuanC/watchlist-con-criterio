@@ -81,7 +81,7 @@ export default function GraphControls() {
                             step={MIN_SIMILARITY_RANGE.step}
                             value={minSimilarity}
                             onChange={(e) => setMinSimilarity(parseFloat(e.target.value))}
-                            className="w-full accent-cyan-500"
+                            className="w-full accent-amber-500"
                         />
                         <div className="mt-1 flex items-center justify-between text-[10px] text-neutral-500">
                             <span>Más variedad</span>
@@ -93,14 +93,14 @@ export default function GraphControls() {
                         <LinkTypeChip
                             active={showDirectorLinks}
                             onClick={toggleDirectorLinks}
-                            colorClass="bg-blue-500"
-                            label="Ver películas del mismo director"
+                            colorClass="bg-amber-400"
+                            label="Mismo director"
                         />
                         <LinkTypeChip
                             active={showSemanticLinks}
                             onClick={toggleSemanticLinks}
-                            colorClass="bg-cyan-400 shadow-[0_0_6px_2px_rgba(34,211,238,0.7)]"
-                            label="Ver películas con misma atmósfera"
+                            colorClass="bg-white/80"
+                            label="Misma atmósfera"
                         />
                     </div>
 

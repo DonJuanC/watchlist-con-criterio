@@ -92,9 +92,9 @@ export default function MovieDetailDrawer() {
         <button
           onClick={handleExploreConnections}
           disabled={connections.length === 0}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600/20 px-3 py-2 text-sm font-medium text-cyan-300 hover:bg-cyan-600/30 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-xs font-semibold text-neutral-200 backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Network size={16} />
+          <Network size={14} className="text-neutral-400" />
           Explorar {connections.length}{" "}
           {connections.length === 1 ? "conexión directa" : "conexiones directas"}
         </button>

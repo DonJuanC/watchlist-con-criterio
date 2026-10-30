@@ -248,7 +248,7 @@ export default function NextUpView() {
               onClick={() => setSelectedProvider("all")}
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
                 selectedProvider === "all"
-                  ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                  ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/50"
                   : "bg-white/5 text-neutral-400 hover:text-white border border-white/5 hover:bg-white/10"
               }`}
             >
@@ -260,7 +260,7 @@ export default function NextUpView() {
               onClick={() => setSelectedProvider("stream")}
               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
                 selectedProvider === "stream"
-                  ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                  ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/50"
                   : "bg-white/5 text-neutral-400 hover:text-white border border-white/5 hover:bg-white/10"
               }`}
             >
@@ -277,7 +277,7 @@ export default function NextUpView() {
                   onClick={() => setSelectedProvider(isSelected ? "all" : p.name)}
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
                     isSelected
-                      ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+                      ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/60"
                       : "bg-white/5 text-neutral-300 hover:text-white border border-white/10 hover:bg-white/10"
                   }`}
                 >

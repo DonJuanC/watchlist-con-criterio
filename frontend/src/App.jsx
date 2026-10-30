@@ -52,7 +52,7 @@ function GraphLoading({ label }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 px-6 py-24 text-neutral-400">
       <div className="relative flex items-center justify-center">
-        <div className="h-12 w-12 rounded-full border-2 border-cyan-400/20 border-t-cyan-400 animate-spin" />
+        <div className="h-12 w-12 rounded-full border-2 border-white/15 border-t-amber-400 animate-spin" />
       </div>
       <p className="font-serif text-sm text-neutral-300 tracking-wide">{label}</p>
     </div>
@@ -258,7 +258,7 @@ export default function App() {
 
               {isLoading && !graphReady && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 text-neutral-400">
-                  <div className="h-10 w-10 rounded-full border-2 border-cyan-400/20 border-t-cyan-400 animate-spin" />
+                  <div className="h-10 w-10 rounded-full border-2 border-white/15 border-t-amber-400 animate-spin" />
                   <p className="text-sm font-medium">Cargando el mapa…</p>
                 </div>
               )}
@@ -274,7 +274,7 @@ export default function App() {
                   <Suspense
                     fallback={
                       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 text-neutral-400">
-                        <div className="h-10 w-10 rounded-full border-2 border-cyan-400/20 border-t-cyan-400 animate-spin" />
+                        <div className="h-10 w-10 rounded-full border-2 border-white/15 border-t-amber-400 animate-spin" />
                         <p className="text-sm font-medium">Iniciando motor gráfico…</p>
                       </div>
                     }

@@ -12,8 +12,8 @@ import ShareMovieButton from "./ShareMovieButton";
 const RECOMMEND_CONFIG = {
   1: {
     label: "Imprescindible · La recomiendo sin dudarlo",
-    badgeClass: "bg-emerald-950/50 text-emerald-300 border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.2)]",
-    dotClass: "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]",
+    badgeClass: "bg-emerald-950/60 text-emerald-300 border-emerald-500/40",
+    dotClass: "bg-emerald-400",
   },
   0: {
     label: "Interesante · La recomiendo con reservas",
@@ -299,7 +299,7 @@ export default function MovieInfo({ movieId }) {
               onClick={() => setShowTrailer(true)}
               aria-label={`Ver tráiler oficial de ${movie.title}`}
               title="Ver tráiler oficial en YouTube"
-              className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-xs font-medium text-red-200 backdrop-blur-md transition-all hover:border-red-400/70 hover:bg-red-950/80 hover:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-xs font-medium text-red-200 backdrop-blur-md transition-all hover:border-red-400/70 hover:bg-red-950/80 hover:text-white active:scale-95"
             >
               <Play size={11} className="fill-red-400 text-red-400 shrink-0" />
               <span className="hidden sm:inline">Tráiler oficial</span>

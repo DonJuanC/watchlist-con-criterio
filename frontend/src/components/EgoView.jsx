@@ -71,23 +71,6 @@ export default function EgoView({ centerId, onSelect }) {
           className="pointer-events-none absolute inset-0 h-full w-full"
           aria-hidden="true"
         >
-          <defs>
-            <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
           {placed.map((p) => {
             const isHovered = hoveredNeighborId === p.node.id;
             const isAnyHovered = hoveredNeighborId !== null;

@@ -14,7 +14,7 @@ const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/";
  * @param {boolean} [props.isCenter=false]
  * @param {boolean} [props.selected=false]
  * @param {string} [props.className=""]
- * @param {string} [props.accentColor="cyan"] "cyan" | "emerald" | "amber"
+ * @param {string} [props.accentColor="neutral"] "neutral" | "amber" | "emerald"
  * @param {boolean} [props.showBadge=true]
  */
 export default function MoviePosterCard({
@@ -23,7 +23,7 @@ export default function MoviePosterCard({
   isCenter = false,
   selected = false,
   className = "",
-  accentColor = "cyan",
+  accentColor = "neutral",
   showBadge = true,
 }) {
   const [imageError, setImageError] = useState(false);
@@ -43,6 +43,11 @@ export default function MoviePosterCard({
   };
 
   const accentBorder = {
+    neutral: isCenter
+      ? "ring-1.5 ring-white/60 shadow-2xl shadow-black"
+      : selected
+        ? "ring-1.5 ring-white/60 shadow-xl"
+        : "border-white/10 group-hover:border-white/30 group-hover:shadow-xl shadow-black/50",
     cyan: isCenter
       ? "ring-1.5 ring-white/60 shadow-2xl shadow-black"
       : selected
@@ -105,7 +110,7 @@ export default function MoviePosterCard({
           <span
             className={`block h-2 w-2 rounded-full ${
               movie.recommend === 1
-                ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"
+                ? "bg-emerald-400"
                 : movie.recommend === 0
                   ? "bg-amber-400"
                   : "bg-red-400"

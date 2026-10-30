@@ -93,7 +93,7 @@ export default function WatchProviders({ tmdbId }) {
           <select
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className="rounded-md border border-white/10 bg-neutral-900 px-1.5 py-0.5 text-xs text-neutral-200 outline-none focus:border-cyan-400"
+            className="rounded-md border border-white/10 bg-neutral-900 px-1.5 py-0.5 text-xs text-neutral-200 outline-none focus:border-amber-400/60"
           >
             {options.map((c) => (
               <option key={c} value={c}>

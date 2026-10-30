@@ -9,9 +9,9 @@ import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import useCineStore, { useFilteredLinks } from '../store/useCineStore';
 
 const BASE_NODE_COLOR = '#8b8b8b';
-const MATCH_RING_COLOR = '#22d3ee'; // cyan brillante para nodos que matchean la búsqueda
-const DIRECTOR_LINK_COLOR = 'rgba(59, 130, 246, 0.55)'; // azul sólido — CINE-07
-const SEMANTIC_LINK_COLOR = 'rgba(34, 211, 238, 0.55)'; // cian punteado/brillante — CINE-07
+const MATCH_RING_COLOR = '#f59e0b'; // halo ámbar cálido para nodos que coinciden con la búsqueda
+const DIRECTOR_LINK_COLOR = 'rgba(245, 158, 11, 0.65)'; // filamento ámbar para mismo director
+const SEMANTIC_LINK_COLOR = 'rgba(255, 255, 255, 0.28)'; // filamento tenue de atmósfera compartida
 const DIMMED_ALPHA = 0.15;
 const FULL_ALPHA = 1.0;
 const CENTER_ZOOM = 4;

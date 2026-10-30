@@ -48,7 +48,7 @@ export default function ExternalView({ movie, onPick }) {
       aria-label={`Recomendaciones si te gustó ${movie.title}`}
     >
       <div className="mb-2">
-        <MoviePosterCard movie={movie} size="lg" accentColor="cyan" />
+        <MoviePosterCard movie={movie} size="lg" />
       </div>
 
       <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight text-white leading-tight mt-2">
@@ -104,17 +104,17 @@ export default function ExternalView({ movie, onPick }) {
                     <MoviePosterCard
                       movie={r.node}
                       size="md"
-                      accentColor={isDirector ? "amber" : "cyan"}
+                      accentColor={isDirector ? "amber" : "neutral"}
                     />
                   </div>
-                  <span className="mt-2.5 line-clamp-2 max-w-[120px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-cyan-300 transition-colors">
+                  <span className="mt-2.5 line-clamp-2 max-w-[120px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-white transition-colors">
                     {r.node.title}
                   </span>
                   <span
                     className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium leading-none border ${
                       isDirector
-                        ? "bg-blue-950/80 text-blue-300 border-blue-400/30"
-                        : "bg-cyan-950/80 text-cyan-300 border-cyan-400/30"
+                        ? "bg-amber-950/80 text-amber-300 border-amber-500/30"
+                        : "bg-neutral-900/90 text-neutral-300 border-white/15"
                     }`}
                   >
                     {isDirector ? <User size={9} /> : <Sparkles size={9} />}
