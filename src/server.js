@@ -7,6 +7,7 @@ const express = require("express");
 const cors = require("cors");
 
 const apiRouter = require("./routes/api");
+const { renderMoviePreview } = require("./controllers/shareController");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -54,6 +55,9 @@ app.use(express.json());
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
+
+// Enlace corto y dinámico para compartir con metatags Open Graph (WhatsApp, Telegram, etc.)
+app.get("/m/:id", renderMoviePreview);
 
 app.use("/api", apiRouter);
 

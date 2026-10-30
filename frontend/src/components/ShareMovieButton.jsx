@@ -21,7 +21,12 @@ export default function ShareMovieButton({
   const handleShare = async (e) => {
     e.stopPropagation();
     const origin = window.location.origin;
-    const shareUrl = `${origin}${window.location.pathname}#/movie/${movie.id}`;
+    const apiBase = import.meta.env.VITE_API_BASE_URL;
+    // En producción se comparte la ruta corta con metadatos Open Graph enriquecidos
+    const shareUrl =
+      apiBase && !apiBase.includes("localhost")
+        ? `${apiBase}/m/${movie.id}`
+        : `${origin}${window.location.pathname}#/movie/${movie.id}`;
 
     // Web Share API nativa si el dispositivo la soporta (móviles/tablets)
     if (
