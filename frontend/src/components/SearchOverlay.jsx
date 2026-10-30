@@ -85,7 +85,7 @@ export default function SearchOverlay() {
     const hasActiveSearch = matchedMovieIds.size > 0 || searchQuery;
 
     return (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-20 w-full max-w-xl px-4">
+        <div className="fixed top-16 sm:top-18 left-1/2 -translate-x-1/2 z-20 w-full max-w-xl px-4">
             <form
                 onSubmit={handleSubmit}
                 className="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-900/90 px-4 py-3 shadow-2xl backdrop-blur"

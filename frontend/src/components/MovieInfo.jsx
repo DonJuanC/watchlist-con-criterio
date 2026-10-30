@@ -3,7 +3,8 @@
 // Bloque "Mi Criterio" con jerarquía de reseña de autor, notas de crítica
 // estilizadas (OMDb) y enlaces de streaming por país (JustWatch).
 
-import { Star, Compass, Award, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Star, Compass, Award, ExternalLink, Play, X } from "lucide-react";
 import useMovieDetail from "../hooks/useMovieDetail";
 import WatchProviders from "./WatchProviders";
 import ShareMovieButton from "./ShareMovieButton";
@@ -144,6 +145,77 @@ function MyCriteria({ rating, recommend, review }) {
   );
 }
 
+function TrailerModal({ trailer, movieTitle, onClose }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  if (!trailer?.key) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Tráiler oficial de ${movieTitle}`}
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-xl animate-in fade-in duration-200"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-neutral-950 shadow-[0_0_50px_rgba(0,0,0,0.9)]"
+      >
+        {/* Cabecera del reproductor */}
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 bg-neutral-900/70">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="inline-flex items-center gap-1 rounded bg-red-950/80 border border-red-500/40 px-2 py-0.5 text-[10px] font-semibold text-red-300 uppercase tracking-wider">
+              Oficial
+            </span>
+            <span className="truncate text-xs sm:text-sm font-medium text-white">
+              {movieTitle} — {trailer.name || "Tráiler Oficial"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href={`https://www.youtube.com/watch?v=${trailer.key}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white transition-colors"
+              title="Abrir directamente en YouTube"
+            >
+              <span>YouTube</span>
+              <ExternalLink size={11} />
+            </a>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar reproductor"
+              className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors ml-1"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Reproductor de YouTube embebido con modo sin cookies */}
+        <div className="relative aspect-video w-full bg-black">
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&rel=0&modestbranding=1`}
+            title={`Tráiler oficial de ${movieTitle}`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full border-0"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TmdbAttribution() {
   return (
     <p className="border-t border-white/10 pt-3 text-[11px] leading-snug text-neutral-500">
@@ -166,6 +238,7 @@ function TmdbAttribution() {
  */
 export default function MovieInfo({ movieId }) {
   const { data: movie, loading, error } = useMovieDetail(movieId);
+  const [showTrailer, setShowTrailer] = useState(false);
 
   if (loading) {
     return (
@@ -219,7 +292,22 @@ export default function MovieInfo({ movieId }) {
           )}
         </div>
 
-        <ShareMovieButton movie={movie} />
+        <div className="flex items-center gap-2 shrink-0">
+          {movie.trailer?.key && (
+            <button
+              type="button"
+              onClick={() => setShowTrailer(true)}
+              aria-label={`Ver tráiler oficial de ${movie.title}`}
+              title="Ver tráiler oficial en YouTube"
+              className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-xs font-medium text-red-200 backdrop-blur-md transition-all hover:border-red-400/70 hover:bg-red-950/80 hover:text-white hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] active:scale-95"
+            >
+              <Play size={11} className="fill-red-400 text-red-400 shrink-0" />
+              <span className="hidden sm:inline">Tráiler oficial</span>
+              <span className="sm:hidden">Tráiler</span>
+            </button>
+          )}
+          <ShareMovieButton movie={movie} />
+        </div>
       </div>
 
       {Array.isArray(movie.genres) && movie.genres.length > 0 && (
@@ -260,6 +348,15 @@ export default function MovieInfo({ movieId }) {
       <WatchProviders tmdbId={movie.tmdb_id} />
 
       <TmdbAttribution />
+
+      {/* Modal Cinematográfico de Tráiler Oficial */}
+      {showTrailer && movie.trailer && (
+        <TrailerModal
+          trailer={movie.trailer}
+          movieTitle={movie.title}
+          onClose={() => setShowTrailer(false)}
+        />
+      )}
     </div>
   );
 }

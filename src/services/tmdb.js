@@ -186,10 +186,62 @@ async function getWatchProviders(tmdbId) {
   return data.results || {};
 }
 
+/**
+ * Tráiler oficial en YouTube desde TMDB.
+ * Filtra ESTRICTAMENTE por official === true, site === "YouTube" y type === "Trailer".
+ * @param {number} tmdbId
+ * @returns {Promise<{ key: string, name: string, site: string, lang: string } | null>}
+ */
+async function getOfficialTrailer(tmdbId) {
+  if (!tmdbId) return null;
+  const url = `${TMDB_BASE_URL}/movie/${tmdbId}/videos?api_key=${API_KEY}&include_video_language=es,en,null`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const results = data.results || [];
+
+    // Filtro estricto: SIEMPRE oficial, en YouTube y de tipo Trailer
+    const officialTrailers = results.filter(
+      (v) =>
+        v.site === "YouTube" &&
+        v.official === true &&
+        v.type === "Trailer" &&
+        v.key,
+    );
+    if (!officialTrailers.length) return null;
+
+    // Priorizar tráiler principal y versión oficial en español si existe
+    const score = (v) => {
+      let s = 0;
+      const name = (v.name || "").toLowerCase();
+      if (/official (main )?trailer|tráiler oficial|trailer oficial/i.test(name)) s += 30;
+      if (/final trailer/i.test(name)) s += 25;
+      if (/official us trailer|official trailer/i.test(name)) s += 20;
+      if (v.iso_639_1 === "es") s += 15;
+      if (/b&w|black & white|anniversary|re-release/i.test(name)) s -= 20;
+      if (v.size >= 1080) s += 5;
+      return s;
+    };
+
+    const best = officialTrailers.sort((a, b) => score(b) - score(a))[0];
+    return {
+      key: best.key,
+      name: best.name,
+      site: best.site,
+      lang: best.iso_639_1,
+    };
+  } catch (err) {
+    console.warn(`[getOfficialTrailer] Falló para tmdb_id=${tmdbId}:`, err.message);
+    return null;
+  }
+}
+
 module.exports = {
   searchMovie,
   getMovieDetails,
   searchMovies,
   getMovieForEmbedding,
   getWatchProviders,
+  getOfficialTrailer,
 };

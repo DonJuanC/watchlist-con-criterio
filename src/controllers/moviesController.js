@@ -3,10 +3,14 @@
 // sigue liviano (no carga 295 sinopsis de golpe).
 
 const { query } = require("../db");
-const { searchMovies } = require("../services/tmdb");
+const { searchMovies, getOfficialTrailer } = require("../services/tmdb");
+
+const trailerCache = new Map(); // tmdb_id -> trailer | null
+
 /**
  * GET /api/movies/:id
- * Devuelve la ficha de una película del catálogo, incluido el criterio personal.
+ * Devuelve la ficha de una película del catálogo, incluido el criterio personal
+ * y el tráiler oficial verificado de YouTube.
  */
 async function getMovieById(req, res) {
   const id = Number(req.params.id);
@@ -29,11 +33,27 @@ async function getMovieById(req, res) {
     if (rows.length === 0) {
       return res.status(404).json({ error: "Película no encontrada." });
     }
+
+    const movie = rows[0];
+
+    // Adjuntar tráiler oficial verificado de YouTube (con caché en memoria)
+    if (movie.tmdb_id) {
+      if (trailerCache.has(movie.tmdb_id)) {
+        movie.trailer = trailerCache.get(movie.tmdb_id);
+      } else {
+        const trailer = await getOfficialTrailer(movie.tmdb_id);
+        trailerCache.set(movie.tmdb_id, trailer);
+        movie.trailer = trailer;
+      }
+    } else {
+      movie.trailer = null;
+    }
+
     res.setHeader(
       "Cache-Control",
       "public, max-age=3600, stale-while-revalidate=86400",
     );
-    return res.status(200).json(rows[0]);
+    return res.status(200).json(movie);
   } catch (err) {
     console.error("❌ Error en getMovieById:", err.message);
     return res.status(500).json({ error: "Error al obtener la película." });
