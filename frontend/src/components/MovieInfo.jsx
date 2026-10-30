@@ -6,6 +6,7 @@
 import { Star, Compass, Award, ExternalLink } from "lucide-react";
 import useMovieDetail from "../hooks/useMovieDetail";
 import WatchProviders from "./WatchProviders";
+import ShareMovieButton from "./ShareMovieButton";
 
 const RECOMMEND_CONFIG = {
   1: {
@@ -193,28 +194,32 @@ export default function MovieInfo({ movieId }) {
 
   return (
     <div className="space-y-4 text-left">
-      <div>
-        <h3 className="font-serif text-2xl font-bold tracking-tight text-white leading-tight">
-          {movie.title}
-        </h3>
-        {subtitle && (
-          <p className="mt-0.5 text-xs text-neutral-400 italic font-serif">
-            {subtitle}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h3 className="font-serif text-2xl font-bold tracking-tight text-white leading-tight">
+            {movie.title}
+          </h3>
+          {subtitle && (
+            <p className="mt-0.5 text-xs text-neutral-400 italic font-serif">
+              {subtitle}
+            </p>
+          )}
+          <p className="mt-1.5 text-xs sm:text-sm font-medium text-neutral-300">
+            {[
+              movie.release_year,
+              movie.director && `Dir. ${movie.director}`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
-        )}
-        <p className="mt-1.5 text-xs sm:text-sm font-medium text-neutral-300">
-          {[
-            movie.release_year,
-            movie.director && `Dir. ${movie.director}`,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-        {movie.cinematographer && (
-          <p className="mt-0.5 text-xs text-neutral-400">
-            Fotografía: {movie.cinematographer}
-          </p>
-        )}
+          {movie.cinematographer && (
+            <p className="mt-0.5 text-xs text-neutral-400">
+              Fotografía: {movie.cinematographer}
+            </p>
+          )}
+        </div>
+
+        <ShareMovieButton movie={movie} />
       </div>
 
       {Array.isArray(movie.genres) && movie.genres.length > 0 && (

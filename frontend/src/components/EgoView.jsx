@@ -9,6 +9,7 @@ import { useEgoGraph } from "../store/useCineStore";
 import MovieInfo from "./MovieInfo";
 import useNeighbors from "../hooks/useNeighbors";
 import MoviePosterCard from "./MoviePosterCard";
+import ShareMovieButton from "./ShareMovieButton";
 
 const RING_RADIUS = 38; // % del radio orbital
 const NO_NEIGHBORS = []; // referencia estable
@@ -207,21 +208,25 @@ export default function EgoView({ centerId, onSelect }) {
         </p>
       )}
 
-      {/* Botón de ficha completa */}
-      <button
-        type="button"
-        onClick={() => setShowInfo((v) => !v)}
-        aria-expanded={showInfo}
-        aria-controls="ego-movie-info"
-        className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-xs font-medium text-neutral-200 backdrop-blur-md transition-all duration-200 hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
-      >
-        <Info size={14} className="text-cyan-400" />
-        Sobre esta película
-        <ChevronDown
-          size={14}
-          className={`transition-transform duration-300 ${showInfo ? "rotate-180" : ""}`}
-        />
-      </button>
+      {/* Botones de acción central */}
+      <div className="mt-5 flex items-center justify-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => setShowInfo((v) => !v)}
+          aria-expanded={showInfo}
+          aria-controls="ego-movie-info"
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 sm:px-5 py-2 text-xs font-medium text-neutral-200 backdrop-blur-md transition-all duration-200 hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
+        >
+          <Info size={14} className="text-cyan-400" />
+          Sobre esta película
+          <ChevronDown
+            size={14}
+            className={`transition-transform duration-300 ${showInfo ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        <ShareMovieButton movie={center} />
+      </div>
 
       {/* Ficha técnica y Criterio personal */}
       {showInfo && (
