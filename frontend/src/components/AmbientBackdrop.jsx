@@ -1,6 +1,4 @@
-// src/components/AmbientBackdrop.jsx
-// Fondo ambiental dinámico de sala de cine: iluminación OLED que florece
-// con la paleta de la película activa o focos teatrales sutiles en la pantalla inicial.
+import { useEffect, useState } from "react";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w780";
 
@@ -10,6 +8,31 @@ const POSTER_BASE = "https://image.tmdb.org/t/p/w780";
  * @param {string} [props.className=""]
  */
 export default function AmbientBackdrop({ posterPath, className = "" }) {
+  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
+
+  useEffect(() => {
+    let frameId = null;
+    let targetX = -1000;
+    let targetY = -1000;
+
+    const handleMouseMove = (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+      if (!frameId) {
+        frameId = requestAnimationFrame(() => {
+          setMousePos({ x: targetX, y: targetY });
+          frameId = null;
+        });
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, []);
+
   return (
     <div
       aria-hidden="true"
@@ -30,13 +53,22 @@ export default function AmbientBackdrop({ posterPath, className = "" }) {
         </>
       ) : (
         <>
-          {/* Atmósfera de sala de proyección: oscuridad sobria con foco sutil de luz cálida de proyector */}
-          <div className="absolute -top-40 left-1/2 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-gradient-to-b from-amber-500/[0.04] via-amber-900/[0.02] to-transparent blur-[140px]" />
+          {/* Atmósfera de sala de proyección: foco de proyector con respiración sutil */}
+          <div className="absolute -top-40 left-1/2 h-[650px] w-[850px] rounded-full bg-gradient-to-b from-amber-500/[0.045] via-amber-900/[0.02] to-transparent blur-[140px] animate-projector-beam" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neutral-950/80 to-neutral-950" />
         </>
       )}
 
-      {/* Viñeta sutil de bordes estilo pantalla de proyección */}
+      {/* Haz de luz de sala interactivo que acompaña suavemente al cursor */}
+      <div
+        className="absolute inset-0 transition-opacity duration-700 ease-out"
+        style={{
+          opacity: mousePos.x > 0 ? 1 : 0,
+          background: `radial-gradient(650px circle at ${mousePos.x}px ${mousePos.y}px, rgba(245, 158, 11, 0.038), transparent 70%)`,
+        }}
+      />
+
+      {/* Viñeta sutil de bordes estilo sala de cine */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_30%,_rgba(0,0,0,0.65)_100%)]" />
     </div>
   );

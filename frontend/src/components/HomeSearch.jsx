@@ -328,21 +328,21 @@ export default function HomeSearch({
 
           {/* Guía en 3 Pasos de Navegación Clara */}
           <div className="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-left text-xs">
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 backdrop-blur-sm">
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 backdrop-blur-sm transition-all duration-300 hover:border-white/25 hover:bg-white/[0.04] hover:-translate-y-0.5">
               <span className="block font-mono text-[10px] text-neutral-500 uppercase">Paso 1</span>
               <span className="font-medium text-neutral-200">Elige una obra o sensación</span>
               <span className="block text-[11px] text-neutral-400 mt-0.5">
                 En el buscador, en los ciclos o en la obra en foco.
               </span>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 backdrop-blur-sm">
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 backdrop-blur-sm transition-all duration-300 hover:border-white/25 hover:bg-white/[0.04] hover:-translate-y-0.5">
               <span className="block font-mono text-[10px] text-neutral-500 uppercase">Paso 2</span>
               <span className="font-medium text-neutral-200">Despliega sus 6 conexiones</span>
               <span className="block text-[11px] text-neutral-400 mt-0.5">
                 Afinidad temática, estética y directores compartidos.
               </span>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 backdrop-blur-sm">
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 backdrop-blur-sm transition-all duration-300 hover:border-white/25 hover:bg-white/[0.04] hover:-translate-y-0.5">
               <span className="block font-mono text-[10px] text-neutral-500 uppercase">Paso 3</span>
               <span className="font-medium text-neutral-200">Lee mi criterio y dónde verla</span>
               <span className="block text-[11px] text-neutral-400 mt-0.5">
@@ -545,7 +545,10 @@ export default function HomeSearch({
           className="mt-12 w-full text-left rounded-3xl border border-white/15 bg-neutral-900/60 backdrop-blur-xl p-5 sm:p-7 shadow-2xl transition-all"
           aria-label="Obra en foco del archivo"
         >
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <div
+            key={currentSpotlight.id}
+            className="flex flex-col sm:flex-row items-center sm:items-start gap-6 animate-view-enter"
+          >
             {/* Afiche en proporción 2:3 */}
             <div className="shrink-0 transition-transform duration-300 hover:scale-102">
               <MoviePosterCard movie={currentSpotlight} size="lg" />

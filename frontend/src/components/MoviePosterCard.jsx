@@ -95,6 +95,9 @@ export default function MoviePosterCard({
       {/* Gradiente sutil inferior para legibilidad y elegancia */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent" />
 
+      {/* Reflejo especular táctil estilo cristal fotográfico al pasar el cursor */}
+      <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-tr from-transparent via-white/[0.035] to-amber-400/[0.05]" />
+
       {/* Badge de recomendación personal (🟢/🟡/🔴) o calificación */}
       {showBadge && movie?.recommend != null && (
         <div

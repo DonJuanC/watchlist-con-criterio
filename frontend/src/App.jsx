@@ -203,7 +203,7 @@ export default function App() {
       {/* Contenedor principal de vistas */}
       <main className="relative flex-1 overflow-hidden">
         {/* Inicio: siempre montado */}
-        <div className={view === "home" ? "h-full overflow-y-auto" : "hidden"}>
+        <div className={view === "home" ? "h-full overflow-y-auto animate-view-enter" : "hidden"}>
           <HomeSearch
             key={homeKey}
             onPick={handlePick}
@@ -214,7 +214,7 @@ export default function App() {
         </div>
 
         {view === "external" && externalMovie && (
-          <div className="h-full overflow-y-auto pt-2">
+          <div className="h-full overflow-y-auto pt-2 animate-view-enter">
             <nav className="mx-auto flex w-full max-w-xl items-center px-4 pt-2">
               <button
                 type="button"
@@ -230,13 +230,13 @@ export default function App() {
         )}
 
         {view === "next" && (
-          <div className="h-full overflow-y-auto pt-2">
+          <div className="h-full overflow-y-auto pt-2 animate-view-enter">
             <NextUpView />
           </div>
         )}
 
         {view === "ego" && (
-          <div className="h-full overflow-y-auto pt-2">
+          <div className="h-full overflow-y-auto pt-2 animate-view-enter">
             {graphReady && <EgoView centerId={centerId} onSelect={handlePick} />}
             {!graphReady && graphError && !isLoading && (
               <GraphError message={graphError} />
@@ -248,7 +248,7 @@ export default function App() {
         )}
 
         {view === "map" && (
-          <div className="absolute inset-0 flex flex-col">
+          <div className="absolute inset-0 flex flex-col animate-view-enter">
             <div
               className="relative flex-1 overflow-hidden"
               style={{ transform: "translateZ(0)" }}
