@@ -7,7 +7,7 @@
 
 const { query } = require("../db");
 const { getMovieForEmbedding } = require("../services/tmdb");
-const { generateEmbedding } = require("../services/embeddings");
+const { generateEmbedding, buildMovieSemanticText } = require("../services/embeddings");
 const { pickNeighbors } = require("../services/neighborRanking");
 
 const LIMIT = 6;
@@ -30,8 +30,13 @@ async function getExternalEmbedding(tmdbId) {
   const d = await getMovieForEmbedding(tmdbId);
   if (!d.overview) return null; // sin sinopsis no hay con qué comparar
 
-  // Mismo texto que scripts/sync-notion.js, para que los embeddings sean comparables.
-  const semanticText = `${d.title_es}. Géneros: ${d.genres.join(", ")}. Sinopsis: ${d.overview}`;
+  // Mismo formato enriquecido que scripts/sync-notion.js, para que los embeddings sean comparables.
+  const semanticText = buildMovieSemanticText({
+    title: d.title_es || d.display_title,
+    director: d.director,
+    genres: d.genres,
+    overview: d.overview,
+  });
   const embedding = `[${(await generateEmbedding(semanticText)).join(",")}]`;
 
   const movie = {

@@ -44,7 +44,48 @@ async function generateEmbedding(text) {
     return values;
 }
 
+/**
+ * Construye el texto semántico enriquecido para calcular el embedding de una película.
+ * Combina título, director, géneros, sinopsis y el criterio/reseña personal de Notion.
+ *
+ * @param {object} params
+ * @param {string} params.title
+ * @param {string|null} [params.director]
+ * @param {string[]} [params.genres=[]]
+ * @param {string} [params.overview=""]
+ * @param {string|null} [params.review=null] Reseña personal o notas de criterio propio
+ * @returns {string}
+ */
+function buildMovieSemanticText({ title, director, genres = [], overview = "", review = null }) {
+    const parts = [];
+
+    const mainTitle = (title || "").trim();
+    if (mainTitle) parts.push(`Título: ${mainTitle}`);
+
+    const dir = (director || "").trim();
+    if (dir) parts.push(`Director: ${dir}`);
+
+    if (Array.isArray(genres) && genres.length > 0) {
+        const cleanGenres = genres.filter(Boolean).map((g) => g.trim()).filter(Boolean);
+        if (cleanGenres.length > 0) {
+            parts.push(`Géneros: ${cleanGenres.join(", ")}`);
+        }
+    }
+
+    const syn = (overview || "").trim();
+    if (syn) parts.push(`Sinopsis: ${syn}`);
+
+    const rev = (review || "").trim();
+    if (rev) parts.push(`Criterio y reseña personal: ${rev}`);
+
+    return parts.join(". ");
+}
+
 // Alias: el handoff de CINE-03 (búsqueda semántica) referencia esta función como
 // `generateMovieEmbedding`. Se expone como alias para no duplicar lógica ni romper
 // los imports existentes de scripts/seed.js (que usa `generateEmbedding`).
-module.exports = { generateEmbedding, generateMovieEmbedding: generateEmbedding };
+module.exports = {
+    generateEmbedding,
+    generateMovieEmbedding: generateEmbedding,
+    buildMovieSemanticText,
+};

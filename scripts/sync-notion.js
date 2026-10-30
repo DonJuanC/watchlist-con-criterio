@@ -1,13 +1,14 @@
 // scripts/sync-notion.js
 // CINE-10a: sincroniza el catálogo desde Notion ("🎬 Películas & Series") hacia Neon.
-//   node scripts/sync-notion.js             → sincroniza lo nuevo/editado
+//   node scripts/sync-notion.js             → sincroniza lo nuevo/editado (detecta cambios en reseña)
 //   node scripts/sync-notion.js --dry-run   → solo muestra qué haría, sin escribir
 //   node scripts/sync-notion.js --prune     → además borra de Neon lo que no está en Notion
 //   node scripts/sync-notion.js --limit 5   → procesa solo N filas (para probar)
+//   node scripts/sync-notion.js --reembed   → regenera embeddings con criterio enriquecido (director + reseña)
 
 require("dotenv").config();
 const { query, pool } = require("../src/db");
-const { generateEmbedding } = require("../src/services/embeddings");
+const { generateEmbedding, buildMovieSemanticText } = require("../src/services/embeddings");
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const DATA_SOURCE_ID = process.env.NOTION_DATA_SOURCE_ID;
@@ -18,6 +19,7 @@ if (!NOTION_TOKEN || !DATA_SOURCE_ID)
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes("--dry-run");
 const PRUNE = args.includes("--prune");
+const REEMBED = args.includes("--reembed") || args.includes("--force-emb");
 const LIMIT = args.includes("--limit")
   ? Number(args[args.indexOf("--limit") + 1])
   : Infinity;
@@ -225,7 +227,7 @@ async function main() {
   const pages = await fetchAllRows();
   const rows = pages.map(parseRow).filter((r) => MOVIE_TYPES.has(r.type));
   const { rows: existing } = await query(
-    "SELECT tmdb_id, notion_page_id, notion_edited_at, embedding IS NOT NULL AS has_emb FROM movies",
+    "SELECT tmdb_id, notion_page_id, notion_edited_at, review, embedding IS NOT NULL AS has_emb FROM movies",
   );
   const byPage = new Map(
     existing.filter((e) => e.notion_page_id).map((e) => [e.notion_page_id, e]),
@@ -254,10 +256,16 @@ async function main() {
     keepPageIds.add(row.pageId);
 
     const prev = byPage.get(row.pageId);
+    const reviewChanged =
+      Boolean(prev) &&
+      (row.review || "").trim() !== (prev.review || "").trim();
+
     if (
+      !REEMBED &&
       prev &&
       row.tmdbId === prev.tmdb_id &&
-      new Date(row.editedAt) <= new Date(prev.notion_edited_at)
+      new Date(row.editedAt) <= new Date(prev.notion_edited_at) &&
+      !reviewChanged
     ) {
       stats.skipped++;
       continue;
@@ -284,8 +292,8 @@ async function main() {
       if (match === "Revisar") stats.review++;
 
       const movie = await getDetails(tmdbId);
-      const needsEmbedding = !embedded.has(tmdbId);
-      const label = `${row.title} → ${movie.display_title} [${tmdbId}] ${row.status}${needsEmbedding ? " +emb" : ""}`;
+      const needsEmbedding = !embedded.has(tmdbId) || REEMBED || reviewChanged;
+      const label = `${row.title} → ${movie.display_title} [${tmdbId}] ${row.status}${needsEmbedding ? " +emb" : ""}${reviewChanged ? " (reseña actualizada)" : ""}`;
 
       if (DRY_RUN) {
         console.log(`· ${label}`);
@@ -295,7 +303,13 @@ async function main() {
 
       let embedding = null;
       if (needsEmbedding) {
-        const semanticText = `${movie.title_es}. Géneros: ${movie.genres.join(", ")}. Sinopsis: ${movie.overview}`;
+        const semanticText = buildMovieSemanticText({
+          title: movie.title_es || movie.display_title,
+          director: movie.director,
+          genres: movie.genres,
+          overview: movie.overview,
+          review: row.review,
+        });
         embedding = await generateEmbedding(semanticText);
         stats.embedded++;
         await sleep(EMBED_DELAY_MS);

@@ -54,10 +54,11 @@ superficial — y lo hace sobre un catálogo con criterio propio, no sobre un to
    calificación ⭐1-5, ¿recomendarías? 🟢🟡🔴 y reseña personal.
 2. **Sync** (`scripts/sync-notion.js`): lee la base por la API de Notion, resuelve el TMDB ID
    (título + año ±1, o el que se fije a mano en Notion), trae detalle en español + título en
-   inglés en una sola llamada a TMDB, genera el embedding solo si la película es nueva y hace
-   UPSERT en Neon. Escribe de vuelta en Notion el TMDB ID, el estado del match y el título que
+   inglés en una sola llamada a TMDB, genera el embedding semántico enriquecido (título, director,
+   géneros, sinopsis y la reseña personal de Notion) si la película es nueva o si la reseña fue
+   editada, y hace UPSERT en Neon. Escribe de vuelta en Notion el TMDB ID, el estado del match y el título que
    mostrará la app. Es incremental (salta filas sin cambios) y `--prune` elimina de Neon lo que
-   ya no está en Notion.
+   ya no está en Notion. Soporta `--reembed` para regenerar con el formato enriquecido.
 3. **Almacenamiento** (`schema.sql`, `migrations/`): PostgreSQL en Neon con `pgvector`,
    columna `embedding vector(768)` (`gemini-embedding-001`, truncado de 3072 a 768) e índice
    HNSW (`vector_cosine_ops`).
@@ -132,7 +133,7 @@ original para marcar el match como OK, y deja el resto en "Revisar" para decidir
 
 - **Criterio en las vecinas (Implementado):** El ranking de afinidad prioriza las películas recomendadas e ignora las calificadas negativamente.
 - **Cold start mitigado:** Mitigado activamente mediante un cron job periódico en GitHub Actions (`.github/workflows/warmup.yml`) que mantiene despierto el servidor en horarios activos, sumado a una caché en memoria de 1 hora en la API.
-- **Afinidad basada en texto:** Los embeddings se calculan sobre título, géneros y sinopsis de TMDB. Incorporar el director y la reseña personal de Notion en el vector es el siguiente paso.
+- **Embeddings enriquecidos con criterio (Implementado):** Los vectores semánticos de 768 dimensiones incorporan el director y la reseña personal de Notion además de la metadata de TMDB.
 - **Solo películas:** Las series del registro de Notion no entran todavía.
 
 ## Correr en local
