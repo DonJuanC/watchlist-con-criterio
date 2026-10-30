@@ -35,7 +35,7 @@ async function getNextUp(req, res) {
          FROM movies p CROSS JOIN anchors a
          WHERE p.status = 'pending' AND p.embedding IS NOT NULL
        )
-       SELECT m.id, m.title, m.release_year, m.poster_path, m.director,
+       SELECT m.id, m.tmdb_id, m.title, m.release_year, m.poster_path, m.director,
               m.genres[1] AS main_genre,
               AVG(pr.sim) FILTER (WHERE pr.rk <= $1) AS score,
               json_agg(json_build_object('id', pr.anchor_id, 'title', pr.anchor_title)
