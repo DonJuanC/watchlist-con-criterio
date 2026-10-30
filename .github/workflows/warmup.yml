@@ -1,0 +1,15 @@
+name: Keep-Alive Ping (Render Free Tier)
+
+on:
+  schedule:
+    # Corre cada 14 minutos entre las 12:00 UTC y las 03:00 UTC (7:00 AM a 10:00 PM hora Colombia UTC-5)
+    - cron: "*/14 12-23,0-3 * * *"
+  workflow_dispatch: # Permite dispararlo manualmente desde GitHub Actions si se desea
+
+jobs:
+  warmup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Health Check
+        run: |
+          curl -s -f -m 30 "https://watchlist-api-jy0u.onrender.com/health" || echo "Warmup ping falló o está despertando"

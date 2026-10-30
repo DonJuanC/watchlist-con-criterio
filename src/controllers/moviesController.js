@@ -29,6 +29,10 @@ async function getMovieById(req, res) {
     if (rows.length === 0) {
       return res.status(404).json({ error: "Película no encontrada." });
     }
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=3600, stale-while-revalidate=86400",
+    );
     return res.status(200).json(rows[0]);
   } catch (err) {
     console.error("❌ Error en getMovieById:", err.message);

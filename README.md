@@ -16,26 +16,21 @@ calificación, recomendación y reseña), sincronizado a la base de datos con un
 
 ## Cómo se usa
 
-**1. Inicio — busca una película o una sensación.** La barra sugiere títulos del catálogo
-mientras escribes; si lo que escribes no es un título, Enter lanza una búsqueda semántica por
-sensación. También hay temas sugeridos y un botón «Sorpréndeme».
+**1. Inicio — busca una película, una sensación o explora el escaparate.** La barra sugiere títulos del catálogo mientras escribes; si lo que escribes no es un título, Enter lanza una búsqueda semántica por sensación. También incluye chips temáticos, el botón «Sorpréndeme», accesos a «¿Qué veo hoy?» y un escaparate curado de 6 obras destacadas del catálogo con sus afiches oficiales para empezar a navegar de inmediato.
 
 ![Inicio con sugerencias de título en vivo](docs/01-home.png)
 
-**2. Una película y sus vecinas.** La película elegida va al centro, con hasta 6 películas
-conectadas y la razón de cada conexión («Mismo director» o «Se siente parecida»). Tocar
-cualquiera la convierte en el nuevo centro.
+**2. Una película y sus vecinas.** La película elegida va al centro, con hasta 6 películas conectadas y la razón de cada conexión («Mismo director» o «Se siente parecida»). Tocar cualquiera la convierte en el nuevo centro, con iluminación ambiental adaptativa según el póster. La URL se sincroniza automáticamente (`#/movie/:id`), permitiendo compartir el enlace o usar los botones Atrás/Adelante del navegador.
 
 ![Vista de una película con sus 6 vecinas](docs/02-ego.png)
 
-**3. La ficha.** Tocando el póster del centro o «Sobre esta película» se abre la ficha:
-sinopsis, director, fotografía, géneros y el bloque **Mi criterio** (calificación,
-recomendación y reseña, cuando las hay).
+**3. La ficha editorial.** Tocando el póster del centro o «Sobre esta película» se abre la ficha: sinopsis, director, fotografía, géneros, calificaciones de crítica (RT, IMDb, Metascore), enlaces directos de streaming por país (JustWatch) y el bloque **Mi criterio** (calificación, recomendación y reseña personal).
 
 ![Ficha de la película con el bloque Mi criterio](docs/03-ficha.png)
 
-**4. Mapa completo (opcional).** El grafo entero, con controles de afinidad mínima y tipo de
-conexión. Al seleccionar un nodo se abre la misma ficha.
+**4. Barra de navegación y reset.** En todo momento se dispone de una barra superior translúcida con acceso rápido a *Explorar*, *¿Qué veo hoy?*, *Mapa completo* y el botón **«Empezar de nuevo»** para limpiar el estado y volver a la portada limpia desde cualquier pantalla.
+
+**5. Mapa completo (opcional).** El grafo entero, cargado de forma diferida (*lazy loading*), con controles de afinidad mínima y tipo de conexión. Al seleccionar un nodo se abre la misma ficha.
 
 ![Mapa completo del grafo](docs/04-map.png)
 
@@ -133,37 +128,39 @@ original para marcar el match como OK, y deja el resto en "Revisar" para decidir
 - **728** aristas: 302 por mismo director y 426 por afinidad semántica (top-2, piso 0.65).
 - **0** películas sin conexión.
 
-## Limitaciones conocidas
+## Limitaciones conocidas y Estado
 
-- **Catálogo cerrado.** Solo se pueden explorar las películas del catálogo; comparar cualquier
-  película de TMDB contra él es la siguiente fase.
-- **El criterio todavía no pesa en las vecinas.** La ficha muestra calificación y
-  recomendación, pero el cálculo de vecinas aún no las usa (🔴 debería excluirse, 🟢 subir).
-- **Cold start.** La primera carga tras inactividad tarda 30-60 s (mitigado con el banner, no
-  eliminado).
-- **Afinidad basada en texto.** Los embeddings se calculan sobre título, géneros y sinopsis de
-  TMDB: la "sensación" que capturan es la del texto, no la de la imagen, el ritmo o el sonido.
-- **Solo películas.** Las series del registro de Notion no entran todavía.
+- **Criterio en las vecinas (Implementado):** El ranking de afinidad prioriza las películas recomendadas e ignora las calificadas negativamente.
+- **Cold start mitigado:** Mitigado activamente mediante un cron job periódico en GitHub Actions (`.github/workflows/warmup.yml`) que mantiene despierto el servidor en horarios activos, sumado a una caché en memoria de 1 hora en la API.
+- **Afinidad basada en texto:** Los embeddings se calculan sobre título, géneros y sinopsis de TMDB. Incorporar el director y la reseña personal de Notion en el vector es el siguiente paso.
+- **Solo películas:** Las series del registro de Notion no entran todavía.
 
 ## Correr en local
 
 ```bash
-# Backend
+# 1. Clonar el repositorio
 git clone https://github.com/DonJuanC/watchlist-con-criterio.git
 cd watchlist-con-criterio
-cp .env.example .env    # DATABASE_URL, TMDB_API_KEY, GEMINI_API_KEY, NOTION_TOKEN, NOTION_DATA_SOURCE_ID
-npm install
-npm run test:db         # valida la conexión a Neon
-npm run sync -- --dry-run   # muestra qué haría el sync, sin escribir
-npm run sync            # sincroniza Notion → Neon (agrega --prune para borrar lo que ya no está)
-npm run dev             # API en :4000
 
-# Frontend (otra terminal)
-cd frontend
-cp .env.example .env    # VITE_API_BASE_URL=http://localhost:4000
+# 2. Configurar variables de entorno (.env)
+cp .env.example .env    # DATABASE_URL, TMDB_API_KEY, GEMINI_API_KEY, NOTION_TOKEN, NOTION_DATA_SOURCE_ID
+cp frontend/.env.example frontend/.env  # VITE_API_BASE_URL=http://localhost:4000
+
+# 3. Instalar dependencias (raíz y frontend)
 npm install
-npm run dev             # Vite en :5173
+npm --prefix frontend install
+
+# 4. Validar conexión y sincronizar catálogo si es necesario
+npm run test:db         # valida la conexión a Neon
+npm run sync            # sincroniza Notion → Neon (opcional: --dry-run)
+
+# 5. Iniciar Backend y Frontend concurrentemente con un solo comando:
+npm run dev             # Backend en :4000 y Vite Frontend en :5173
 ```
+
+Para correrlos por separado si se prefiere:
+* `npm run dev:backend` (Express en `:4000`)
+* `npm run dev:frontend` (Vite en `:5173`)
 
 Para una base nueva: `schema.sql`. Para una existente: `migrations/` en orden. Los scripts de la
 primera versión del catálogo quedan en `scripts/legacy/` como referencia.

@@ -76,11 +76,14 @@ export default function MovieDetailDrawer() {
       </div>
 
       {poster_path && (
-        <img
-          src={`${TMDB_IMAGE_BASE}${poster_path}`}
-          alt={title}
-          className="h-72 w-full object-cover"
-        />
+        <div className="relative h-72 w-full overflow-hidden bg-neutral-950">
+          <img
+            src={`${TMDB_IMAGE_BASE}${poster_path}`}
+            alt={`Afiche de ${title}`}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-black/40" />
+        </div>
       )}
 
       <div className="space-y-3 p-4">
@@ -116,8 +119,8 @@ export default function MovieDetailDrawer() {
                     </span>
                     <span className="text-xs text-neutral-500">
                       {type === "same_director"
-                        ? "🎥 Del mismo director"
-                        : `✨ ${Math.round((weight ?? 0) * 100)}% misma atmósfera`}
+                        ? "Mismo director"
+                        : `${Math.round((weight ?? 0) * 100)}% misma atmósfera`}
                     </span>
                   </button>
                   <button

@@ -74,6 +74,7 @@ async function getNeighbors(req, res) {
       limit,
     });
 
+    res.setHeader("Cache-Control", "public, max-age=1800, stale-while-revalidate=86400");
     return res.status(200).json({ centerId: id, neighbors: picked });
   } catch (err) {
     console.error("❌ Error en getNeighbors:", err.message);

@@ -1,42 +1,16 @@
 // src/components/ExternalView.jsx
-// CINE-10: "Si te gustó X…" para una película que NO está en las vistas del catálogo.
-// Pide POST /api/recommend; si resulta que sí está vista, salta directo a su EgoView.
-// Tocar una recomendación abre su EgoView (ahí ya es una película del catálogo).
+// "Si te gustó X…" para cualquier película externa de TMDB comparada con el catálogo:
+// Formato vertical 2:3, fondo ambiental cinemático y tarjetas con afinidad.
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Sparkles, User } from "lucide-react";
 import { fetchRecommend } from "../services/api";
-
-const POSTER_BASE = "https://image.tmdb.org/t/p/w185";
+import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 
 const REASON_LABEL = {
   same_director: "Mismo director",
   semantic_similarity: "Se siente parecida",
 };
-
-function Poster({ movie, className }) {
-  const initial = (movie.title || "?").trim().charAt(0).toUpperCase();
-  return (
-    <div
-      className={`relative shrink-0 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-white/20 transition group-hover:ring-cyan-400 group-focus-visible:ring-2 group-focus-visible:ring-cyan-400 ${className}`}
-    >
-      <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-neutral-400">
-        {initial}
-      </span>
-      {movie.poster_path && (
-        <img
-          src={`${POSTER_BASE}${movie.poster_path}`}
-          alt=""
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      )}
-    </div>
-  );
-}
 
 /**
  * @param {{ movie: { tmdb_id: number, title: string, release_year?: number, poster_path?: string },
@@ -52,7 +26,7 @@ export default function ExternalView({ movie, onPick }) {
       .then((data) => {
         if (cancelled) return;
         if (data.source === "catalog") {
-          onPick(data.movieId); // ya la vi: mejor su vista con vecinas
+          onPick(data.movieId);
           return;
         }
         setState({ status: "done", data, error: "" });
@@ -70,24 +44,37 @@ export default function ExternalView({ movie, onPick }) {
 
   return (
     <section
-      className="mx-auto flex w-full max-w-xl flex-col items-center px-4 pb-10 pt-4 text-center"
+      className="relative mx-auto flex w-full max-w-xl flex-col items-center px-4 pb-16 pt-4 text-center"
       aria-label={`Recomendaciones si te gustó ${movie.title}`}
     >
-      <Poster movie={movie} className="h-24 w-24 ring-2 ring-cyan-400/70" />
-      <h2 className="mt-3 text-lg font-semibold leading-tight text-white">
-        Si te gustó {movie.title}
+      <div className="mb-2">
+        <MoviePosterCard movie={movie} size="lg" accentColor="cyan" />
+      </div>
+
+      <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight text-white leading-tight mt-2">
+        Si te gustó <span className="italic">{movie.title}</span>
       </h2>
-      <p className="text-xs text-neutral-400">
+      <p className="text-xs sm:text-sm text-neutral-400 mt-1">
         {[movie.release_year, isPending && "En mi lista de pendientes"]
           .filter(Boolean)
           .join(" · ")}
       </p>
 
       {state.status === "loading" && (
-        <p className="mt-8 inline-flex items-center gap-2 text-sm text-neutral-400">
-          <Loader2 size={16} className="animate-spin" />
-          Comparando con lo que he visto…
-        </p>
+        <div className="mt-8 w-full">
+          <p className="font-serif text-sm text-neutral-300 mb-5">
+            Comparando atmósferas y temáticas con lo que he visto...
+          </p>
+          <div className="grid w-full grid-cols-3 gap-x-3 gap-y-6 sm:gap-x-4">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="flex flex-col items-center">
+                <MovieCardSkeleton size="md" />
+                <div className="mt-2.5 h-3 w-20 rounded bg-white/10 animate-shimmer" />
+                <div className="mt-1 h-2.5 w-14 rounded bg-white/5 animate-shimmer" />
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {state.status === "error" && (
@@ -98,40 +85,51 @@ export default function ExternalView({ movie, onPick }) {
       )}
 
       {state.status === "done" && recommendations.length > 0 && (
-        <>
-          <p className="mb-4 mt-6 text-sm text-neutral-300">
-            De lo que he visto, te recomiendo:
+        <div className="mt-8 w-full">
+          <p className="font-serif text-base text-neutral-200 mb-6">
+            De mi catálogo personal, te recomiendo:
           </p>
-          <div className="grid w-full grid-cols-3 gap-x-2 gap-y-5">
-            {recommendations.map((r) => (
-              <button
-                key={r.node.id}
-                type="button"
-                onClick={() => onPick(r.node.id)}
-                aria-label={`Abrir ${r.node.title}. ${REASON_LABEL[r.type] ?? "Conectada"}`}
-                className="group flex flex-col items-center focus:outline-none"
-              >
-                <Poster movie={r.node} className="h-20 w-20 group-hover:scale-105" />
-                <span className="mt-2 line-clamp-2 text-xs leading-tight text-neutral-100">
-                  {r.node.title}
-                </span>
-                <span className="mt-0.5 text-[10px] leading-none text-neutral-500">
-                  {REASON_LABEL[r.type] ?? "Conectada"}
-                </span>
-                {r.node.recommend === 1 && (
-                  <span className="mt-1 text-[10px] leading-none text-emerald-400">
-                    🟢 La recomiendo
+          <div className="grid w-full grid-cols-3 gap-x-3 gap-y-7 sm:gap-x-4">
+            {recommendations.map((r) => {
+              const isDirector = r.type === "same_director";
+              return (
+                <button
+                  key={r.node.id}
+                  type="button"
+                  onClick={() => onPick(r.node.id)}
+                  aria-label={`Abrir ${r.node.title}. ${REASON_LABEL[r.type] ?? "Conectada"}`}
+                  className="group flex flex-col items-center focus:outline-none"
+                >
+                  <div className="transition-transform duration-300 group-hover:-translate-y-1">
+                    <MoviePosterCard
+                      movie={r.node}
+                      size="md"
+                      accentColor={isDirector ? "amber" : "cyan"}
+                    />
+                  </div>
+                  <span className="mt-2.5 line-clamp-2 max-w-[120px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-cyan-300 transition-colors">
+                    {r.node.title}
                   </span>
-                )}
-              </button>
-            ))}
+                  <span
+                    className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium leading-none border ${
+                      isDirector
+                        ? "bg-blue-950/80 text-blue-300 border-blue-400/30"
+                        : "bg-cyan-950/80 text-cyan-300 border-cyan-400/30"
+                    }`}
+                  >
+                    {isDirector ? <User size={9} /> : <Sparkles size={9} />}
+                    {REASON_LABEL[r.type] ?? "Conectada"}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        </>
+        </div>
       )}
 
       {state.status === "done" && recommendations.length === 0 && (
         <p className="mt-8 max-w-sm text-sm text-neutral-400">
-          No encontré nada parecido entre lo que he visto.
+          No encontré películas parecidas entre lo que he visto en el catálogo.
         </p>
       )}
     </section>

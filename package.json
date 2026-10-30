@@ -4,9 +4,11 @@
   "description": "Watchlist con Criterio & Grafo de Conexiones — ingesta TMDB + embeddings + PostgreSQL/pgvector",
   "main": "src/server.js",
   "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:backend": "node src/server.js",
+    "dev:frontend": "npm --prefix frontend run dev",
     "test:db": "node src/db.js",
     "seed:legacy": "node scripts/legacy/seed.js",
-    "dev": "node src/server.js",
     "sync": "node scripts/sync-notion.js",
     "ratings": "node scripts/fetch-ratings.js"
   },

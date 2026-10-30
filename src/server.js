@@ -24,6 +24,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
 // prefijos, solo bajo el team juan-selector. Las URLs sin sufijo de team van en el listado exacto.
 const VERCEL_PREVIEW_PATTERN =
   /^https:\/\/(frontend|watchlist-con-criterio)-[a-z0-9-]+-juan-selector\.vercel\.app$/;
+const LOCALHOST_PATTERN = /^http:\/\/localhost(:\d+)?$/;
 const allowedOrigins = process.env.FRONTEND_URL
   ? [...DEFAULT_ALLOWED_ORIGINS, process.env.FRONTEND_URL]
   : DEFAULT_ALLOWED_ORIGINS;
@@ -31,11 +32,13 @@ const allowedOrigins = process.env.FRONTEND_URL
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Permite requests sin origin (curl, health checks de Render).
+      // Permite requests sin origin (curl, health checks de Render),
+      // orígenes en lista, previews de Vercel o cualquier puerto de localhost.
       if (
         !origin ||
         allowedOrigins.includes(origin) ||
-        VERCEL_PREVIEW_PATTERN.test(origin)
+        VERCEL_PREVIEW_PATTERN.test(origin) ||
+        LOCALHOST_PATTERN.test(origin)
       ) {
         callback(null, true);
       } else {

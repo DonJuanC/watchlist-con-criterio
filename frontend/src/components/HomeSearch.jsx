@@ -5,12 +5,12 @@
 // resultados como 6 pósters. Al tocar uno, el padre abre EgoView con esa película.
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Search, Loader2, Dices, Sparkles, Popcorn } from "lucide-react";
+import { Search, Loader2, Dices, Sparkles, Popcorn, Film, X, Compass, Network } from "lucide-react";
 import { semanticSearch } from "../services/api";
 import useCineStore from "../store/useCineStore";
 import useTmdbSuggestions from "../hooks/useTmdbSuggestions";
+import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 
-const POSTER_BASE = "https://image.tmdb.org/t/p/w185";
 const RESULTS_LIMIT = 6;
 const SURPRISE_MAX_TRIES = 3;
 const SUGGESTIONS_LIMIT = 5;
@@ -21,51 +21,51 @@ const EXTERNAL_LIMIT = 4; // sugerencias de TMDB fuera de lo ya listado del cat�
 // (más rico que el label, para mejorar el recall del embedding).
 const THEMES = [
   {
-    label: "🌧️ Melancolía y luces de neón",
+    label: "Melancolía y neón",
     query: "melancolía nocturna y luces de neón",
   },
   {
-    label: "🧠 Paranoia y laberintos mentales",
+    label: "Paranoia y laberintos mentales",
     query: "thriller psicológico paranoia identidad",
   },
   {
-    label: "🔪 Venganza estilizada y silenciosa",
+    label: "Venganza estilizada",
     query: "venganza fría estilizada violencia",
   },
   {
-    label: "🌌 Ciencia ficción reflexiva",
+    label: "Ciencia ficción reflexiva",
     query: "ciencia ficción existencial soledad",
   },
   {
-    label: "🕰️ Nostalgia y recuerdos",
+    label: "Nostalgia y memoria",
     query: "nostalgia memoria pérdida recuerdos del pasado",
   },
   {
-    label: "🏙️ Soledad en la ciudad",
+    label: "Soledad en la ciudad",
     query: "soledad en la ciudad aislamiento urbano",
   },
   {
-    label: "🎭 Identidad y dobles",
+    label: "Identidad y dobles",
     query: "identidad doble personalidad espejo",
   },
   {
-    label: "💔 Amor que no puede ser",
+    label: "Amor imposible",
     query: "amor imposible deseo contenido melancolía",
   },
   {
-    label: "🏚️ Terror que se siente",
+    label: "Terror atmosférico",
     query: "terror atmosférico inquietante sin sangre",
   },
   {
-    label: "⚖️ Culpa y dilemas morales",
+    label: "Culpa y dilemas morales",
     query: "culpa dilema moral crimen consecuencias",
   },
   {
-    label: "🌀 Cuando la realidad se rompe",
+    label: "Realidad onírica",
     query: "realidad ambigua sueños confusión onírico",
   },
   {
-    label: "🏠 Secretos de familia",
+    label: "Secretos familiares",
     query: "secretos familiares tensión doméstica",
   },
 ];
@@ -94,30 +94,6 @@ function findTitleSuggestions(nodes, rawQuery) {
     else if (title.includes(q)) contains.push(node);
   }
   return [...starts, ...contains].slice(0, SUGGESTIONS_LIMIT);
-}
-
-function PosterThumb({ movie, className = "h-20 w-20" }) {
-  const initial = (movie.title || "?").trim().charAt(0).toUpperCase();
-  return (
-    <div
-      className={`relative shrink-0 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-white/20 transition group-hover:ring-cyan-400 group-focus-visible:ring-2 group-focus-visible:ring-cyan-400 ${className}`}
-    >
-      <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-neutral-400">
-        {initial}
-      </span>
-      {movie.poster_path && (
-        <img
-          src={`${POSTER_BASE}${movie.poster_path}`}
-          alt=""
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      )}
-    </div>
-  );
 }
 
 /**
@@ -161,6 +137,22 @@ export default function HomeSearch({
   }, [tmdbResults, suggestions]);
   // Orden de filas para el teclado: catálogo, luego TMDB, luego "Buscar por sensación".
   const semanticIndex = suggestions.length + externalSuggestions.length;
+
+  // Selección diversa de películas destacadas del catálogo para inspirar la exploración inicial
+  const featuredMovies = useMemo(() => {
+    if (!catalog || catalog.length === 0) return [];
+    const withPoster = catalog.filter((m) => m.poster_path && m.director);
+    const seenDirectors = new Set();
+    const diverse = [];
+    for (const m of withPoster) {
+      if (!seenDirectors.has(m.director)) {
+        seenDirectors.add(m.director);
+        diverse.push(m);
+        if (diverse.length >= 6) break;
+      }
+    }
+    return diverse.length > 0 ? diverse : withPoster.slice(0, 6);
+  }, [catalog]);
 
   // Devuelve las filas, o null si falló o quedó obsoleta (otra búsqueda la reemplazó).
   const search = useCallback(async (query, label) => {
@@ -295,21 +287,27 @@ export default function HomeSearch({
   const showResults = status === "done";
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col items-center px-4 pb-8 pt-12 text-center sm:pt-20">
+    <main className="mx-auto flex w-full max-w-4xl flex-col items-center px-4 pb-16 pt-8 text-center sm:pt-14">
       {status === "idle" && (
-        <>
-          <h1 className="text-2xl font-semibold text-white">
-            ¿Qué quieres ver hoy?
+        <div className="space-y-3 max-w-xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-950/40 px-3.5 py-1 text-xs text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)] backdrop-blur-md">
+            <Sparkles size={12} className="text-cyan-400" />
+            <span>Curaduría personal conectada por atmósfera y autoría</span>
+          </div>
+          <h1 className="font-serif text-3xl sm:text-5xl font-semibold tracking-tight text-white leading-tight">
+            Descubre cine por <span className="italic bg-gradient-to-r from-cyan-300 via-white to-blue-300 bg-clip-text text-transparent">sensación</span> y <span className="italic bg-gradient-to-r from-amber-200 via-white to-amber-400 bg-clip-text text-transparent">visión</span>
           </h1>
-          <p className="mt-2 max-w-sm text-sm text-neutral-400">
-            Escribe una película que te gustó, o cuéntame cómo te quieres
-            sentir: algo oscuro, nostálgico, con giros…
+          <p className="mx-auto max-w-md text-xs sm:text-sm text-neutral-300 leading-relaxed font-normal">
+            Escribe una película o cuéntame una atmósfera:{" "}
+            <span className="text-cyan-200 italic">melancolía nocturna</span>,{" "}
+            <span className="text-amber-200 italic">paranoia psicológica</span>,{" "}
+            <span className="text-neutral-200 italic">existencialismo sci-fi</span>...
           </p>
-        </>
+        </div>
       )}
 
       <div
-        className="relative mt-6 w-full"
+        className="relative mt-6 w-full max-w-xl"
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget)) {
             setSuggestOpen(false);
@@ -319,10 +317,10 @@ export default function HomeSearch({
       >
         <form
           onSubmit={handleSubmit}
-          className="flex w-full items-center gap-2 rounded-full border border-white/15 bg-neutral-900 px-4 py-3"
+          className="flex w-full items-center gap-3 rounded-2xl border border-white/20 bg-neutral-900/80 px-4 py-3.5 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-300 focus-within:border-cyan-400/70 focus-within:ring-4 focus-within:ring-cyan-500/15"
         >
           {isLoading ? (
-            <Loader2 size={18} className="animate-spin text-neutral-400" />
+            <Loader2 size={18} className="animate-spin text-cyan-400" />
           ) : (
             <Search size={18} className="text-neutral-400" />
           )}
@@ -340,6 +338,16 @@ export default function HomeSearch({
             autoComplete="off"
             className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
           />
+          {inputValue && (
+            <button
+              type="button"
+              onClick={handleReset}
+              aria-label="Limpiar búsqueda"
+              className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <X size={16} />
+            </button>
+          )}
         </form>
 
         {showDropdown && (
@@ -366,16 +374,16 @@ export default function HomeSearch({
                 aria-selected={activeIndex === i}
                 onClick={() => handlePickSuggestion(movie)}
                 onMouseMove={() => setActiveIndex(i)}
-                className={`group flex cursor-pointer items-center gap-3 px-4 py-2 ${
+                className={`group flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors ${
                   activeIndex === i ? "bg-white/10" : ""
                 }`}
               >
-                <PosterThumb movie={movie} className="h-8 w-8" />
-                <span className="min-w-0">
-                  <span className="block truncate text-sm text-neutral-100">
+                <MoviePosterCard movie={movie} size="xs" showBadge={false} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-neutral-100 group-hover:text-cyan-300">
                     {movie.title}
                   </span>
-                  <span className="block truncate text-xs text-neutral-500">
+                  <span className="block truncate text-xs text-neutral-400">
                     {[movie.release_year, movie.director]
                       .filter(Boolean)
                       .join(" · ")}
@@ -386,12 +394,12 @@ export default function HomeSearch({
             {(externalSuggestions.length > 0 || tmdbLoading) && (
               <li
                 role="presentation"
-                className={`flex items-center gap-2 px-4 pb-1 pt-3 text-[11px] text-neutral-500 ${
+                className={`flex items-center gap-2 px-4 pb-1 pt-3 text-[11px] font-medium tracking-wide uppercase text-neutral-500 ${
                   suggestions.length > 0 ? "mt-1 border-t border-white/10" : ""
                 }`}
               >
                 Otras películas
-                {tmdbLoading && <Loader2 size={12} className="animate-spin" />}
+                {tmdbLoading && <Loader2 size={12} className="animate-spin text-cyan-400" />}
               </li>
             )}
             {externalSuggestions.map((movie, j) => {
@@ -409,16 +417,16 @@ export default function HomeSearch({
                   aria-selected={activeIndex === i}
                   onClick={() => handlePickExternal(movie)}
                   onMouseMove={() => setActiveIndex(i)}
-                  className={`group flex cursor-pointer items-center gap-3 px-4 py-2 ${
+                  className={`group flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors ${
                     activeIndex === i ? "bg-white/10" : ""
                   }`}
                 >
-                  <PosterThumb movie={movie} className="h-8 w-8" />
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm text-neutral-100">
+                  <MoviePosterCard movie={movie} size="xs" showBadge={false} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-neutral-100 group-hover:text-cyan-300">
                       {movie.title}
                     </span>
-                    <span className="block truncate text-xs text-neutral-500">
+                    <span className="block truncate text-xs text-neutral-400">
                       {[movie.release_year, badge].filter(Boolean).join(" · ")}
                     </span>
                   </span>
@@ -451,13 +459,13 @@ export default function HomeSearch({
       </div>
 
       {status === "idle" && (
-        <div className="mt-3 flex flex-wrap justify-center gap-2">
+        <div className="mt-3.5 flex flex-wrap justify-center gap-2">
           {HOME_CHIPS.map((theme) => (
             <button
               key={theme.label}
               type="button"
               onClick={() => handleChip(theme)}
-              className="rounded-full border border-white/10 bg-neutral-900/70 px-3 py-1 text-xs text-neutral-300 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white"
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs text-neutral-300 backdrop-blur-md transition-all duration-200 hover:border-cyan-400/40 hover:bg-white/[0.08] hover:text-white hover:scale-105 hover:shadow-[0_0_12px_rgba(34,211,238,0.2)] active:scale-95"
             >
               {theme.label}
             </button>
@@ -465,12 +473,12 @@ export default function HomeSearch({
         </div>
       )}
 
-      <div className="mt-5 flex flex-wrap justify-center gap-2">
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
         <button
           type="button"
           onClick={handleSurprise}
           disabled={isLoading}
-          className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 px-4 py-2 text-sm text-cyan-300 transition-colors hover:bg-cyan-400/10 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-full border border-cyan-400/50 bg-gradient-to-r from-cyan-950/70 to-blue-950/70 px-5 py-2.5 text-xs sm:text-sm font-medium text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.18)] backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.35)] active:scale-95 disabled:opacity-50"
         >
           <Dices size={16} />
           Sorpréndeme
@@ -478,12 +486,104 @@ export default function HomeSearch({
         <button
           type="button"
           onClick={onShowNextUp}
-          className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 px-4 py-2 text-sm text-emerald-300 transition-colors hover:bg-emerald-400/10"
+          className="inline-flex items-center gap-2 rounded-full border border-emerald-400/50 bg-gradient-to-r from-emerald-950/70 to-teal-950/70 px-5 py-2.5 text-xs sm:text-sm font-medium text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.18)] backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-emerald-300 hover:shadow-[0_0_30px_rgba(16,185,129,0.35)] active:scale-95"
         >
           <Popcorn size={16} />
           ¿Qué veo hoy?
         </button>
       </div>
+
+      {/* Escaparate de obras destacadas del catálogo (Alma cinematográfica en la landing) */}
+      {status === "idle" && featuredMovies.length > 0 && (
+        <section className="mt-14 w-full" aria-label="Obras para empezar a explorar">
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/10 pb-3 text-left">
+            <div>
+              <h2 className="font-serif text-lg sm:text-xl font-medium text-white flex items-center gap-2">
+                <Film size={17} className="text-cyan-400" />
+                Obras para empezar a explorar
+              </h2>
+              <p className="mt-0.5 text-xs text-neutral-400">
+                Toca cualquier película para abrir su universo de 6 conexiones
+              </p>
+            </div>
+            <span className="hidden sm:inline-block text-[11px] text-cyan-400/80 font-medium">
+              Vistas en el catálogo
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
+            {featuredMovies.map((movie) => (
+              <button
+                key={movie.id}
+                type="button"
+                onClick={() => onPick(movie.id)}
+                aria-label={`Explorar conexiones de ${movie.title}`}
+                className="group flex flex-col items-center text-center focus:outline-none"
+              >
+                <div className="transition-all duration-300 group-hover:-translate-y-1.5 group-hover:scale-105">
+                  <MoviePosterCard
+                    movie={movie}
+                    size="sm"
+                    accentColor="cyan"
+                  />
+                </div>
+                <span className="mt-2 line-clamp-1 max-w-[100px] text-xs font-medium text-neutral-200 group-hover:text-cyan-300 transition-colors">
+                  {movie.title}
+                </span>
+                <span className="text-[10px] text-neutral-500 truncate max-w-[100px]">
+                  {[movie.release_year, movie.director].filter(Boolean).join(" · ")}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Explicación de la curaduría y cómo funciona el grafo */}
+      {status === "idle" && (
+        <section className="mt-14 w-full border-t border-white/10 pt-10" aria-label="Cómo funciona">
+          <h3 className="font-serif text-base sm:text-lg font-medium text-neutral-200 mb-6 text-left">
+            ¿Cómo se conecta este catálogo?
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4.5 backdrop-blur-md transition-all hover:border-cyan-400/30 hover:bg-white/[0.04]">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-950/60 border border-cyan-400/30 text-cyan-300 mb-3">
+                <Film size={15} />
+              </div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-1">
+                1. Autoría Cinematográfica
+              </h4>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Vínculos directos por realizador y época. La mirada de un autor es el primer puente natural entre películas.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4.5 backdrop-blur-md transition-all hover:border-blue-400/30 hover:bg-white/[0.04]">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-950/60 border border-blue-400/30 text-blue-300 mb-3">
+                <Network size={15} />
+              </div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-1">
+                2. Atmósfera y Tono (IA)
+              </h4>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Embeddings de 768 dimensiones que calculan afinidad de sensaciones (paranoia, melancolía, estética) más allá de géneros planos.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4.5 backdrop-blur-md transition-all hover:border-emerald-400/30 hover:bg-white/[0.04]">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-950/60 border border-emerald-400/30 text-emerald-300 mb-3">
+                <Compass size={15} />
+              </div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-1">
+                3. Criterio y Crítica
+              </h4>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Registro personal en Notion con calificación de estrellas, sello de recomendación y reseñas honestas, con notas de crítica y dónde verlas.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {status === "error" && (
         <p className="mt-6 max-w-sm text-sm text-red-400">
@@ -494,13 +594,31 @@ export default function HomeSearch({
         </p>
       )}
 
+      {isLoading && (
+        <section className="mt-8 w-full" aria-label="Buscando películas">
+          <p className="font-serif text-lg font-medium text-neutral-200">{heading || "Buscando en el catálogo..."}</p>
+          <p className="mb-6 text-xs text-neutral-400">
+            Comparando atmósferas y temáticas...
+          </p>
+          <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:gap-x-4">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="flex flex-col items-center">
+                <MovieCardSkeleton size="md" />
+                <div className="mt-2.5 h-3 w-20 rounded bg-white/10 animate-shimmer" />
+                <div className="mt-1 h-2.5 w-12 rounded bg-white/5 animate-shimmer" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {showResults && results.length > 0 && (
         <section className="mt-8 w-full" aria-label="Resultados">
-          <p className="text-sm text-neutral-300">{heading}</p>
-          <p className="mb-4 text-xs text-neutral-500">
-            Elige una para empezar
+          <p className="font-serif text-xl font-medium text-neutral-200">{heading}</p>
+          <p className="mb-6 text-xs text-neutral-400">
+            Elige una película para explorar sus conexiones
           </p>
-          <div className="grid grid-cols-3 gap-x-2 gap-y-5">
+          <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:gap-x-4">
             {results.map((movie) => (
               <button
                 key={movie.id}
@@ -509,15 +627,18 @@ export default function HomeSearch({
                 aria-label={`Abrir ${movie.title}`}
                 className="group flex flex-col items-center focus:outline-none"
               >
-                <PosterThumb
-                  movie={movie}
-                  className="h-20 w-20 group-hover:scale-105"
-                />
-                <span className="mt-2 line-clamp-2 text-xs leading-tight text-neutral-100">
+                <div className="transition-transform duration-300 group-hover:-translate-y-1">
+                  <MoviePosterCard
+                    movie={movie}
+                    size="md"
+                    accentColor="cyan"
+                  />
+                </div>
+                <span className="mt-2.5 line-clamp-2 max-w-[120px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-cyan-300 transition-colors">
                   {movie.title}
                 </span>
                 {movie.release_year && (
-                  <span className="mt-0.5 text-[10px] text-neutral-500">
+                  <span className="mt-0.5 text-[11px] text-neutral-500">
                     {movie.release_year}
                   </span>
                 )}
@@ -527,7 +648,7 @@ export default function HomeSearch({
           <button
             type="button"
             onClick={handleReset}
-            className="mt-6 text-xs text-neutral-400 underline-offset-2 hover:text-white hover:underline"
+            className="mt-8 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-neutral-300 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
           >
             Probar otra idea
           </button>
@@ -544,9 +665,10 @@ export default function HomeSearch({
       <button
         type="button"
         onClick={onShowMap}
-        className="mt-10 text-xs text-neutral-500 underline-offset-2 hover:text-neutral-300 hover:underline"
+        className="mt-12 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-medium text-neutral-400 backdrop-blur-md transition-all duration-200 hover:border-white/25 hover:bg-white/10 hover:text-neutral-200 hover:shadow-lg active:scale-95"
       >
-        Ver todo el mapa
+        <Film size={13} className="text-neutral-400" />
+        Ver todo el mapa del catálogo
       </button>
     </main>
   );

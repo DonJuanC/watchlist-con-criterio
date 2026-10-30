@@ -14,10 +14,10 @@ import { semanticSearch } from '../services/api';
 // query es el texto real que se envía a semanticSearch (más rico/específico
 // que el label para mejorar el recall del embedding).
 const SUGGESTED_QUERIES = [
-    { label: '🌧️ Melancolía y luces de neón', query: 'melancolía nocturna y luces de neón' },
-    { label: '🧠 Paranoia y laberintos mentales', query: 'thriller psicológico paranoia identidad' },
-    { label: '🔪 Venganza estilizada y silenciosa', query: 'venganza fría estilizada violencia' },
-    { label: '🌌 Ciencia ficción reflexiva', query: 'ciencia ficción existencial soledad' },
+    { label: 'Melancolía y neón', query: 'melancolía nocturna y luces de neón' },
+    { label: 'Paranoia y laberintos', query: 'thriller psicológico paranoia identidad' },
+    { label: 'Venganza estilizada', query: 'venganza fría estilizada violencia' },
+    { label: 'Ciencia ficción reflexiva', query: 'ciencia ficción existencial soledad' },
 ];
 
 export default function SearchOverlay() {

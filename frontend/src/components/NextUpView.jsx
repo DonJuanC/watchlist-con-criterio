@@ -1,43 +1,17 @@
 // src/components/NextUpView.jsx
-// Fase 2: "¿Qué veo hoy?" — de mi lista por ver (pendientes), lo que mejor encaja con lo
-// que marqué 🟢, cada una con su razón. Opcional: escribir cómo te quieres sentir y buscar
-// por sensación solo entre las pendientes. Tocar una abre su ficha debajo (las pendientes
-// no están en el grafo, así que no tienen EgoView).
+// Fase 2: "¿Qué veo hoy?" — recomendador cinéfilo sobre la lista de pendientes:
+// Formato vertical 2:3, razones de afinidad destacadas como sellos de recomendación,
+// y esqueletos de carga animados.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, RefreshCw, Search, X } from "lucide-react";
+import { RefreshCw, Search, X, Popcorn } from "lucide-react";
 import { fetchNextUp, semanticSearch } from "../services/api";
 import MovieInfo from "./MovieInfo";
+import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 
-const POSTER_BASE = "https://image.tmdb.org/t/p/w185";
 const LIMIT = 6;
 
-function Poster({ movie, className }) {
-  const initial = (movie.title || "?").trim().charAt(0).toUpperCase();
-  return (
-    <div
-      className={`relative shrink-0 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-white/20 transition group-hover:ring-emerald-400 group-focus-visible:ring-2 group-focus-visible:ring-emerald-400 ${className}`}
-    >
-      <span className="absolute inset-0 flex items-center justify-center text-lg font-semibold text-neutral-400">
-        {initial}
-      </span>
-      {movie.poster_path && (
-        <img
-          src={`${POSTER_BASE}${movie.poster_path}`}
-          alt=""
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      )}
-    </div>
-  );
-}
-
 export default function NextUpView() {
-  // items: [{ node, because? }] — because solo existe en la lista por gusto (no por sensación).
   const [state, setState] = useState({
     status: "loading",
     items: [],
@@ -46,12 +20,11 @@ export default function NextUpView() {
     hasMore: false,
   });
   const [mood, setMood] = useState("");
-  const [activeMood, setActiveMood] = useState(""); // sensación aplicada ("" = por gusto)
+  const [activeMood, setActiveMood] = useState("");
   const [selectedId, setSelectedId] = useState(null);
-  const requestIdRef = useRef(0); // descarta respuestas viejas
+  const requestIdRef = useRef(0);
   const infoRef = useRef(null);
 
-  // offset pagina el mismo ranking: "Otras opciones" pide las 6 siguientes.
   const load = useCallback(async (moodText, offset = 0) => {
     const requestId = ++requestIdRef.current;
     setState((s) => ({ ...s, status: "loading", error: "" }));
@@ -79,7 +52,6 @@ export default function NextUpView() {
     load("");
   }, [load]);
 
-  // Al abrir una ficha, llevarla a la vista.
   useEffect(() => {
     if (selectedId != null) {
       infoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -98,41 +70,48 @@ export default function NextUpView() {
 
   const { status, items, error, offset, hasMore } = state;
 
-  // Al final del ranking, vuelve al principio.
   const handleMore = () => load(activeMood, hasMore ? offset + LIMIT : 0);
 
   return (
     <section
-      className="mx-auto flex w-full max-w-xl flex-col items-center px-4 pb-10 pt-6 text-center"
+      className="mx-auto flex w-full max-w-xl flex-col items-center px-4 pb-16 pt-4 text-center"
       aria-label="Qué ver hoy"
     >
-      <h2 className="text-xl font-semibold text-white">¿Qué veo hoy?</h2>
-      <p className="mt-1 max-w-sm text-sm text-neutral-400">
-        {activeMood
-          ? `De mi lista por ver, lo que más se acerca a “${activeMood}”.`
-          : "De mi lista por ver, lo que mejor encaja con lo que más me gustó."}
-      </p>
+      <div className="space-y-2 mb-2">
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-3 py-1 text-xs font-medium text-emerald-300 backdrop-blur-sm">
+          <Popcorn size={13} className="text-emerald-400" />
+          <span>Curaduría de tu lista de pendientes</span>
+        </div>
+        <h2 className="font-serif text-3xl font-semibold tracking-tight text-white">
+          ¿Qué veo hoy?
+        </h2>
+        <p className="mx-auto max-w-md text-xs sm:text-sm text-neutral-400">
+          {activeMood
+            ? `Pendientes que más se acercan a “${activeMood}”.`
+            : "Pendientes que mejor encajan con tus películas mejor valoradas del catálogo."}
+        </p>
+      </div>
 
       <form
         onSubmit={handleSubmit}
-        className="mt-5 flex w-full items-center gap-2 rounded-full border border-white/15 bg-neutral-900 px-4 py-2.5"
+        className="mt-4 flex w-full items-center gap-2 rounded-full border border-white/15 bg-neutral-900/90 px-4 py-2.5 shadow-xl backdrop-blur-md transition-all focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/20"
       >
         <Search size={16} className="shrink-0 text-neutral-400" />
         <input
           type="text"
           value={mood}
           onChange={(e) => setMood(e.target.value)}
-          placeholder="¿Cómo te quieres sentir? (opcional)"
+          placeholder="¿Cómo te quieres sentir? (ej. ciencia ficción existencial)"
           aria-label="Cómo te quieres sentir"
           autoComplete="off"
-          className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
+          className="flex-1 bg-transparent text-xs sm:text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
         />
         {activeMood && (
           <button
             type="button"
             onClick={handleClearMood}
             aria-label="Quitar sensación y volver a la lista por gusto"
-            className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
+            className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
           >
             <X size={14} />
           </button>
@@ -140,10 +119,15 @@ export default function NextUpView() {
       </form>
 
       {status === "loading" && (
-        <p className="mt-8 inline-flex items-center gap-2 text-sm text-neutral-400">
-          <Loader2 size={16} className="animate-spin" />
-          Buscando en mi lista…
-        </p>
+        <div className="mt-8 grid w-full grid-cols-3 gap-x-3 gap-y-6 sm:gap-x-4" aria-label="Cargando recomendaciones">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <div key={idx} className="flex flex-col items-center">
+              <MovieCardSkeleton size="md" />
+              <div className="mt-2.5 h-3 w-20 rounded bg-white/10 animate-shimmer" />
+              <div className="mt-1 h-2.5 w-14 rounded bg-white/5 animate-shimmer" />
+            </div>
+          ))}
+        </div>
       )}
 
       {status === "error" && (
@@ -155,45 +139,51 @@ export default function NextUpView() {
 
       {status === "done" && items.length === 0 && (
         <p className="mt-8 max-w-sm text-sm text-neutral-400">
-          No encontré nada en mi lista con esa idea. Prueba con otras palabras.
+          No encontré películas en tu lista con esa atmósfera. Prueba con otras palabras.
         </p>
       )}
 
       {status === "done" && items.length > 0 && (
-        <div className="mt-8 grid w-full grid-cols-3 gap-x-2 gap-y-6">
-          {items.map(({ node, because }) => (
-            <button
-              key={node.id}
-              type="button"
-              onClick={() => setSelectedId((id) => (id === node.id ? null : node.id))}
-              aria-pressed={selectedId === node.id}
-              aria-label={`Ver ficha de ${node.title}`}
-              className="group flex flex-col items-center focus:outline-none"
-            >
-              <Poster
-                movie={node}
-                className={`h-20 w-20 group-hover:scale-105 ${
-                  selectedId === node.id ? "ring-2 ring-emerald-400" : ""
-                }`}
-              />
-              <span className="mt-2 line-clamp-2 text-xs leading-tight text-neutral-100">
-                {node.title}
-              </span>
-              {node.release_year && (
-                <span className="mt-0.5 text-[10px] text-neutral-500">
-                  {node.release_year}
+        <div className="mt-8 grid w-full grid-cols-3 gap-x-3 gap-y-7 sm:gap-x-4">
+          {items.map(({ node, because }) => {
+            const isSelected = selectedId === node.id;
+            return (
+              <button
+                key={node.id}
+                type="button"
+                onClick={() => setSelectedId((id) => (id === node.id ? null : node.id))}
+                aria-pressed={isSelected}
+                aria-label={`Ver ficha de ${node.title}`}
+                className="group flex flex-col items-center focus:outline-none"
+              >
+                <div className={`transition-all duration-300 ${isSelected ? "scale-105" : "group-hover:-translate-y-1"}`}>
+                  <MoviePosterCard
+                    movie={node}
+                    size="md"
+                    selected={isSelected}
+                    accentColor="emerald"
+                  />
+                </div>
+                <span className="mt-2.5 line-clamp-2 max-w-[120px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-emerald-300 transition-colors">
+                  {node.title}
                 </span>
-              )}
-              {because?.length > 0 && (
-                <span
-                  title={`Porque me gustó ${because[0].title}`}
-                  className="mt-1 line-clamp-2 max-w-full text-[10px] leading-tight text-emerald-400/90"
-                >
-                  Porque me gustó {because[0].title}
-                </span>
-              )}
-            </button>
-          ))}
+                {node.release_year && (
+                  <span className="mt-0.5 text-[11px] text-neutral-500">
+                    {node.release_year}
+                  </span>
+                )}
+                {because?.length > 0 && (
+                  <span
+                    title={`Afinidad con ${because[0].title}`}
+                    className="mt-1.5 flex items-center justify-center gap-1 max-w-[120px] rounded-full bg-emerald-950/70 border border-emerald-500/30 px-2 py-0.5 text-[9px] font-medium leading-tight text-emerald-300"
+                  >
+                    <span className="block h-1 w-1 rounded-full bg-emerald-400 shrink-0" />
+                    <span className="truncate">{because[0].title}</span>
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -201,17 +191,17 @@ export default function NextUpView() {
         <button
           type="button"
           onClick={handleMore}
-          className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+          className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-xs font-medium text-neutral-200 backdrop-blur-md transition-all hover:border-emerald-500/40 hover:bg-white/10 hover:text-white"
         >
-          <RefreshCw size={14} />
-          {hasMore ? "Otras opciones" : "Volver a las primeras"}
+          <RefreshCw size={13} className="text-emerald-400" />
+          {hasMore ? "Ver otras 6 opciones" : "Volver a las primeras"}
         </button>
       )}
 
       {selectedId != null && (
         <div
           ref={infoRef}
-          className="mt-8 w-full scroll-mt-4 rounded-xl border border-white/10 bg-neutral-900/60 p-4 text-left"
+          className="mt-8 w-full scroll-mt-4 rounded-2xl border border-white/10 bg-neutral-900/80 p-5 text-left shadow-2xl backdrop-blur-xl transition-all"
         >
           <MovieInfo movieId={selectedId} />
         </div>

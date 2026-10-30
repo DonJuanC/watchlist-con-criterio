@@ -51,6 +51,7 @@ async function getWatch(req, res) {
   try {
     const results = await getCachedProviders(tmdbId);
     const c = results[country] || {};
+    res.setHeader("Cache-Control", "public, max-age=7200, stale-while-revalidate=86400");
     return res.status(200).json({
       country,
       link: c.link || null,
