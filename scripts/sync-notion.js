@@ -24,8 +24,20 @@ const LIMIT = args.includes("--limit")
   ? Number(args[args.indexOf("--limit") + 1])
   : Infinity;
 
-const EMBED_DELAY_MS = 700; // margen para la cuota gratis de Gemini
+const EMBED_DELAY_MS = 350; // margen seguro para la cuota de Gemini
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function generateEmbeddingWithRetry(text) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      return await generateEmbedding(text);
+    } catch (err) {
+      if (attempt === 3) throw err;
+      console.warn(`⚠️ Reintento Gemini (${attempt}/3): ${err.message}`);
+      await sleep(1500 * attempt);
+    }
+  }
+}
 
 // ---------- Notion ----------
 const NOTION_HEADERS = {
@@ -310,23 +322,25 @@ async function main() {
           overview: movie.overview,
           review: row.review,
         });
-        embedding = await generateEmbedding(semanticText);
+        embedding = await generateEmbeddingWithRetry(semanticText);
         stats.embedded++;
         await sleep(EMBED_DELAY_MS);
       }
 
-      // Write-back primero: así guardamos en Neon el last_edited_time que deja nuestra propia edición
-      // y el siguiente sync no vuelve a procesar esta fila.
-      row.editedAt = await writeBack(row.pageId, {
-        tmdbId,
-        match,
-        appTitle: row.appTitle ? null : movie.display_title, // respeta lo escrito a mano
-      });
+      // Write-back: solo cuando Notion aún no tiene TMDB ID o appTitle, evitando saturar Notion con PATCH innecesarios
+      const needsWriteBack = !row.tmdbId || (!row.appTitle && movie.display_title);
+      if (needsWriteBack) {
+        row.editedAt = await writeBack(row.pageId, {
+          tmdbId,
+          match,
+          appTitle: row.appTitle ? null : movie.display_title, // respeta lo escrito a mano
+        });
+      }
       if (row.appTitle) movie.display_title = row.appTitle;
 
       await upsertMovie(movie, row, embedding);
       stats.synced++;
-      console.log(`✅ ${label}`);
+      console.log(`✅ [${stats.synced}/${rows.length}] ${label}`);
     } catch (err) {
       stats.errors++;
       console.error(`❌ ${row.title}: ${err.message}`);
