@@ -68,8 +68,8 @@ export default function ShareMovieButton({
         title="Compartir o copiar enlace directo"
         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-md transition-all duration-200 active:scale-95 shrink-0 ${
           copied
-            ? "border-emerald-500/50 bg-emerald-950/70 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-            : "border-white/15 bg-white/5 text-neutral-300 hover:border-cyan-400/50 hover:bg-white/10 hover:text-white hover:shadow-[0_0_12px_rgba(34,211,238,0.15)]"
+            ? "border-emerald-500/50 bg-emerald-950/70 text-emerald-300 shadow-md"
+            : "border-white/15 bg-white/5 text-neutral-300 hover:border-white/30 hover:bg-white/10 hover:text-white"
         } ${className}`}
       >
         {copied ? (
@@ -79,7 +79,7 @@ export default function ShareMovieButton({
           </>
         ) : (
           <>
-            <Share2 size={13} className="text-cyan-400" />
+            <Share2 size={13} className="text-neutral-400 group-hover:text-white" />
             <span>Compartir</span>
           </>
         )}

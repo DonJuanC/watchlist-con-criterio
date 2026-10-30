@@ -44,20 +44,20 @@ export default function MoviePosterCard({
 
   const accentBorder = {
     cyan: isCenter
-      ? "ring-2 ring-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.35)]"
+      ? "ring-1.5 ring-white/60 shadow-2xl shadow-black"
       : selected
-        ? "ring-2 ring-cyan-400"
-        : "border-white/10 group-hover:border-cyan-400/60 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.25)]",
+        ? "ring-1.5 ring-white/60 shadow-xl"
+        : "border-white/10 group-hover:border-white/30 group-hover:shadow-xl shadow-black/50",
     emerald: isCenter
-      ? "ring-2 ring-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.35)]"
+      ? "ring-1.5 ring-emerald-400/80 shadow-2xl shadow-black"
       : selected
-        ? "ring-2 ring-emerald-400"
-        : "border-white/10 group-hover:border-emerald-400/60 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]",
+        ? "ring-1.5 ring-emerald-400/80 shadow-xl"
+        : "border-white/10 group-hover:border-emerald-500/30 group-hover:shadow-xl shadow-black/50",
     amber: isCenter
-      ? "ring-2 ring-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.35)]"
+      ? "ring-1.5 ring-amber-400/80 shadow-2xl shadow-black"
       : selected
-        ? "ring-2 ring-amber-400"
-        : "border-white/10 group-hover:border-amber-400/60 group-hover:shadow-[0_0_20px_rgba(245,158,11,0.25)]",
+        ? "ring-1.5 ring-amber-400/80 shadow-xl"
+        : "border-white/10 group-hover:border-amber-500/30 group-hover:shadow-xl shadow-black/50",
   };
 
   const hasPoster = movie?.poster_path && !imageError;

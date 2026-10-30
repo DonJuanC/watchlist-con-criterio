@@ -100,16 +100,16 @@ function MyCriteria({ rating, recommend, review }) {
   const recConfig = RECOMMEND_CONFIG[recommend];
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-cyan-400/30 bg-gradient-to-br from-cyan-950/30 via-neutral-900/50 to-neutral-900/70 p-4 shadow-[0_0_20px_rgba(34,211,238,0.08)] backdrop-blur-md">
+    <section className="relative overflow-hidden rounded-xl border border-amber-500/25 bg-neutral-900/70 p-4 shadow-xl backdrop-blur-md">
       <div className="mb-2.5 flex items-center justify-between">
-        <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-cyan-300">
-          <Compass size={14} className="text-cyan-400 animate-pulse" />
-          Mi Criterio
+        <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-300">
+          <Compass size={14} className="text-amber-400" />
+          Mi Criterio Personal
         </h4>
 
         {rating != null && (
           <div
-            className="flex items-center gap-0.5 rounded-full bg-neutral-950/60 px-2 py-0.5 border border-white/5"
+            className="flex items-center gap-0.5 rounded-full bg-neutral-950/60 px-2 py-0.5 border border-white/10"
             aria-label={`${rating} de 5 estrellas`}
           >
             {Array.from({ length: 5 }, (_, i) => (
@@ -118,7 +118,7 @@ function MyCriteria({ rating, recommend, review }) {
                 size={13}
                 className={
                   i < rating
-                    ? "fill-amber-400 text-amber-400 drop-shadow-[0_0_4px_rgba(245,158,11,0.6)]"
+                    ? "fill-amber-400 text-amber-400"
                     : "text-neutral-700"
                 }
               />
@@ -137,7 +137,7 @@ function MyCriteria({ rating, recommend, review }) {
       )}
 
       {review && (
-        <blockquote className="mt-3 rounded-r-lg border-l-2 border-cyan-400/60 bg-cyan-950/20 px-3.5 py-2 font-serif text-sm sm:text-base italic leading-relaxed text-neutral-200">
+        <blockquote className="mt-3 rounded-r-lg border-l-2 border-amber-500/50 bg-amber-950/15 px-3.5 py-2.5 font-serif text-sm sm:text-base italic leading-relaxed text-neutral-200">
           “{review}”
         </blockquote>
       )}

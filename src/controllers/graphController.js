@@ -35,7 +35,7 @@ async function getGraph(req, res) {
   try {
     const nodesSql = `
             SELECT id, title, release_year, poster_path, director,
-                   genres[1] AS main_genre
+                   genres[1] AS main_genre, rating, recommend, review
             FROM movies
             WHERE status = 'seen';
         `;

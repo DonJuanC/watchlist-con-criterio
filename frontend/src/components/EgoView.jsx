@@ -95,11 +95,11 @@ export default function EgoView({ centerId, onSelect }) {
 
             const strokeColor = isDirector
               ? isHovered
-                ? "#60a5fa"
-                : "rgba(59, 130, 246, 0.45)"
+                ? "#f59e0b"
+                : "rgba(245, 158, 11, 0.45)"
               : isHovered
-                ? "#22d3ee"
-                : "rgba(34, 211, 238, 0.45)";
+                ? "#ffffff"
+                : "rgba(255, 255, 255, 0.25)";
 
             return (
               <line
@@ -109,9 +109,8 @@ export default function EgoView({ centerId, onSelect }) {
                 x2={p.x}
                 y2={p.y}
                 stroke={strokeColor}
-                strokeWidth={isHovered ? "2" : "1.2"}
+                strokeWidth={isHovered ? "1.8" : "1"}
                 strokeDasharray={isDirector ? undefined : "1.5 1"}
-                filter={isHovered ? (isDirector ? "url(#glow-blue)" : "url(#glow-cyan)") : undefined}
                 className="transition-all duration-300"
                 style={{
                   opacity: isAnyHovered && !isHovered ? 0.2 : 1,
@@ -135,9 +134,8 @@ export default function EgoView({ centerId, onSelect }) {
             movie={center}
             size="lg"
             isCenter={true}
-            accentColor="cyan"
           />
-          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-900/90 px-2.5 py-0.5 text-[11px] font-medium text-cyan-300 border border-cyan-400/30 backdrop-blur-md shadow-lg transition-opacity duration-200">
+          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-900/90 px-2.5 py-0.5 text-[11px] font-medium text-neutral-200 border border-white/20 backdrop-blur-md shadow-lg transition-opacity duration-200">
             {showInfo ? "Cerrar ficha" : "Ver ficha"}
           </div>
         </button>
@@ -175,14 +173,14 @@ export default function EgoView({ centerId, onSelect }) {
 
               {/* Etiqueta flotante con estilo glassmorphic */}
               <div className="mt-1 flex flex-col items-center max-w-[100px] sm:max-w-[110px]">
-                <span className="line-clamp-2 rounded bg-neutral-950/90 px-1.5 py-0.5 text-[11px] font-medium leading-tight text-neutral-200 border border-white/5 backdrop-blur-sm group-hover:text-cyan-300 transition-colors">
+                <span className="line-clamp-2 rounded bg-neutral-950/90 px-1.5 py-0.5 text-[11px] font-medium leading-tight text-neutral-200 border border-white/5 backdrop-blur-sm group-hover:text-white transition-colors">
                   {p.node.title}
                 </span>
                 <span
                   className={`mt-0.5 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-medium leading-none backdrop-blur-sm border ${
                     isDirector
-                      ? "bg-blue-950/80 text-blue-300 border-blue-400/30"
-                      : "bg-cyan-950/80 text-cyan-300 border-cyan-400/30"
+                      ? "bg-amber-950/80 text-amber-300 border-amber-500/30"
+                      : "bg-neutral-900/90 text-neutral-300 border-white/15"
                   }`}
                 >
                   {isDirector ? <User size={9} /> : <Sparkles size={9} />}
@@ -215,9 +213,9 @@ export default function EgoView({ centerId, onSelect }) {
           onClick={() => setShowInfo((v) => !v)}
           aria-expanded={showInfo}
           aria-controls="ego-movie-info"
-          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 sm:px-5 py-2 text-xs font-medium text-neutral-200 backdrop-blur-md transition-all duration-200 hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 sm:px-5 py-2 text-xs font-medium text-neutral-200 backdrop-blur-md transition-all duration-200 hover:border-white/30 hover:bg-white/10 hover:text-white"
         >
-          <Info size={14} className="text-cyan-400" />
+          <Info size={14} className="text-neutral-400" />
           Sobre esta película
           <ChevronDown
             size={14}

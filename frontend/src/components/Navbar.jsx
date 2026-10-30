@@ -36,15 +36,15 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           aria-label="Ir al inicio y reiniciar"
           className="group flex items-center gap-2.5 text-left focus:outline-none"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-950/40 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all duration-300 group-hover:scale-105 group-hover:border-cyan-400 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.35)]">
-            <Film size={16} />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/[0.04] text-neutral-200 transition-all duration-300 group-hover:scale-105 group-hover:border-white/30 group-hover:bg-white/[0.08]">
+            <Film size={15} />
           </div>
           <div>
-            <span className="block font-serif text-sm font-bold tracking-wider text-white group-hover:text-cyan-300 transition-colors">
-              WATCHLIST <span className="font-sans text-[10px] uppercase tracking-widest text-cyan-400 font-semibold ml-1 px-1.5 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/30">Criterio</span>
+            <span className="block font-serif text-sm font-semibold tracking-wider text-white group-hover:text-neutral-200 transition-colors">
+              WATCHLIST <span className="font-sans text-[9px] uppercase tracking-widest text-neutral-300 font-medium ml-1.5 px-1.5 py-0.5 rounded bg-white/10 border border-white/15">Criterio</span>
             </span>
             <span className="hidden sm:block text-[10px] text-neutral-400">
-              Explorador de afinidad y autoría
+              Archivo y conexiones de cine
             </span>
           </div>
         </button>
@@ -56,12 +56,12 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
             onClick={() => onNavigate("home")}
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
               isHome
-                ? "bg-white/10 text-white shadow-sm border border-white/15"
+                ? "bg-white/10 text-white shadow-sm border border-white/20"
                 : "text-neutral-400 hover:text-white hover:bg-white/5"
             }`}
           >
             <Compass size={13} />
-            <span className="hidden sm:inline">Explorar</span>
+            <span className="hidden sm:inline">Archivo</span>
           </button>
 
           <button
@@ -69,7 +69,7 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
             onClick={() => onNavigate("next")}
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
               currentView === "next"
-                ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/30"
                 : "text-neutral-400 hover:text-emerald-300 hover:bg-white/5"
             }`}
           >
@@ -82,12 +82,12 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
             onClick={() => onNavigate("map")}
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
               currentView === "map"
-                ? "bg-cyan-950/70 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
-                : "text-neutral-400 hover:text-cyan-300 hover:bg-white/5"
+                ? "bg-white/10 text-white border border-white/20"
+                : "text-neutral-400 hover:text-white hover:bg-white/5"
             }`}
           >
             <Network size={13} />
-            <span className="hidden sm:inline">Mapa completo</span>
+            <span className="hidden sm:inline">Mapa</span>
           </button>
         </nav>
 
@@ -95,11 +95,11 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
         <div className="flex items-center gap-2">
           {movieCount > 0 && (
             <div
-              title="Películas vistas registradas en el catálogo con embeddings"
+              title="Películas vistas registradas en el catálogo con criterio"
               className="hidden lg:inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-neutral-400"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{movieCount} películas</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80" />
+              <span>{movieCount} obras</span>
             </div>
           )}
 
@@ -107,11 +107,11 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
             type="button"
             onClick={handleBrandClick}
             title="Reiniciar todo y volver al inicio"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] px-3 py-1.5 text-xs font-medium text-neutral-200 backdrop-blur-md transition-all hover:border-cyan-400/50 hover:bg-white/10 hover:text-white hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] active:scale-95"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-neutral-300 backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-95"
           >
-            <RotateCcw size={12} className="text-cyan-400" />
-            <span className="hidden sm:inline">Empezar de nuevo</span>
-            <span className="sm:hidden">Reiniciar</span>
+            <RotateCcw size={12} className="text-neutral-400" />
+            <span className="hidden sm:inline">Inicio</span>
+            <span className="sm:hidden">Inicio</span>
           </button>
         </div>
       </div>

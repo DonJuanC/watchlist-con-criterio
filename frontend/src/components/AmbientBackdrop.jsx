@@ -30,11 +30,9 @@ export default function AmbientBackdrop({ posterPath, className = "" }) {
         </>
       ) : (
         <>
-          {/* Foco cinematográfico cenital (Teal & Indigo & Amber) */}
-          <div className="absolute -top-40 left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-gradient-to-b from-cyan-600/18 via-indigo-600/12 to-transparent blur-[110px]" />
-          <div className="absolute top-1/3 -left-20 h-[400px] w-[500px] rounded-full bg-indigo-900/15 blur-[120px]" />
-          <div className="absolute bottom-10 right-0 h-[450px] w-[550px] rounded-full bg-amber-700/10 blur-[130px]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neutral-950/50 to-neutral-950" />
+          {/* Atmósfera de sala de proyección: oscuridad sobria con foco sutil de luz cálida de proyector */}
+          <div className="absolute -top-40 left-1/2 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-gradient-to-b from-amber-500/[0.04] via-amber-900/[0.02] to-transparent blur-[140px]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neutral-950/80 to-neutral-950" />
         </>
       )}
 
