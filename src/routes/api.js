@@ -15,6 +15,7 @@ const { getNeighbors } = require("../controllers/neighborsController");
 const { recommend } = require("../controllers/recommendController");
 const { getNextUp } = require("../controllers/nextUpController");
 const { getWatch } = require("../controllers/watchController");
+const { triggerSync } = require("../controllers/syncController");
 
 router.get("/movies/search", searchExternal);
 router.get("/movies/:id/neighbors", getNeighbors);
@@ -24,5 +25,6 @@ router.get("/movies/:id", getMovieById);
 router.post("/recommend", recommend);
 router.get("/recommend/next", getNextUp);
 router.get("/watch/:tmdbId", getWatch);
+router.all("/sync", triggerSync);
 
 module.exports = router;
