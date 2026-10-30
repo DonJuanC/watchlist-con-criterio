@@ -4,7 +4,7 @@
 // esqueletos de carga animados y filtros en vivo por plataforma de streaming (JustWatch vía TMDB).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RefreshCw, Search, X, Popcorn, Tv, Globe, Filter } from "lucide-react";
+import { RefreshCw, Search, X, Popcorn, Tv, Globe, Filter, Sparkles, User } from "lucide-react";
 import { fetchNextUp, semanticSearch, fetchWatchProviders } from "../services/api";
 import useCountry from "../hooks/useCountry";
 import MovieInfo from "./MovieInfo";
@@ -34,6 +34,7 @@ export default function NextUpView() {
   });
   const [mood, setMood] = useState("");
   const [activeMood, setActiveMood] = useState("");
+  const [recommendMode, setRecommendMode] = useState("affinity"); // "affinity" | "director"
   const [selectedId, setSelectedId] = useState(null);
   const [selectedProvider, setSelectedProvider] = useState("all");
   const [providersMap, setProvidersMap] = useState({});
@@ -45,11 +46,12 @@ export default function NextUpView() {
   const requestIdRef = useRef(0);
   const infoRef = useRef(null);
 
-  const load = useCallback(async (moodText, offset = 0) => {
+  const load = useCallback(async (moodText, offset = 0, overrideMode = null) => {
     const requestId = ++requestIdRef.current;
     setState((s) => ({ ...s, status: "loading", error: "" }));
     setSelectedId(null);
     setActiveMood(moodText);
+    const targetMode = overrideMode || recommendMode;
     try {
       let items;
       let data;
@@ -57,7 +59,7 @@ export default function NextUpView() {
         data = await semanticSearch(moodText, LIMIT, "pending", offset);
         items = (data.results ?? []).map((node) => ({ node }));
       } else {
-        data = await fetchNextUp(LIMIT, offset);
+        data = await fetchNextUp(LIMIT, offset, targetMode);
         items = data.results ?? [];
       }
       if (requestId !== requestIdRef.current) return;
@@ -66,7 +68,7 @@ export default function NextUpView() {
       if (requestId !== requestIdRef.current) return;
       setState({ status: "error", items: [], error: err.message, offset, hasMore: false });
     }
-  }, []);
+  }, [recommendMode]);
 
   useEffect(() => {
     load("");
@@ -118,6 +120,13 @@ export default function NextUpView() {
   const handleClearMood = () => {
     setMood("");
     load("");
+  };
+
+  const handleModeChange = (newMode) => {
+    setRecommendMode(newMode);
+    setMood("");
+    setActiveMood("");
+    load("", 0, newMode);
   };
 
   const { status, items, error, offset, hasMore } = state;
@@ -180,8 +189,39 @@ export default function NextUpView() {
         <p className="mx-auto max-w-md text-xs sm:text-sm text-neutral-400">
           {activeMood
             ? `Pendientes que más se acercan a “${activeMood}”.`
-            : "Pendientes que mejor encajan con tus películas mejor valoradas del catálogo."}
+            : recommendMode === "director"
+              ? "Obras pendientes dirigidas por los mismos autores presentes en tu catálogo."
+              : "Pendientes que mejor encajan con tus películas mejor valoradas del catálogo."}
         </p>
+      </div>
+
+      {/* Selector de modo de recomendación */}
+      <div className="mt-3 flex items-center justify-center gap-1.5 p-1 rounded-full border border-white/10 bg-neutral-900/60 backdrop-blur-md">
+        <button
+          type="button"
+          onClick={() => handleModeChange("affinity")}
+          className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+            recommendMode === "affinity" && !activeMood
+              ? "bg-white/15 text-white shadow-sm border border-white/20"
+              : "text-neutral-400 hover:text-white"
+          }`}
+        >
+          <Sparkles size={13} className="text-emerald-400" />
+          <span>Por afinidad estética</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleModeChange("director")}
+          className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+            recommendMode === "director" && !activeMood
+              ? "bg-white/15 text-white shadow-sm border border-white/20"
+              : "text-neutral-400 hover:text-white"
+          }`}
+        >
+          <User size={13} className="text-amber-400" />
+          <span>De autores en tu archivo</span>
+        </button>
       </div>
 
       {/* Barra de búsqueda por sensación */}
@@ -369,17 +409,15 @@ export default function NextUpView() {
                     movie={node}
                     size="md"
                     selected={isSelected}
-                    accentColor="emerald"
+                    accentColor={recommendMode === "director" && !activeMood ? "amber" : "emerald"}
                   />
                 </div>
-                <span className="mt-2.5 line-clamp-2 max-w-[125px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-emerald-300 transition-colors">
+                <span className="mt-2.5 line-clamp-2 max-w-[125px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-white transition-colors">
                   {node.title}
                 </span>
-                {node.release_year && (
-                  <span className="mt-0.5 text-[11px] text-neutral-500">
-                    {node.release_year}
-                  </span>
-                )}
+                <span className="mt-0.5 text-[11px] text-neutral-500">
+                  {[node.release_year, recommendMode === "director" && !activeMood ? node.director : null].filter(Boolean).join(" · ")}
+                </span>
 
                 {/* Plataformas de Streaming disponibles */}
                 {streamList.length > 0 && (
@@ -410,10 +448,22 @@ export default function NextUpView() {
 
                 {because?.length > 0 && (
                   <span
-                    title={`Afinidad con ${because[0].title}`}
-                    className="mt-1.5 flex items-center justify-center gap-1 max-w-[125px] rounded-full bg-emerald-950/70 border border-emerald-500/30 px-2 py-0.5 text-[9px] font-medium leading-tight text-emerald-300"
+                    title={
+                      recommendMode === "director" && !activeMood
+                        ? `Del realizador de ${because[0].title} (${node.director})`
+                        : `Afinidad con ${because[0].title}`
+                    }
+                    className={`mt-1.5 flex items-center justify-center gap-1 max-w-[125px] rounded-full px-2 py-0.5 text-[9px] font-medium leading-tight ${
+                      recommendMode === "director" && !activeMood
+                        ? "bg-amber-950/70 border border-amber-500/30 text-amber-300"
+                        : "bg-emerald-950/70 border border-emerald-500/30 text-emerald-300"
+                    }`}
                   >
-                    <span className="block h-1 w-1 rounded-full bg-emerald-400 shrink-0" />
+                    {recommendMode === "director" && !activeMood ? (
+                      <User size={9} className="shrink-0 text-amber-400" />
+                    ) : (
+                      <span className="block h-1 w-1 rounded-full bg-emerald-400 shrink-0" />
+                    )}
                     <span className="truncate">{because[0].title}</span>
                   </span>
                 )}

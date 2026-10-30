@@ -97,11 +97,14 @@ export function fetchRecommend(tmdbId) {
   });
 }
 
-/** GET /api/recommend/next — "¿Qué veo hoy?": pendientes que mejor encajan con mis 🟢. */
-export function fetchNextUp(limit = 6, offset = 0) {
-  return fetchWithColdStartHandling(`/api/recommend/next?limit=${limit}&offset=${offset}`, {
-    method: "GET",
-  });
+/** GET /api/recommend/next — "¿Qué veo hoy?": pendientes por afinidad de 🟢 o directores compartidos. */
+export function fetchNextUp(limit = 6, offset = 0, mode = "affinity") {
+  return fetchWithColdStartHandling(
+    `/api/recommend/next?limit=${limit}&offset=${offset}&mode=${mode}`,
+    {
+      method: "GET",
+    },
+  );
 }
 
 /** GET /api/watch/:tmdbId — dónde ver una película en un país (datos de JustWatch vía TMDB). */
