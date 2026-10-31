@@ -63,34 +63,31 @@ export default function AmbientBackdrop({ posterPath, className = "" }) {
         }}
       />
 
-      {/* 2. Atmósfera de fondo: Póster activo o Haz de proyección cenital */}
-      {posterPath ? (
-        <>
-          {/* Resplandor del afiche desenfocado */}
+      {/* 2. Atmósfera de fondo: Resplandor cromático del afiche activo */}
+      {posterPath && (
+        <div className="absolute inset-0 transition-opacity duration-1000 ease-out">
           <div
-            className="absolute -inset-10 bg-cover bg-center opacity-55 filter blur-[90px] scale-125 transition-all duration-1000 ease-out"
+            className="absolute -inset-10 bg-cover bg-center opacity-50 filter blur-[90px] scale-125 transition-all duration-1000 ease-out"
             style={{
               backgroundImage: `url(${POSTER_BASE}${posterPath})`,
             }}
           />
-          <div className="absolute inset-0 bg-neutral-950/60 backdrop-blur-3xl" />
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-black/30" />
-        </>
-      ) : (
-        <>
-          {/* Cono de luz cálida de proyector que ilumina la cabecera */}
-          <div
-            className="absolute -top-32 left-1/2 h-[550px] w-[900px] -translate-x-1/2 rounded-full blur-[110px] animate-projector-beam"
-            style={{
-              background:
-                "radial-gradient(ellipse at center, rgba(245, 158, 11, 0.14) 0%, rgba(217, 119, 6, 0.05) 50%, transparent 80%)",
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neutral-950/50 to-neutral-950" />
-        </>
+          <div className="absolute inset-0 bg-neutral-950/65 backdrop-blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/50 to-black/40" />
+        </div>
       )}
 
-      {/* 3. Luz de linterna / Haz de proyector que sigue al cursor (visible pero elegante) */}
+      {/* 3. Cono de luz cálida de proyector cenital (3200K constante con respiración analógica) */}
+      <div
+        className="absolute -top-32 left-1/2 h-[550px] w-[900px] -translate-x-1/2 rounded-full blur-[110px] animate-projector-beam pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(245, 158, 11, 0.13) 0%, rgba(217, 119, 6, 0.04) 50%, transparent 80%)",
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neutral-950/40 to-neutral-950 pointer-events-none" />
+
+      {/* 4. Luz de linterna / Haz interactivo que sigue al cursor */}
       <div
         className="absolute inset-0 transition-opacity duration-300 ease-out"
         style={{
@@ -99,7 +96,7 @@ export default function AmbientBackdrop({ posterPath, className = "" }) {
         }}
       />
 
-      {/* 4. Viñeta óptica perimetral suave de lente cinematográfica */}
+      {/* 5. Viñeta óptica perimetral suave de lente cinematográfica */}
       <div
         className="absolute inset-0"
         style={{

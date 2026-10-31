@@ -86,6 +86,7 @@ export default function App() {
   const [view, setView] = useState(initialRoute.current.view);
   const [centerId, setCenterId] = useState(initialRoute.current.centerId);
   const [externalMovie, setExternalMovie] = useState(null);
+  const [homeSpotlightPoster, setHomeSpotlightPoster] = useState(null);
   const [homeKey, setHomeKey] = useState(0);
 
   const isLoading = useCineStore((s) => s.isLoading);
@@ -186,7 +187,9 @@ export default function App() {
       ? rawGraph.nodes.find((n) => n.id === centerId)?.poster_path
       : view === "external" && externalMovie
         ? externalMovie.poster_path
-        : null;
+        : view === "home"
+          ? homeSpotlightPoster
+          : null;
 
   return (
     <div className="relative flex h-screen w-screen flex-col overflow-hidden bg-neutral-950">
@@ -210,6 +213,7 @@ export default function App() {
             onPickExternal={handlePickExternal}
             onShowNextUp={() => navigate("next")}
             onShowMap={() => navigate("map")}
+            onSpotlightPosterChange={setHomeSpotlightPoster}
           />
         </div>
 
