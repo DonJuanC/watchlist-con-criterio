@@ -39,6 +39,17 @@ function shuffleArray(arr) {
 }
 
 // Atmósferas cinéfilas reales para búsqueda semántica por sensación
+// El carrusel de spotlight sale de la landing v2: competía con el H1 y empujaba la
+// búsqueda bajo el fold. Se conserva el código detrás de esta bandera.
+const SHOW_SPOTLIGHT = false;
+
+// Ejemplos clicables bajo el buscador: dos títulos del archivo y una sensación.
+const SEARCH_EXAMPLES = [
+  { label: "Parasite", title: "Parasite" },
+  { label: "Interstellar", title: "Interstellar" },
+  { label: "algo nostálgico", query: "nostalgia memoria pérdida recuerdos del pasado tiempo" },
+];
+
 const CINEMATIC_MOODS = [
   {
     label: "Paranoia y laberintos",
@@ -207,7 +218,7 @@ export default function HomeSearch({
 
   // Sincronizar el afiche de la obra en foco con la atmósfera ambiental de la sala
   useEffect(() => {
-    if (onSpotlightPosterChange && currentSpotlight?.poster_path) {
+    if (SHOW_SPOTLIGHT && onSpotlightPosterChange && currentSpotlight?.poster_path) {
       onSpotlightPosterChange(currentSpotlight.poster_path);
     }
   }, [currentSpotlight, onSpotlightPosterChange]);
@@ -390,6 +401,24 @@ export default function HomeSearch({
     [search],
   );
 
+  const handleExample = useCallback(
+    (ex) => {
+      if (ex.query) {
+        handleMoodClick({ label: ex.label, query: ex.query });
+        return;
+      }
+      const target = normalizeText(ex.title);
+      const match = catalog.find((m) => normalizeText(m.title) === target);
+      if (match) {
+        onPick(match.id);
+      } else {
+        setInputValue(ex.title);
+        setSuggestOpen(true);
+      }
+    },
+    [catalog, handleMoodClick, onPick],
+  );
+
   const handleSurprise = useCallback(async () => {
     const randomMood = CINEMATIC_MOODS[Math.floor(Math.random() * CINEMATIC_MOODS.length)];
     setInputValue(randomMood.label);
@@ -418,27 +447,28 @@ export default function HomeSearch({
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pb-24 pt-6 sm:pt-10 text-center">
-      {/* 1. Manifiesto y Encabezado Editorial */}
+      {/* 1. Hero: la tesis del producto y la acción principal arriba del fold */}
       {status === "idle" && (
-        <header className="space-y-3 max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] px-3 py-0.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
-            <span>Archivo Cinematográfico · Curaduría de Autor</span>
-          </div>
+        <header className="flex max-w-4xl flex-col items-center gap-4">
+          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-400">
+            Una selección de <span className="text-amber-400">El Selector</span> ·{" "}
+            <span className="tabular-nums">{catalog.length > 0 ? catalog.length : "casi 300"}</span> películas vistas
+          </span>
 
-          <h1 className="font-serif text-3xl sm:text-5xl font-normal tracking-tight text-white leading-[1.1]">
-            Watchlist con Criterio
+          <h1 className="font-serif text-4xl sm:text-[3.5rem] font-normal tracking-tight text-white leading-[1.05] text-balance">
+            Dime una película que te gustó.{" "}
+            <span className="block text-neutral-300">Te digo cuál ver después.</span>
           </h1>
 
-          <p className="mx-auto max-w-lg text-xs sm:text-sm text-neutral-400 leading-relaxed font-normal">
-            Una cartografía viva del cine conectada por autoría, atmósfera y obsesiones compartidas.
-            Selecciona una obra para desplegar su constelación de{" "}
-            <span className="text-neutral-200 font-medium">6 conexiones directas</span>.
+          <p className="mx-auto max-w-xl text-sm sm:text-base text-neutral-400 leading-relaxed">
+            Cada película está conectada con otras por su director o por cómo se siente.
+            Todas tienen mi nota y mi reseña.
           </p>
         </header>
       )}
 
       {/* 2. LA GRAN PANTALLA: Selección Dinámica de Cabecera (Editorial Stage) */}
-      {status === "idle" && currentSpotlight && (
+      {SHOW_SPOTLIGHT && status === "idle" && currentSpotlight && (
         <section
           onMouseEnter={() => setHeroHovered(true)}
           onMouseLeave={() => setHeroHovered(false)}
@@ -588,7 +618,7 @@ export default function HomeSearch({
                       “{currentSpotlight.review}”
                     </p>
                     <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-neutral-400 uppercase">
-                      — Juan Camilo · Cuaderno de notas
+                      — El Selector · Cuaderno de notas
                     </span>
                   </div>
                 )}
@@ -679,7 +709,7 @@ export default function HomeSearch({
 
       {/* 3. Buscador Cinéfilo y Selector de Atmósfera */}
       <div
-        className="relative mt-8 sm:mt-10 w-full max-w-2xl"
+        className="relative mt-8 w-full max-w-2xl"
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget)) {
             setSuggestOpen(false);
@@ -689,7 +719,7 @@ export default function HomeSearch({
       >
         <form
           onSubmit={handleSubmit}
-          className="flex w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-surface/90 px-4 py-3 shadow-surface-elevated transition-all duration-200 focus-within:border-amber-400/50"
+          className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.12] bg-surface/90 px-5 py-4 shadow-surface-elevated transition-all duration-200 focus-within:border-amber-400/60"
         >
           {isLoading ? (
             <Loader2 size={16} className="animate-spin text-neutral-400" />
@@ -701,7 +731,7 @@ export default function HomeSearch({
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Busca una película, director o atmósfera (ej: paranoia nocturna, laberintos mentales)..."
+            placeholder="Una película, o cómo te quieres sentir…"
             aria-label="Buscar película o atmósfera"
             role="combobox"
             aria-expanded={showDropdown}
@@ -715,7 +745,7 @@ export default function HomeSearch({
                 : undefined
             }
             autoComplete="off"
-            className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500 font-sans"
+            className="min-w-0 flex-1 bg-transparent text-[15px] sm:text-base text-neutral-100 outline-none placeholder:text-neutral-400 font-sans"
           />
           {inputValue && (
             <button
@@ -819,10 +849,10 @@ export default function HomeSearch({
               <Sparkles size={15} className="shrink-0 text-amber-400/80" />
               <span className="min-w-0">
                 <span className="block truncate text-sm text-neutral-100 font-medium">
-                  Buscar por afinidad de atmósfera: “{inputValue.trim()}”
+                  Buscar por sensación: “{inputValue.trim()}”
                 </span>
                 <span className="block text-xs text-neutral-400">
-                  Presiona Enter para calcular conexiones
+                  Presiona Enter
                 </span>
               </span>
             </li>
@@ -832,13 +862,13 @@ export default function HomeSearch({
 
       {/* Chips de Atmósferas Cinéfilas Reales */}
       {status === "idle" && (
-        <div className="mt-3.5 flex flex-wrap justify-center items-center gap-1.5 max-w-3xl">
+        <div className="mt-4 -mx-4 flex w-[calc(100%+2rem)] flex-nowrap items-center gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:w-auto sm:max-w-3xl sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0">
           {CINEMATIC_MOODS.map((mood) => (
             <button
               key={mood.label}
               type="button"
               onClick={() => handleMoodClick(mood)}
-              className="rounded-full border border-white/[0.07] bg-white/[0.02] px-3 py-1 text-xs text-neutral-400 hover:border-white/20 hover:bg-white/[0.05] hover:text-neutral-200 transition-all duration-150 active:scale-95"
+              className="shrink-0 whitespace-nowrap rounded-full border border-white/[0.07] bg-white/[0.02] px-3 py-1 text-xs text-neutral-400 hover:border-white/20 hover:bg-white/[0.05] hover:text-neutral-200 transition-all duration-150 active:scale-95"
             >
               {mood.label}
             </button>
@@ -847,12 +877,30 @@ export default function HomeSearch({
             type="button"
             onClick={handleSurprise}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-950/20 px-3 py-1 text-xs font-mono text-amber-300 hover:border-amber-500/50 hover:bg-amber-950/30 transition-all duration-150 active:scale-95 disabled:opacity-50"
+            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-950/20 px-3 py-1 text-xs font-mono text-amber-300 hover:border-amber-500/50 hover:bg-amber-950/30 transition-all duration-150 active:scale-95 disabled:opacity-50"
           >
             <Dices size={12} className="text-amber-400" />
-            <span>Al azar</span>
+            <span>Sorpréndeme</span>
           </button>
         </div>
+      )}
+
+      {status === "idle" && (
+        <p className="mt-4 text-xs text-neutral-400">
+          Prueba con{" "}
+          {SEARCH_EXAMPLES.map((ex, i) => (
+            <span key={ex.label}>
+              {i > 0 && <span aria-hidden="true"> · </span>}
+              <button
+                type="button"
+                onClick={() => handleExample(ex)}
+                className="text-neutral-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white hover:decoration-amber-400/60 focus-ring-cinematic rounded"
+              >
+                {ex.label}
+              </button>
+            </span>
+          ))}
+        </p>
       )}
 
       {/* 4. SECCIÓN EDITORIAL: JOYAS DEL ARCHIVO */}
@@ -1082,7 +1130,7 @@ export default function HomeSearch({
         </button>
 
         <span className="text-[10px] text-neutral-400 uppercase tracking-[0.14em] text-center sm:text-right">
-          Watchlist con Criterio · Notion & Neon · Curaduría de Juan Camilo
+          Watchlist con Criterio · Una selección de El Selector
         </span>
       </footer>
     </main>

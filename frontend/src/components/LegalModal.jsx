@@ -122,7 +122,7 @@ export default function LegalModal({ isOpen, onClose }) {
               <section>
                 <h3 className="font-semibold text-white text-sm mb-1">1. Naturaleza del Servicio</h3>
                 <p>
-                  <strong>Watchlist con Criterio</strong> es un catálogo exploratorio y archivo cinematográfico personal creado por Juan Camilo con fines culturales, educativos y de divulgación cinéfila.
+                  <strong>Watchlist con Criterio</strong> es un catálogo exploratorio y archivo cinematográfico personal creado por El Selector con fines culturales, educativos y de divulgación cinéfila.
                 </p>
               </section>
 
