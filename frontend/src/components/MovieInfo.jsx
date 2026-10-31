@@ -33,14 +33,14 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
   if (!hasScores) return null;
 
   return (
-    <section className="rounded-xl border border-white/10 bg-neutral-900/40 p-3.5 backdrop-blur-sm">
-      <div className="mb-2.5 flex items-center justify-between">
-        <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-400">
-          <Award size={13} className="text-neutral-400" />
-          La Crítica
+    <section className="rounded-xl border border-white/[0.06] bg-[#121215]/60 p-3.5 inner-bevel-subtle">
+      <div className="mb-2 flex items-center justify-between">
+        <h4 className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
+          <Award size={12} className="text-neutral-400" />
+          La Crítica Externa
         </h4>
-        <div className="flex items-center gap-1 text-[11px] text-neutral-400">
-          <span>vía OMDb</span>
+        <div className="flex items-center gap-1 text-[10px] font-mono text-neutral-500">
+          <span>OMDb</span>
           {imdbId && (
             <a
               href={`https://www.imdb.com/title/${imdbId}/`}
@@ -60,20 +60,20 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
         {rtScore != null && (
           <div
             title="Rotten Tomatoes Tomatometer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-950/30 px-2.5 py-1 text-xs font-medium text-red-200"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 text-xs font-mono text-neutral-300"
           >
-            <span className="font-bold text-red-400">RT</span>
-            <span className="font-semibold text-white">{rtScore}%</span>
+            <span className="font-semibold text-red-400">RT</span>
+            <span className="font-medium text-white">{rtScore}%</span>
           </div>
         )}
 
         {imdbRating != null && (
           <div
             title="Calificación IMDb"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/20 bg-amber-950/30 px-2.5 py-1 text-xs font-medium text-amber-200"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 text-xs font-mono text-neutral-300"
           >
-            <span className="font-bold text-amber-400">IMDb</span>
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-amber-400">IMDb</span>
+            <span className="font-medium text-white">
               {Number(imdbRating).toFixed(1)}
             </span>
           </div>
@@ -82,10 +82,10 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
         {metascore != null && (
           <div
             title="Metascore (Metacritic)"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-950/30 px-2.5 py-1 text-xs font-medium text-emerald-200"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 text-xs font-mono text-neutral-300"
           >
-            <span className="font-semibold text-emerald-400">Metascore</span>
-            <span className="font-semibold text-white">{metascore}</span>
+            <span className="font-medium text-emerald-400">Metascore</span>
+            <span className="font-medium text-white">{metascore}</span>
           </div>
         )}
       </div>
@@ -101,22 +101,22 @@ function MyCriteria({ rating, recommend, review }) {
   const recConfig = RECOMMEND_CONFIG[recommend];
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-amber-500/25 bg-neutral-900/70 p-4 shadow-xl backdrop-blur-md">
+    <section className="relative rounded-xl border border-white/[0.08] bg-[#121215]/80 p-4 inner-bevel-subtle">
       <div className="mb-2.5 flex items-center justify-between">
-        <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-300">
-          <Compass size={14} className="text-amber-400" />
+        <h4 className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
+          <Compass size={13} className="text-amber-400" />
           Mi Criterio Personal
         </h4>
 
         {rating != null && (
           <div
-            className="flex items-center gap-0.5 rounded-full bg-neutral-950/60 px-2 py-0.5 border border-white/10"
+            className="flex items-center gap-0.5"
             aria-label={`${rating} de 5 estrellas`}
           >
             {Array.from({ length: 5 }, (_, i) => (
               <Star
                 key={i}
-                size={13}
+                size={11}
                 className={
                   i < rating
                     ? "fill-amber-400 text-amber-400"
@@ -130,15 +130,15 @@ function MyCriteria({ rating, recommend, review }) {
 
       {recConfig && (
         <div
-          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${recConfig.badgeClass}`}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${recConfig.badgeClass}`}
         >
-          <span className={`h-2 w-2 rounded-full ${recConfig.dotClass}`} />
+          <span className={`h-1.5 w-1.5 rounded-full ${recConfig.dotClass}`} />
           {recConfig.label}
         </div>
       )}
 
       {review && (
-        <blockquote className="mt-3 rounded-r-lg border-l-2 border-amber-500/50 bg-amber-950/15 px-3.5 py-2.5 font-serif text-sm sm:text-base italic leading-relaxed text-neutral-200">
+        <blockquote className="mt-3 border-l border-amber-500/40 pl-3.5 py-0.5 font-serif text-sm sm:text-base italic leading-relaxed text-neutral-200">
           “{review}”
         </blockquote>
       )}
