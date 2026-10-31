@@ -61,17 +61,17 @@ export default function MovieDetailDrawer() {
   const { title, poster_path } = selectedMovie;
 
   return (
-    <aside className="fixed right-0 top-0 z-30 h-full w-96 overflow-y-auto border-l border-white/10 bg-neutral-900/95 shadow-2xl backdrop-blur">
-      <div className="flex items-center justify-between border-b border-white/10 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
-          Detalle
+    <aside className="fixed right-0 top-0 z-30 h-full w-96 overflow-y-auto border-l border-white/[0.06] bg-[#0a0a0c]/95 shadow-2xl backdrop-blur-md">
+      <div className="flex items-center justify-between border-b border-white/[0.06] p-4">
+        <h2 className="text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
+          Ficha de Obra
         </h2>
         <button
           onClick={clearSelectedMovie}
           aria-label="Cerrar panel"
-          className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white focus-ring-cinematic"
+          className="rounded p-1 text-neutral-400 hover:text-white focus-ring-cinematic transition-colors"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
       </div>
 
@@ -82,7 +82,7 @@ export default function MovieDetailDrawer() {
             alt={`Afiche de ${title}`}
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-black/40" />
         </div>
       )}
 
@@ -92,7 +92,7 @@ export default function MovieDetailDrawer() {
         <button
           onClick={handleExploreConnections}
           disabled={connections.length === 0}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-xs font-semibold text-neutral-200 backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 focus-ring-cinematic"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-xs font-medium text-neutral-200 transition-all hover:border-white/20 hover:bg-white/[0.07] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 focus-ring-cinematic"
         >
           <Network size={14} className="text-neutral-400" />
           Explorar {connections.length}{" "}
@@ -100,8 +100,8 @@ export default function MovieDetailDrawer() {
         </button>
 
         {connections.length > 0 && (
-          <div className="border-t border-white/10 pt-3">
-            <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          <div className="border-t border-white/[0.06] pt-3">
+            <h4 className="mb-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
               Puentes hacia otras películas
             </h4>
             <ul className="space-y-1">
