@@ -11,7 +11,10 @@ import useNeighbors from "../hooks/useNeighbors";
 import MoviePosterCard from "./MoviePosterCard";
 import ShareMovieButton from "./ShareMovieButton";
 
-const RING_RADIUS = 38; // % del radio orbital
+// Órbita elíptica: más radio vertical que horizontal porque los pósters son 2:3.
+// Con radio igual, la vecina de arriba tapaba el título y el borde del póster central.
+const RING_RADIUS_X = 38; // % del ancho
+const RING_RADIUS_Y = 42; // % del alto (contenedor 3:4 en móvil, 5:6 en desktop)
 const NO_NEIGHBORS = []; // referencia estable
 
 const REASON_LABEL = {
@@ -37,8 +40,8 @@ export default function EgoView({ centerId, onSelect }) {
         const angle = -Math.PI / 2 + (i * 2 * Math.PI) / neighbors.length;
         return {
           ...entry,
-          x: 50 + RING_RADIUS * Math.cos(angle),
-          y: 50 + RING_RADIUS * Math.sin(angle),
+          x: 50 + RING_RADIUS_X * Math.cos(angle),
+          y: 50 + RING_RADIUS_Y * Math.sin(angle),
         };
       }),
     [neighbors],
@@ -64,7 +67,7 @@ export default function EgoView({ centerId, onSelect }) {
       </header>
 
       {/* Lienzo orbital con conexiones SVG */}
-      <div key={center.id} className="relative aspect-square w-full max-w-[480px]">
+      <div key={center.id} className="relative mt-10 aspect-[3/4] w-full max-w-[480px] sm:aspect-[5/6]">
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
@@ -185,7 +188,7 @@ export default function EgoView({ centerId, onSelect }) {
           Esta película todavía no tiene conexiones en el catálogo. Prueba con otra.
         </p>
       ) : (
-        <p className="mt-10 text-center text-xs text-neutral-400">
+        <p className="mt-14 text-center text-xs text-neutral-400">
           Toca cualquier vecina para moverla al centro y seguir navegando
         </p>
       )}
