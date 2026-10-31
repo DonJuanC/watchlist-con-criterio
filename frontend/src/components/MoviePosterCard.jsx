@@ -52,12 +52,12 @@ export default function MoviePosterCard({
 
   return (
     <div
-      className={`relative shrink-0 overflow-hidden bg-[#121215] transition-all duration-300 ease-out ${
+      className={`relative shrink-0 overflow-hidden bg-surface transition-all duration-300 ease-out ${
         sizeStyles[size] || sizeStyles.md
       } ${elevationStyle} ${className}`}
     >
       {/* Respaldo / Fallback cuando no hay póster o falla la carga */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center select-none bg-[#121215]">
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center select-none bg-surface">
         <Film size={size === "xs" || size === "sm" ? 14 : 20} className="mb-1 text-neutral-600" />
         <span className="font-serif font-semibold text-neutral-400 leading-tight">
           {initial}

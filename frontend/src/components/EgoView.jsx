@@ -78,11 +78,11 @@ export default function EgoView({ centerId, onSelect }) {
 
             const strokeColor = isDirector
               ? isHovered
-                ? "#d97706"
-                : "rgba(217, 119, 6, 0.35)"
+                ? "var(--color-amber-600)"
+                : "color-mix(in oklab, var(--color-amber-600) 35%, transparent)"
               : isHovered
-                ? "#ffffff"
-                : "rgba(255, 255, 255, 0.14)";
+                ? "var(--color-white)"
+                : "color-mix(in oklab, var(--color-white) 14%, transparent)";
 
             return (
               <line
@@ -91,7 +91,7 @@ export default function EgoView({ centerId, onSelect }) {
                 y1="50"
                 x2={p.x}
                 y2={p.y}
-                stroke={strokeColor}
+                style={{ stroke: strokeColor }}
                 strokeWidth={isHovered ? "1.4" : "0.75"}
                 strokeDasharray={isDirector ? undefined : "1.5 1"}
                 className="transition-all duration-300"
@@ -119,7 +119,7 @@ export default function EgoView({ centerId, onSelect }) {
             isCenter={true}
             showBadge={false}
           />
-          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#121215]/90 px-2.5 py-0.5 text-[10px] font-mono tracking-wider uppercase text-neutral-300 border border-white/10 shadow-lg transition-opacity duration-200">
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-surface/90 px-2.5 py-0.5 text-[10px] font-mono tracking-wider uppercase text-neutral-300 border border-white/10 shadow-lg transition-opacity duration-200">
             {showInfo ? "Cerrar ficha" : "Ver ficha"}
           </div>
         </button>
@@ -157,14 +157,14 @@ export default function EgoView({ centerId, onSelect }) {
 
               {/* Etiqueta flotante con estilo editorial */}
               <div className="mt-1 flex flex-col items-center max-w-[100px] sm:max-w-[110px]">
-                <span className="line-clamp-2 rounded bg-[#0a0a0c]/85 px-1.5 py-0.5 text-[11px] font-medium leading-tight text-neutral-200 group-hover:text-white transition-colors">
+                <span className="line-clamp-2 rounded bg-canvas/85 px-1.5 py-0.5 text-[11px] font-medium leading-tight text-neutral-200 group-hover:text-white transition-colors">
                   {p.node.title}
                 </span>
                 <span
                   className={`mt-0.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono leading-none border ${
                     isDirector
                       ? "bg-amber-950/40 text-amber-300/90 border-amber-500/30"
-                      : "bg-[#121215]/80 text-neutral-400 border-white/10"
+                      : "bg-surface/80 text-neutral-400 border-white/10"
                   }`}
                 >
                   {isDirector ? <User size={8} /> : <Sparkles size={8} />}

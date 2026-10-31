@@ -56,7 +56,7 @@ export default function AmbientBackdrop({ posterPath, className = "" }) {
       <div
         className="absolute inset-0 opacity-35"
         style={{
-          backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(var(--ambient-dot) 1px, transparent 1px)",
           backgroundSize: "32px 32px",
           maskImage: "radial-gradient(ellipse 75% 65% at 50% 35%, black 20%, transparent 85%)",
           WebkitMaskImage: "radial-gradient(ellipse 75% 65% at 50% 35%, black 20%, transparent 85%)",
@@ -73,7 +73,7 @@ export default function AmbientBackdrop({ posterPath, className = "" }) {
             }}
           />
           <div className="absolute inset-0 bg-neutral-950/65 backdrop-blur-3xl" />
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/50 to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/50 to-neutral-950/40" />
         </div>
       )}
 
@@ -82,7 +82,7 @@ export default function AmbientBackdrop({ posterPath, className = "" }) {
         className="absolute -top-32 left-1/2 h-[550px] w-[900px] -translate-x-1/2 rounded-full blur-[110px] animate-projector-beam pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(245, 158, 11, 0.13) 0%, rgba(217, 119, 6, 0.04) 50%, transparent 80%)",
+            "radial-gradient(ellipse at center, var(--ambient-beam) 0%, var(--ambient-beam-edge) 50%, transparent 80%)",
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neutral-950/40 to-neutral-950 pointer-events-none" />
@@ -92,7 +92,7 @@ export default function AmbientBackdrop({ posterPath, className = "" }) {
         className="absolute inset-0 transition-opacity duration-300 ease-out"
         style={{
           opacity: isHovered && mousePos.x > 0 ? 1 : 0,
-          background: `radial-gradient(550px circle at ${mousePos.x}px ${mousePos.y}px, rgba(245, 158, 11, 0.09) 0%, rgba(245, 158, 11, 0.02) 45%, transparent 75%)`,
+          background: `radial-gradient(550px circle at ${mousePos.x}px ${mousePos.y}px, var(--ambient-cursor) 0%, transparent 75%)`,
         }}
       />
 
@@ -100,7 +100,7 @@ export default function AmbientBackdrop({ posterPath, className = "" }) {
       <div
         className="absolute inset-0"
         style={{
-          background: "radial-gradient(ellipse 95% 85% at center, transparent 45%, rgba(0, 0, 0, 0.55) 100%)",
+          background: "radial-gradient(ellipse 95% 85% at center, transparent 45%, var(--ambient-vignette) 100%)",
         }}
       />
     </div>

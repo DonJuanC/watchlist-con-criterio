@@ -1,16 +1,135 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Sistema de color claro/oscuro
+   La paleta de Tailwind se remapea a tokens semánticos: en ambos modos
+   "white" significa tinta principal y "neutral-950" significa el fondo.
+   Así las ~740 clases existentes cambian de tema sin tocarlas una a una.
+   Oscuro = "sala con luces bajas". Claro = "programa de mano".
+   ========================================================================== */
 @theme {
   --font-serif: "Playfair Display", Georgia, Cambria, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Superficies semánticas */
+  --color-canvas: #14110E;
+  --color-surface: #1C1814;
+
+  /* Tinta y escala neutra cálida (oscuro) */
+  --color-white: #F2EDE6;
+  --color-black: #000000;
+  --color-neutral-50: #F7F3EE;
+  --color-neutral-100: #F2EDE6;
+  --color-neutral-200: #DCD5CB;
+  --color-neutral-300: #C6BEB3;
+  --color-neutral-400: #A69D92;
+  --color-neutral-500: #82796F;
+  --color-neutral-600: #5F574F;
+  --color-neutral-700: #453F38;
+  --color-neutral-800: #2D2823;
+  --color-neutral-900: #1C1814;
+  --color-neutral-950: #14110E;
+
+  /* Ámbar tungsteno: acción primaria, estado activo y calificación */
+  --color-amber-200: #F7D9A8;
+  --color-amber-300: #F2C57E;
+  --color-amber-400: #EBA640;
+  --color-amber-500: #DE8F22;
+  --color-amber-600: #C27515;
+  --color-amber-950: #2A1A07;
+
+  /* Semánticos: recomendada / no recomendada */
+  --color-emerald-200: #B5E8CF;
+  --color-emerald-300: #8FD9B6;
+  --color-emerald-400: #5CC89A;
+  --color-emerald-500: #34AE7C;
+  --color-emerald-950: #0D2219;
+  --color-red-200: #F8C4C4;
+  --color-red-300: #F5A3A3;
+  --color-red-400: #EE7B7B;
+  --color-red-500: #E05656;
+  --color-red-950: #2A1010;
+}
+
+/* Tokens fuera de la paleta de Tailwind (canvas del grafo, ambiente, sombras) */
+:root {
+  color-scheme: dark;
+  --graph-bg: #14110E;
+  --graph-node: #8F877D;
+  --graph-label: rgba(242, 237, 230, 0.85);
+  --graph-match: #EBA640;
+  --graph-director: rgba(235, 166, 64, 0.65);
+  --graph-semantic: rgba(242, 237, 230, 0.28);
+  --ambient-dot: rgba(242, 237, 230, 0.15);
+  --ambient-beam: rgba(235, 166, 64, 0.13);
+  --ambient-beam-edge: rgba(194, 117, 21, 0.04);
+  --ambient-cursor: rgba(235, 166, 64, 0.09);
+  --ambient-vignette: rgba(0, 0, 0, 0.55);
+  --shadow-color: 0, 0, 0;
+  --shadow-alpha-a: 0.4;
+  --shadow-alpha-b: 0.7;
+  --bevel: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-canvas: #F2EFEA;
+  --color-surface: #FBFAF7;
+
+  --color-white: #1B1814;
+  --color-neutral-50: #12100D;
+  --color-neutral-100: #1B1814;
+  --color-neutral-200: #2E2924;
+  --color-neutral-300: #3F3933;
+  --color-neutral-400: #5A534B;
+  --color-neutral-500: #776F66;
+  --color-neutral-600: #9B9389;
+  --color-neutral-700: #BDB6AC;
+  --color-neutral-800: #DAD5CD;
+  --color-neutral-900: #FBFAF7;
+  --color-neutral-950: #F2EFEA;
+
+  --color-amber-200: #7A4606;
+  --color-amber-300: #8C5208;
+  --color-amber-400: #9A5B0A;
+  --color-amber-500: #A8620B;
+  --color-amber-600: #B86E14;
+  --color-amber-950: #F7E9D2;
+
+  --color-emerald-200: #0F5139;
+  --color-emerald-300: #17694B;
+  --color-emerald-400: #1B7A57;
+  --color-emerald-500: #23905F;
+  --color-emerald-950: #E1F2E9;
+  --color-red-200: #7F1F1F;
+  --color-red-300: #A83232;
+  --color-red-400: #B93A3A;
+  --color-red-500: #C94444;
+  --color-red-950: #FBE6E6;
+
+  --graph-bg: #F2EFEA;
+  --graph-node: #8A8279;
+  --graph-label: rgba(27, 24, 20, 0.85);
+  --graph-match: #9A5B0A;
+  --graph-director: rgba(154, 91, 10, 0.6);
+  --graph-semantic: rgba(27, 24, 20, 0.22);
+  --ambient-dot: rgba(27, 24, 20, 0.12);
+  --ambient-beam: rgba(235, 166, 64, 0.16);
+  --ambient-beam-edge: rgba(235, 166, 64, 0.05);
+  --ambient-cursor: rgba(235, 166, 64, 0.08);
+  --ambient-vignette: rgba(120, 100, 80, 0.10);
+  --shadow-color: 60, 45, 30;
+  --shadow-alpha-a: 0.08;
+  --shadow-alpha-b: 0.14;
+  --bevel: rgba(255, 255, 255, 0.7);
 }
 
 html, body, #root {
   height: 100%;
   margin: 0;
-  background-color: #0a0a0c;
-  color: #ededee;
+  background-color: var(--color-canvas);
+  color: var(--color-white);
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -38,11 +157,11 @@ body::before {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in oklab, var(--color-white) 12%, transparent);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in oklab, var(--color-white) 24%, transparent);
 }
 
 /* ==========================================================================
@@ -52,29 +171,29 @@ body::before {
 /* Sombra de penumbra multicapa realista para afiches */
 .shadow-poster {
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.4),
-    0 8px 24px -2px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 1px 2px rgba(var(--shadow-color), var(--shadow-alpha-a)),
+    0 8px 24px -2px rgba(var(--shadow-color), var(--shadow-alpha-b)),
+    inset 0 1px 0 var(--bevel);
 }
 
 .shadow-poster-hover {
   box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.45),
-    0 16px 36px -4px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 2px 6px rgba(var(--shadow-color), var(--shadow-alpha-a)),
+    0 16px 36px -4px rgba(var(--shadow-color), var(--shadow-alpha-b)),
+    inset 0 1px 0 var(--bevel);
 }
 
 /* Bisel rasante superior de óptica de cámara */
 .inner-bevel-subtle {
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 0 var(--bevel);
 }
 
 /* Elevación refinada para paneles, modales y barras de búsqueda */
 .shadow-surface-elevated {
   box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.5),
-    0 12px 32px -4px rgba(0, 0, 0, 0.75),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 1px 3px rgba(var(--shadow-color), var(--shadow-alpha-a)),
+    0 12px 32px -4px rgba(var(--shadow-color), var(--shadow-alpha-b)),
+    inset 0 1px 0 var(--bevel);
 }
 
 /* Animación shimmer para Skeletons */
@@ -100,9 +219,9 @@ body::before {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.03),
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0.03),
+    color-mix(in oklab, var(--color-white) 3%, transparent),
+    color-mix(in oklab, var(--color-white) 8%, transparent),
+    color-mix(in oklab, var(--color-white) 3%, transparent),
     transparent
   );
   animation: shimmer 2s infinite ease-in-out;
@@ -145,7 +264,7 @@ body::before {
    ========================================================================== */
 
 :focus-visible {
-  outline: 2px solid #d97706;
+  outline: 2px solid var(--color-amber-500);
   outline-offset: 2px;
 }
 
@@ -154,9 +273,9 @@ body::before {
 }
 
 .focus-ring-cinematic:focus-visible {
-  outline: 2px solid #d97706 !important;
+  outline: 2px solid var(--color-amber-500) !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.22) !important;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-amber-500) 22%, transparent) !important;
 }
 
 /* ==========================================================================

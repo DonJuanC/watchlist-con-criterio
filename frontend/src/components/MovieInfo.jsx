@@ -33,7 +33,7 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
   if (!hasScores) return null;
 
   return (
-    <section className="rounded-xl border border-white/[0.06] bg-[#121215]/60 p-3.5 inner-bevel-subtle">
+    <section className="rounded-xl border border-white/[0.06] bg-surface/60 p-3.5 inner-bevel-subtle">
       <div className="mb-2 flex items-center justify-between">
         <h4 className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
           <Award size={12} className="text-neutral-400" />
@@ -101,7 +101,7 @@ function MyCriteria({ rating, recommend, review }) {
   const recConfig = RECOMMEND_CONFIG[recommend];
 
   return (
-    <section className="relative rounded-xl border border-white/[0.08] bg-[#121215]/80 p-4 inner-bevel-subtle">
+    <section className="relative rounded-xl border border-white/[0.08] bg-surface/80 p-4 inner-bevel-subtle">
       <div className="mb-2.5 flex items-center justify-between">
         <h4 className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
           <Compass size={13} className="text-amber-400" />
@@ -167,7 +167,7 @@ function TrailerModal({ trailer, movieTitle, onClose }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-neutral-950 shadow-[0_0_50px_rgba(0,0,0,0.9)]"
+        className="relative flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-neutral-950 shadow-2xl"
       >
         {/* Cabecera del reproductor */}
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 bg-neutral-900/70">

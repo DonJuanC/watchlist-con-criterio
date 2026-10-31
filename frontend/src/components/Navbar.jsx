@@ -4,8 +4,9 @@
 // y un botón omnipresente para "Empezar de nuevo" / limpiar estado.
 
 import { useState } from "react";
-import { Film, Popcorn, Network, RotateCcw, Compass, Scale } from "lucide-react";
+import { Film, Popcorn, Network, RotateCcw, Compass, Scale, Sun, Moon } from "lucide-react";
 import useCineStore from "../store/useCineStore";
+import useThemeStore from "../store/useThemeStore";
 import LegalModal from "./LegalModal";
 
 /**
@@ -18,6 +19,9 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
   const [showLegal, setShowLegal] = useState(false);
   const rawNodes = useCineStore((s) => s.rawGraph.nodes);
   const movieCount = rawNodes.length;
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
+  const nextThemeLabel = theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
 
   const handleBrandClick = () => {
     if (onResetAll) {
@@ -30,7 +34,7 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
   const isHome = currentView === "home";
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-[#0a0a0c]/85 backdrop-blur-md transition-all">
+    <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-canvas/85 backdrop-blur-md transition-all">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
         {/* Identidad de Marca y Logo Cinéfilo */}
         <button
@@ -118,6 +122,17 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           >
             <RotateCcw size={12} className="text-neutral-400" />
             <span className="hidden sm:inline">Inicio</span>
+          </button>
+
+          {/* Toggle de tema claro/oscuro */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            title={nextThemeLabel}
+            aria-label={nextThemeLabel}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.02] text-neutral-400 transition-all hover:border-white/20 hover:text-white active:scale-95 focus-ring-cinematic"
+          >
+            {theme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
           </button>
 
           {/* Botón de Marco Legal, Privacidad y Atribuciones */}

@@ -689,7 +689,7 @@ export default function HomeSearch({
       >
         <form
           onSubmit={handleSubmit}
-          className="flex w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-[#121215]/90 px-4 py-3 shadow-surface-elevated transition-all duration-200 focus-within:border-amber-400/50"
+          className="flex w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-surface/90 px-4 py-3 shadow-surface-elevated transition-all duration-200 focus-within:border-amber-400/50"
         >
           {isLoading ? (
             <Loader2 size={16} className="animate-spin text-neutral-400" />
@@ -734,7 +734,7 @@ export default function HomeSearch({
             id="home-suggestions"
             role="listbox"
             onMouseDown={(e) => e.preventDefault()}
-            className="absolute left-0 right-0 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-white/[0.08] bg-[#121215] text-left shadow-2xl"
+            className="absolute left-0 right-0 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-white/[0.08] bg-surface text-left shadow-2xl"
           >
             {suggestions.length > 0 && (
               <li role="presentation" className="px-4 pb-1 pt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400">
@@ -953,7 +953,7 @@ export default function HomeSearch({
 
           {/* Shelf de Películas del Director Seleccionado */}
           {selectedDirector && directorMovies.length > 0 && (
-            <div className="rounded-xl border border-white/[0.06] bg-[#121215]/60 p-4 mb-6">
+            <div className="rounded-xl border border-white/[0.06] bg-surface/60 p-4 mb-6">
               <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-neutral-400 mb-3">
                 Películas de {selectedDirector} en el archivo:
               </p>

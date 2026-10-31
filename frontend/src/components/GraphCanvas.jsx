@@ -7,11 +7,22 @@ import { forwardRef, useImperativeHandle, useRef, useCallback, useMemo, useState
 import ForceGraph2D from 'react-force-graph-2d';
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import useCineStore, { useFilteredLinks } from '../store/useCineStore';
+import useThemeStore from '../store/useThemeStore';
 
-const BASE_NODE_COLOR = '#8b8b8b';
-const MATCH_RING_COLOR = '#f59e0b'; // halo ámbar cálido para nodos que coinciden con la búsqueda
-const DIRECTOR_LINK_COLOR = 'rgba(245, 158, 11, 0.65)'; // filamento ámbar para mismo director
-const SEMANTIC_LINK_COLOR = 'rgba(255, 255, 255, 0.28)'; // filamento tenue de atmósfera compartida
+// Los colores del canvas salen de CSS vars (index.css) para respetar el tema claro/oscuro:
+// el canvas no entiende var(), así que se leen con getComputedStyle cada vez que cambia el tema.
+function readGraphColors() {
+    const css = getComputedStyle(document.documentElement);
+    const v = (name) => css.getPropertyValue(name).trim();
+    return {
+        bg: v('--graph-bg'),
+        node: v('--graph-node'),
+        label: v('--graph-label'),
+        match: v('--graph-match'),
+        director: v('--graph-director'),
+        semantic: v('--graph-semantic'),
+    };
+}
 const DIMMED_ALPHA = 0.15;
 const FULL_ALPHA = 1.0;
 const CENTER_ZOOM = 4;
@@ -22,6 +33,9 @@ const ZOOM_STEP_FACTOR = 1.5;
 const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
     const internalRef = useRef(null);
     const containerRef = useRef(null);
+    const theme = useThemeStore((s) => s.theme);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- theme es el disparador: las vars ya cambiaron en el DOM
+    const colors = useMemo(() => readGraphColors(), [theme]);
     // CINE-05 (fix en vivo): react-force-graph-2d mide el tamaño de su contenedor
     // vía getBoundingClientRect al montar. El div padre (sin height explícito,
     // solo heredando de .h-screen sin flex/h-full) resolvía a height:0 en el
@@ -87,14 +101,14 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
 
             ctx.beginPath();
             ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
-            ctx.fillStyle = BASE_NODE_COLOR;
+            ctx.fillStyle = colors.node;
             ctx.fill();
 
             if (hasActiveSearch && isMatch) {
                 // Anillo exterior brillante proporcional a la similitud.
                 const similarity = matchedMovieIds.get(node.id) ?? 0;
                 ctx.lineWidth = 1.5 / globalScale;
-                ctx.strokeStyle = MATCH_RING_COLOR;
+                ctx.strokeStyle = colors.match;
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, radius + 2 + similarity * 2, 0, 2 * Math.PI, false);
                 ctx.stroke();
@@ -103,14 +117,14 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
             // Etiqueta del título, solo visible con zoom suficiente para no saturar.
             if (globalScale > 2) {
                 ctx.font = `${10 / globalScale}px Sans-Serif`;
-                ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                ctx.fillStyle = colors.label;
                 ctx.textAlign = 'center';
                 ctx.fillText(node.title, node.x, node.y + radius + 8 / globalScale);
             }
 
             ctx.globalAlpha = 1.0;
         },
-        [matchedMovieIds]
+        [matchedMovieIds, colors]
     );
 
     const handleNodeClick = useCallback(
@@ -153,7 +167,7 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
             width={dimensions.width}
             height={dimensions.height}
             graphData={graphData}
-            backgroundColor="#0a0a0a"
+            backgroundColor={colors.bg}
             nodeId="id"
             nodeLabel="title"
             nodeCanvasObject={nodeCanvasObject}
@@ -163,7 +177,7 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
                 ctx.arc(node.x, node.y, 6, 0, 2 * Math.PI, false);
                 ctx.fill();
             }}
-            linkColor={(link) => (link.type === 'same_director' ? DIRECTOR_LINK_COLOR : SEMANTIC_LINK_COLOR)}
+            linkColor={(link) => (link.type === 'same_director' ? colors.director : colors.semantic)}
             linkWidth={(link) => (link.type === 'same_director' ? 1.5 : 1)}
             linkLineDash={(link) => (link.type === 'semantic_similarity' ? [3, 2] : null)}
             onNodeClick={handleNodeClick}
@@ -175,14 +189,14 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
             {/* La leyenda se oculta en mobile: no cabe junto al panel de ajustes. */}
             <div className="hidden rounded-lg border border-neutral-800 sm:block bg-neutral-900/80 px-3 py-2 text-xs text-neutral-300 shadow-2xl backdrop-blur-md">
                 <div className="flex items-center gap-2">
-                    <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: DIRECTOR_LINK_COLOR }} />
+                    <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: colors.director }} />
                     Mismo director
                 </div>
                 <div className="mt-1.5 flex items-center gap-2">
                     <span
                         className="h-0.5 w-4"
                         style={{
-                            backgroundImage: `repeating-linear-gradient(to right, ${SEMANTIC_LINK_COLOR} 0 3px, transparent 3px 5px)`,
+                            backgroundImage: `repeating-linear-gradient(to right, ${colors.semantic} 0 3px, transparent 3px 5px)`,
                         }}
                     />
                     Afinidad semántica

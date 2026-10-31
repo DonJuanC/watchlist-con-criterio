@@ -47,11 +47,11 @@ export default function LegalModal({ isOpen, onClose }) {
       }}
     >
       <div
-        className="relative flex flex-col w-full max-w-2xl max-h-[88dvh] sm:max-h-[84vh] my-auto rounded-2xl border border-white/15 bg-[#121215] shadow-2xl overflow-hidden text-neutral-200"
+        className="relative flex flex-col w-full max-w-2xl max-h-[88dvh] sm:max-h-[84vh] my-auto rounded-2xl border border-white/15 bg-surface shadow-2xl overflow-hidden text-neutral-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cabecera del Modal (Fija) */}
-        <div className="shrink-0 flex items-center justify-between border-b border-white/10 px-5 sm:px-6 py-3.5 sm:py-4 bg-[#121215]">
+        <div className="shrink-0 flex items-center justify-between border-b border-white/10 px-5 sm:px-6 py-3.5 sm:py-4 bg-surface">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-amber-300">
               <Scale size={16} />
