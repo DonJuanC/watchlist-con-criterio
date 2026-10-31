@@ -47,22 +47,22 @@ export default function MoviePosterCard({
       ? "ring-1.5 ring-white/60 shadow-2xl shadow-black"
       : selected
         ? "ring-1.5 ring-white/60 shadow-xl"
-        : "border-white/10 group-hover:border-white/30 group-hover:shadow-xl shadow-black/50",
+        : "border-white/10 group-hover:border-white/40 group-hover:shadow-[0_12px_28px_rgba(0,0,0,0.8)] shadow-black/50",
     cyan: isCenter
       ? "ring-1.5 ring-white/60 shadow-2xl shadow-black"
       : selected
         ? "ring-1.5 ring-white/60 shadow-xl"
-        : "border-white/10 group-hover:border-white/30 group-hover:shadow-xl shadow-black/50",
+        : "border-white/10 group-hover:border-white/40 group-hover:shadow-[0_12px_28px_rgba(0,0,0,0.8)] shadow-black/50",
     emerald: isCenter
       ? "ring-1.5 ring-emerald-400/80 shadow-2xl shadow-black"
       : selected
         ? "ring-1.5 ring-emerald-400/80 shadow-xl"
-        : "border-white/10 group-hover:border-emerald-500/30 group-hover:shadow-xl shadow-black/50",
+        : "border-white/10 group-hover:border-emerald-500/50 group-hover:shadow-[0_12px_28px_rgba(6,78,59,0.35)] shadow-black/50",
     amber: isCenter
       ? "ring-1.5 ring-amber-400/80 shadow-2xl shadow-black"
       : selected
         ? "ring-1.5 ring-amber-400/80 shadow-xl"
-        : "border-white/10 group-hover:border-amber-500/30 group-hover:shadow-xl shadow-black/50",
+        : "border-white/10 group-hover:border-amber-500/50 group-hover:shadow-[0_12px_28px_rgba(120,53,15,0.35)] shadow-black/50",
   };
 
   const hasPoster = movie?.poster_path && !imageError;

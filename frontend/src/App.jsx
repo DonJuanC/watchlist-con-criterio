@@ -201,7 +201,7 @@ export default function App() {
       />
 
       {/* Contenedor principal de vistas */}
-      <main className="relative flex-1 overflow-hidden">
+      <main className="relative z-10 flex-1 overflow-hidden">
         {/* Inicio: siempre montado */}
         <div className={view === "home" ? "h-full overflow-y-auto animate-view-enter" : "hidden"}>
           <HomeSearch
