@@ -88,7 +88,7 @@ export default function SearchOverlay() {
         <div className="fixed top-16 sm:top-18 left-1/2 -translate-x-1/2 z-20 w-full max-w-xl px-4">
             <form
                 onSubmit={handleSubmit}
-                className="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-900/90 px-4 py-3 shadow-2xl backdrop-blur"
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-900/90 px-4 py-3 shadow-2xl backdrop-blur focus-within:border-amber-400/50 focus-within:ring-2 focus-within:ring-amber-400/30 transition-all"
             >
                 {isSearching ? (
                     <Loader2 size={18} className="animate-spin text-neutral-400" />
@@ -101,14 +101,15 @@ export default function SearchOverlay() {
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Ej: soledad, obsesión, paranoia…"
-                    className="flex-1 bg-transparent text-sm text-neutral-100 placeholder:text-neutral-500 outline-none"
+                    aria-label="Buscar película en el mapa"
+                    className="flex-1 bg-transparent text-sm text-neutral-100 placeholder:text-neutral-400 outline-none"
                 />
                 {hasActiveSearch && (
                     <button
                         type="button"
                         onClick={handleClear}
                         aria-label="Limpiar búsqueda"
-                        className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
+                        className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white focus-ring-cinematic"
                     >
                         <X size={16} />
                     </button>
@@ -122,7 +123,7 @@ export default function SearchOverlay() {
                             key={chip.label}
                             type="button"
                             onClick={() => handleChipClick(chip.query)}
-                            className="rounded-full border border-white/10 bg-neutral-900/70 px-3 py-1 text-xs text-neutral-300 backdrop-blur transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white"
+                            className="rounded-full border border-white/10 bg-neutral-900/70 px-3 py-1 text-xs text-neutral-300 backdrop-blur transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white focus-ring-cinematic"
                         >
                             {chip.label}
                         </button>

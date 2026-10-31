@@ -26,7 +26,7 @@ function ProviderRow({ label, providers }) {
   if (!providers?.length) return null;
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-      <span className="w-20 shrink-0 text-xs text-neutral-500">{label}</span>
+      <span className="w-20 shrink-0 text-xs text-neutral-400">{label}</span>
       {providers.map((p) => (
         <span key={p.id} className="inline-flex items-center gap-1.5 text-xs text-neutral-200">
           {p.logo_path && (
@@ -93,7 +93,7 @@ export default function WatchProviders({ tmdbId }) {
           <select
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className="rounded-md border border-white/10 bg-neutral-900 px-1.5 py-0.5 text-xs text-neutral-200 outline-none focus:border-amber-400/60"
+            className="rounded-md border border-white/10 bg-neutral-900 px-1.5 py-0.5 text-xs text-neutral-200 outline-none focus-ring-cinematic"
           >
             {options.map((c) => (
               <option key={c} value={c}>
@@ -110,7 +110,7 @@ export default function WatchProviders({ tmdbId }) {
         </p>
       )}
       {current.error && (
-        <p className="text-xs text-neutral-500">No pude consultar dónde verla ahora mismo.</p>
+        <p className="text-xs text-neutral-400">No pude consultar dónde verla ahora mismo.</p>
       )}
       {empty && (
         <p className="text-xs text-neutral-400">
@@ -126,13 +126,14 @@ export default function WatchProviders({ tmdbId }) {
       )}
 
       {data && (
-        <p className="mt-2 text-[10px] text-neutral-500">
+        <p className="mt-2 text-[10px] text-neutral-400">
           Datos de{" "}
           <a
             href="https://www.justwatch.com"
             target="_blank"
             rel="noreferrer"
-            className="underline-offset-2 hover:text-neutral-300 hover:underline"
+            className="underline-offset-2 hover:text-neutral-300 hover:underline focus-ring-cinematic rounded"
+            aria-label="Sitio web de JustWatch (se abre en nueva pestaña)"
           >
             JustWatch
           </a>
@@ -143,7 +144,8 @@ export default function WatchProviders({ tmdbId }) {
                 href={data.link}
                 target="_blank"
                 rel="noreferrer"
-                className="underline-offset-2 hover:text-neutral-300 hover:underline"
+                className="underline-offset-2 hover:text-neutral-300 hover:underline focus-ring-cinematic rounded"
+                aria-label="Ver opciones en TMDB (se abre en nueva pestaña)"
               >
                 Ver opciones en TMDB
               </a>

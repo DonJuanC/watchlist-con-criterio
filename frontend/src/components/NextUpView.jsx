@@ -421,7 +421,7 @@ export default function NextUpView() {
       {status === "error" && (
         <p className="mt-8 max-w-sm text-sm text-red-400">
           No pude armar la lista ahora mismo. Intenta de nuevo en unos segundos.
-          <span className="mt-1 block text-xs text-neutral-500">{error}</span>
+          <span className="mt-1 block text-xs text-neutral-400">{error}</span>
         </p>
       )}
 
@@ -433,7 +433,7 @@ export default function NextUpView() {
 
       {status === "done" && items.length > 0 && filteredItems.length === 0 && (
         <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center max-w-md">
-          <Tv size={24} className="mx-auto text-neutral-500 mb-2" />
+          <Tv size={24} className="mx-auto text-neutral-400 mb-2" />
           <p className="text-sm font-medium text-neutral-300">
             {selectedProviders.length > 0
               ? `Ninguna de estas recomendaciones está disponible en ${selectedProviders.join(", ")} en ${countryName(country)}.`
@@ -443,7 +443,7 @@ export default function NextUpView() {
             <button
               type="button"
               onClick={handleSelectAll}
-              className="rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs text-white hover:bg-white/20 transition-all"
+              className="rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs text-white hover:bg-white/20 transition-all focus-ring-cinematic"
             >
               Ver todas ({items.length})
             </button>
@@ -451,7 +451,7 @@ export default function NextUpView() {
               <button
                 type="button"
                 onClick={handleMore}
-                className="rounded-full border border-emerald-500/40 bg-emerald-950/60 px-4 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950 transition-all"
+                className="rounded-full border border-emerald-500/40 bg-emerald-950/60 px-4 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950 transition-all focus-ring-cinematic"
               >
                 Cargar otras opciones
               </button>
@@ -474,7 +474,7 @@ export default function NextUpView() {
                 onClick={() => setSelectedId((id) => (id === node.id ? null : node.id))}
                 aria-pressed={isSelected}
                 aria-label={`Ver ficha de ${node.title}`}
-                className="group flex flex-col items-center focus:outline-none"
+                className="group flex flex-col items-center focus-ring-cinematic rounded-xl p-1"
               >
                 <div className={`transition-all duration-300 ${isSelected ? "scale-105" : "group-hover:-translate-y-1"}`}>
                   <MoviePosterCard
@@ -487,7 +487,7 @@ export default function NextUpView() {
                 <span className="mt-2.5 line-clamp-2 max-w-[125px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-white transition-colors">
                   {node.title}
                 </span>
-                <span className="mt-0.5 text-[11px] text-neutral-500">
+                <span className="mt-0.5 text-[11px] text-neutral-400">
                   {[node.release_year, recommendMode === "director" && !activeMood ? node.director : null].filter(Boolean).join(" · ")}
                 </span>
 

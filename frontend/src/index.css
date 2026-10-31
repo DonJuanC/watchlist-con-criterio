@@ -3,14 +3,18 @@
 @theme {
   --font-serif: "Playfair Display", Georgia, Cambria, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 html, body, #root {
   height: 100%;
   margin: 0;
-  background-color: #07070a;
-  color: #ededed;
+  background-color: #0a0a0c;
+  color: #ededee;
   font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Textura sutil de grano analógico 35mm para romper la frialdad digital */
@@ -20,25 +24,57 @@ body::before {
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0.048;
+  opacity: 0.035;
   mix-blend-mode: screen;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
 /* Scrollbar sutil y moderno */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   Craft Shadows & Tactile Elevation
+   ========================================================================== */
+
+/* Sombra de penumbra multicapa realista para afiches */
+.shadow-poster {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 8px 24px -2px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.shadow-poster-hover {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 16px 36px -4px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Bisel rasante superior de óptica de cámara */
+.inner-bevel-subtle {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Elevación refinada para paneles, modales y barras de búsqueda */
+.shadow-surface-elevated {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.5),
+    0 12px 32px -4px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Animación shimmer para Skeletons */
@@ -64,35 +100,35 @@ body::before {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.05),
-    rgba(255, 255, 255, 0.12),
-    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.03),
     transparent
   );
-  animation: shimmer 1.8s infinite;
+  animation: shimmer 2s infinite ease-in-out;
 }
 
 /* Respiración orgánica del haz de proyector */
 @keyframes projector-breathe {
   0%, 100% {
     transform: translate(-50%, 0) scale(1);
-    opacity: 0.85;
+    opacity: 0.65;
   }
   50% {
-    transform: translate(-50%, 14px) scale(1.08);
-    opacity: 1;
+    transform: translate(-50%, 10px) scale(1.05);
+    opacity: 0.8;
   }
 }
 
 .animate-projector-beam {
-  animation: projector-breathe 14s ease-in-out infinite;
+  animation: projector-breathe 16s ease-in-out infinite;
 }
 
 /* Entrada cinemática fluida entre vistas (fade + glide) */
 @keyframes view-enter {
   0% {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   100% {
     opacity: 1;
@@ -101,14 +137,46 @@ body::before {
 }
 
 .animate-view-enter {
-  animation: view-enter 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: view-enter 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Resplandor cinemático de tungsteno cálido */
-.ambient-glow-amber {
-  filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.25));
+/* ==========================================================================
+   Accesibilidad WCAG 2.2: Anillo de Foco Cinemático & Navegación por Teclado
+   ========================================================================== */
+
+:focus-visible {
+  outline: 2px solid #d97706;
+  outline-offset: 2px;
 }
 
-.ambient-glow-emerald {
-  filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.25));
+.focus-ring-cinematic {
+  outline: none;
 }
+
+.focus-ring-cinematic:focus-visible {
+  outline: 2px solid #d97706 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.22) !important;
+}
+
+/* ==========================================================================
+   Accesibilidad WCAG 2.2 SC 2.2.2 / 2.3.3: Respeto a Movimiento Reducido
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-projector-beam,
+  .animate-shimmer::after,
+  .animate-spin {
+    animation: none !important;
+  }
+}
+

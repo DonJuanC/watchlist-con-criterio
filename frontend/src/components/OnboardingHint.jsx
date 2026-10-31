@@ -33,7 +33,7 @@ export default function OnboardingHint() {
             <button
                 onClick={handleDismiss}
                 aria-label="Cerrar sugerencia"
-                className="absolute right-2 top-2 rounded-full p-0.5 text-neutral-500 hover:bg-white/10 hover:text-white"
+                className="absolute right-2 top-2 rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white focus-ring-cinematic"
             >
                 <X size={14} />
             </button>

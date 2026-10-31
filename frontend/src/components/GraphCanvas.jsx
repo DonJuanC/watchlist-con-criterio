@@ -193,24 +193,24 @@ const GraphCanvas = forwardRef(function GraphCanvas(props, forwardedRef) {
                 <button
                     type="button"
                     onClick={handleZoomIn}
-                    aria-label="Acercar"
-                    className="p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                    aria-label="Acercar mapa"
+                    className="p-2 text-neutral-300 hover:bg-white/10 hover:text-white focus-ring-cinematic"
                 >
                     <ZoomIn size={16} />
                 </button>
                 <button
                     type="button"
                     onClick={handleZoomOut}
-                    aria-label="Alejar"
-                    className="border-t border-neutral-800 p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                    aria-label="Alejar mapa"
+                    className="border-t border-neutral-800 p-2 text-neutral-300 hover:bg-white/10 hover:text-white focus-ring-cinematic"
                 >
                     <ZoomOut size={16} />
                 </button>
                 <button
                     type="button"
                     onClick={handleResetView}
-                    aria-label="Restablecer vista"
-                    className="border-t border-neutral-800 p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+                    aria-label="Restablecer vista del mapa"
+                    className="border-t border-neutral-800 p-2 text-neutral-300 hover:bg-white/10 hover:text-white focus-ring-cinematic"
                 >
                     <Maximize2 size={16} />
                 </button>

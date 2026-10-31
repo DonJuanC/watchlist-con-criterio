@@ -14,10 +14,10 @@ function LinkTypeChip({ active, onClick, colorClass, label }) {
             type="button"
             onClick={onClick}
             aria-pressed={active}
-            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors focus-ring-cinematic ${
                 active
                     ? 'border-white/20 bg-white/10 text-white'
-                    : 'border-white/5 bg-transparent text-neutral-500 hover:text-neutral-300'
+                    : 'border-white/5 bg-transparent text-neutral-400 hover:text-neutral-200'
             }`}
         >
             <span className={`h-2 w-2 rounded-full ${active ? colorClass : 'bg-neutral-600'}`} />
@@ -50,7 +50,7 @@ export default function GraphControls() {
             <button
                 type="button"
                 onClick={() => setCollapsed((c) => !c)}
-                className="flex w-full items-center justify-between text-left"
+                className="flex w-full items-center justify-between text-left focus-ring-cinematic rounded-lg p-0.5"
                 aria-expanded={!collapsed}
             >
                 <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-neutral-300">
@@ -58,9 +58,9 @@ export default function GraphControls() {
                     Ajustes del Mapa
                 </span>
                 {collapsed ? (
-                    <ChevronUp size={16} className="text-neutral-500" />
+                    <ChevronUp size={16} className="text-neutral-400" />
                 ) : (
-                    <ChevronDown size={16} className="text-neutral-500" />
+                    <ChevronDown size={16} className="text-neutral-400" />
                 )}
             </button>
 
@@ -81,9 +81,9 @@ export default function GraphControls() {
                             step={MIN_SIMILARITY_RANGE.step}
                             value={minSimilarity}
                             onChange={(e) => setMinSimilarity(parseFloat(e.target.value))}
-                            className="w-full accent-amber-500"
+                            className="w-full accent-amber-500 focus-ring-cinematic"
                         />
-                        <div className="mt-1 flex items-center justify-between text-[10px] text-neutral-500">
+                        <div className="mt-1 flex items-center justify-between text-[10px] text-neutral-400">
                             <span>Más variedad</span>
                             <span>Muy parecidas</span>
                         </div>
@@ -104,7 +104,7 @@ export default function GraphControls() {
                         />
                     </div>
 
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-xs text-neutral-400">
                         {visibleLinksCount}{' '}
                         {visibleLinksCount === 1 ? 'conexión activa' : 'conexiones activas'}
                     </p>

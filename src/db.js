@@ -8,9 +8,11 @@ if (!process.env.DATABASE_URL) {
     throw new Error('Falta DATABASE_URL en el archivo .env');
 }
 
+const sslRejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false";
+
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }, // requerido por Neon.tech
+    ssl: { rejectUnauthorized: sslRejectUnauthorized },
 });
 
 /**

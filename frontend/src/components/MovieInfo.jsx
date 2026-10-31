@@ -39,15 +39,16 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
           <Award size={13} className="text-neutral-400" />
           La Crítica
         </h4>
-        <div className="flex items-center gap-1 text-[11px] text-neutral-500">
+        <div className="flex items-center gap-1 text-[11px] text-neutral-400">
           <span>vía OMDb</span>
           {imdbId && (
             <a
               href={`https://www.imdb.com/title/${imdbId}/`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-0.5 text-neutral-400 hover:text-white transition-colors"
-              title="Abrir en IMDb"
+              className="inline-flex items-center gap-0.5 text-neutral-400 hover:text-white transition-colors focus-ring-cinematic rounded"
+              title="Abrir en IMDb (se abre en nueva pestaña)"
+              aria-label="Abrir ficha en IMDb (se abre en nueva pestaña)"
             >
               <ExternalLink size={10} />
             </a>
@@ -184,8 +185,9 @@ function TrailerModal({ trailer, movieTitle, onClose }) {
               href={`https://www.youtube.com/watch?v=${trailer.key}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white transition-colors"
-              title="Abrir directamente en YouTube"
+              className="inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white transition-colors focus-ring-cinematic rounded"
+              title="Abrir directamente en YouTube (se abre en nueva pestaña)"
+              aria-label="Abrir tráiler en YouTube (se abre en nueva pestaña)"
             >
               <span>YouTube</span>
               <ExternalLink size={11} />
@@ -194,7 +196,7 @@ function TrailerModal({ trailer, movieTitle, onClose }) {
               type="button"
               onClick={onClose}
               aria-label="Cerrar reproductor"
-              className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors ml-1"
+              className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors ml-1 focus-ring-cinematic"
             >
               <X size={16} />
             </button>
@@ -218,13 +220,14 @@ function TrailerModal({ trailer, movieTitle, onClose }) {
 
 function TmdbAttribution() {
   return (
-    <p className="border-t border-white/10 pt-3 text-[11px] leading-snug text-neutral-500">
+    <p className="border-t border-white/10 pt-3 text-[11px] leading-snug text-neutral-400">
       Datos e imágenes de{" "}
       <a
         href="https://www.themoviedb.org/"
         target="_blank"
         rel="noreferrer"
-        className="underline hover:text-neutral-300 transition-colors"
+        className="underline hover:text-neutral-300 transition-colors focus-ring-cinematic rounded"
+        aria-label="Sitio web de The Movie Database (TMDB, se abre en nueva pestaña)"
       >
         TMDB
       </a>
@@ -299,7 +302,7 @@ export default function MovieInfo({ movieId }) {
               onClick={() => setShowTrailer(true)}
               aria-label={`Ver tráiler oficial de ${movie.title}`}
               title="Ver tráiler oficial en YouTube"
-              className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-xs font-medium text-red-200 backdrop-blur-md transition-all hover:border-red-400/70 hover:bg-red-950/80 hover:text-white active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-950/40 px-3 py-1.5 text-xs font-medium text-red-200 backdrop-blur-md transition-all hover:border-red-400/70 hover:bg-red-950/80 hover:text-white active:scale-95 focus-ring-cinematic"
             >
               <Play size={11} className="fill-red-400 text-red-400 shrink-0" />
               <span className="hidden sm:inline">Tráiler oficial</span>

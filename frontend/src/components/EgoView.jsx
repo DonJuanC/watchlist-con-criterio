@@ -111,7 +111,7 @@ export default function EgoView({ centerId, onSelect }) {
           aria-expanded={showInfo}
           aria-controls="ego-movie-info"
           aria-label={`${showInfo ? "Ocultar" : "Ver"} ficha de ${center.title}`}
-          className="group absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 focus:outline-none z-10 transition-transform duration-300 hover:scale-105 active:scale-95"
+          className="group absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 focus-ring-cinematic rounded-2xl z-10 transition-transform duration-300 hover:scale-105 active:scale-95"
         >
           <MoviePosterCard
             movie={center}
@@ -139,7 +139,7 @@ export default function EgoView({ centerId, onSelect }) {
               onBlur={() => setHoveredNeighborId(null)}
               aria-label={`Ir a ${p.node.title}. ${REASON_LABEL[p.type] ?? "Conectada"}`}
               style={{ left: `${p.x}%`, top: `${p.y}%` }}
-              className="group absolute flex w-24 sm:w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center focus:outline-none z-20"
+              className="group absolute flex w-24 sm:w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center focus-ring-cinematic rounded-xl z-20 p-1"
             >
               <div
                 className={`transition-all duration-300 ${
@@ -196,7 +196,7 @@ export default function EgoView({ centerId, onSelect }) {
           onClick={() => setShowInfo((v) => !v)}
           aria-expanded={showInfo}
           aria-controls="ego-movie-info"
-          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 sm:px-5 py-2 text-xs font-medium text-neutral-200 backdrop-blur-md transition-all duration-200 hover:border-white/30 hover:bg-white/10 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 sm:px-5 py-2 text-xs font-medium text-neutral-200 backdrop-blur-md transition-all duration-200 hover:border-white/30 hover:bg-white/10 hover:text-white focus-ring-cinematic"
         >
           <Info size={14} className="text-neutral-400" />
           Sobre esta película

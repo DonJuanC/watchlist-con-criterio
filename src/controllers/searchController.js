@@ -30,11 +30,18 @@ async function semanticSearch(req, res) {
       .json({ error: 'El campo "query" es requerido y no puede venir vacío.' });
   }
 
+  const cleanQuery = searchQuery.trim();
+  if (cleanQuery.length > 250) {
+    return res
+      .status(400)
+      .json({ error: 'El campo "query" no puede superar los 250 caracteres.' });
+  }
+
   const resultLimit =
-    Number.isInteger(limit) && limit > 0 ? limit : DEFAULT_LIMIT;
+    Number.isInteger(limit) && limit > 0 ? Math.min(limit, 50) : DEFAULT_LIMIT;
 
   try {
-    const embedding = await generateMovieEmbedding(searchQuery.trim());
+    const embedding = await generateMovieEmbedding(cleanQuery);
     const vectorLiteral = JSON.stringify(embedding);
 
     const sql = `

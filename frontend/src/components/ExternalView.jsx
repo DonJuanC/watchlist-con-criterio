@@ -80,7 +80,7 @@ export default function ExternalView({ movie, onPick }) {
       {state.status === "error" && (
         <p className="mt-8 max-w-sm text-sm text-red-400">
           No pude armar la recomendación ahora mismo. Intenta de nuevo en unos segundos.
-          <span className="mt-1 block text-xs text-neutral-500">{state.error}</span>
+          <span className="mt-1 block text-xs text-neutral-400">{state.error}</span>
         </p>
       )}
 
@@ -98,7 +98,7 @@ export default function ExternalView({ movie, onPick }) {
                   type="button"
                   onClick={() => onPick(r.node.id)}
                   aria-label={`Abrir ${r.node.title}. ${REASON_LABEL[r.type] ?? "Conectada"}`}
-                  className="group flex flex-col items-center focus:outline-none"
+                  className="group flex flex-col items-center focus-ring-cinematic rounded-xl p-1"
                 >
                   <div className="transition-transform duration-300 group-hover:-translate-y-1">
                     <MoviePosterCard

@@ -69,7 +69,7 @@ export default function MovieDetailDrawer() {
         <button
           onClick={clearSelectedMovie}
           aria-label="Cerrar panel"
-          className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
+          className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white focus-ring-cinematic"
         >
           <X size={18} />
         </button>
@@ -92,7 +92,7 @@ export default function MovieDetailDrawer() {
         <button
           onClick={handleExploreConnections}
           disabled={connections.length === 0}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-xs font-semibold text-neutral-200 backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-xs font-semibold text-neutral-200 backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 focus-ring-cinematic"
         >
           <Network size={14} className="text-neutral-400" />
           Explorar {connections.length}{" "}
@@ -112,12 +112,12 @@ export default function MovieDetailDrawer() {
                 >
                   <button
                     onClick={() => setSelectedMovie(node)}
-                    className="min-w-0 flex-1 text-left"
+                    className="min-w-0 flex-1 text-left focus-ring-cinematic rounded"
                   >
                     <span className="block truncate text-sm text-neutral-300">
                       {node.title}
                     </span>
-                    <span className="text-xs text-neutral-500">
+                    <span className="text-xs text-neutral-400">
                       {type === "same_director"
                         ? "Mismo director"
                         : `${Math.round((weight ?? 0) * 100)}% misma atmósfera`}
@@ -132,7 +132,7 @@ export default function MovieDetailDrawer() {
                     }}
                     aria-label={`Enfocar ${node.title} en el mapa`}
                     title="Enfocar en el mapa"
-                    className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 px-2 py-1 text-[11px] text-neutral-400 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                    className="flex shrink-0 items-center gap-1 rounded-full border border-white/10 px-2 py-1 text-[11px] text-neutral-400 hover:border-white/20 hover:bg-white/10 hover:text-white focus-ring-cinematic"
                   >
                     <Crosshair size={12} />
                     Enfocar en el mapa

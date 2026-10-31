@@ -42,35 +42,35 @@ function shuffleArray(arr) {
 // Atmósferas cinéfilas reales para búsqueda semántica por sensación
 const CINEMATIC_MOODS = [
   {
-    label: "🕯️ Paranoia y laberintos",
+    label: "Paranoia y laberintos",
     query: "thriller psicológico paranoia identidad mente confusión",
   },
   {
-    label: "🌌 Ciencia ficción existencial",
+    label: "Ciencia ficción existencial",
     query: "ciencia ficción existencial soledad universo trascendencia",
   },
   {
-    label: "🌧️ Melancolía y neón",
+    label: "Melancolía y neón",
     query: "melancolía nocturna y luces de neón soledad urbana",
   },
   {
-    label: "⚡ Venganza estilizada",
+    label: "Venganza estilizada",
     query: "venganza fría estilizada violencia estética justicia",
   },
   {
-    label: "⏳ Nostalgia y memoria",
+    label: "Nostalgia y memoria",
     query: "nostalgia memoria pérdida recuerdos del pasado tiempo",
   },
   {
-    label: "🗝️ Secretos familiares",
+    label: "Secretos familiares",
     query: "secretos familiares tensión doméstica drama culpa",
   },
   {
-    label: "🪞 Realidad onírica y dobles",
+    label: "Realidad onírica y dobles",
     query: "realidad ambigua sueños confusión identidad espejo doble",
   },
   {
-    label: "👁️ Terror atmosférico",
+    label: "Terror psicológico",
     query: "terror atmosférico psicológico inquietante sin sangre",
   },
 ];
@@ -118,6 +118,7 @@ export default function HomeSearch({
   const [activeIndex, setActiveIndex] = useState(-1);
   const [spotlightIndex, setSpotlightIndex] = useState(() => Math.floor(Math.random() * 5));
   const [heroHovered, setHeroHovered] = useState(false);
+  const [heroFocused, setHeroFocused] = useState(false);
   const [selectedDirector, setSelectedDirector] = useState(null);
   const [pendingGems, setPendingGems] = useState([]);
   const requestIdRef = useRef(0);
@@ -222,14 +223,28 @@ export default function HomeSearch({
     }
   }, [spotlightGems]);
 
-  // Rotación orgánica de la proyección en cabecera (cada 9s, pausada al interactuar con el cursor)
+  // Rotación orgánica de la proyección en cabecera (cada 9s, pausada al interactuar con el cursor,
+  // tener foco de teclado o si el usuario prefiere movimiento reducido según WCAG 2.2.2)
   useEffect(() => {
-    if (heroHovered || spotlightGems.length <= 1 || status !== "idle") return;
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (
+      prefersReducedMotion ||
+      heroHovered ||
+      heroFocused ||
+      spotlightGems.length <= 1 ||
+      status !== "idle"
+    ) {
+      return;
+    }
+
     const interval = setInterval(() => {
       setSpotlightIndex((prev) => (prev + 1) % spotlightGems.length);
     }, 9000);
     return () => clearInterval(interval);
-  }, [heroHovered, spotlightGems.length, status]);
+  }, [heroHovered, heroFocused, spotlightGems.length, status]);
 
   // Directores clave con 4 o más películas en el catálogo
   const keyDirectors = useMemo(() => {
@@ -406,68 +421,47 @@ export default function HomeSearch({
     <main className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pb-24 pt-6 sm:pt-10 text-center">
       {/* 1. Manifiesto y Encabezado Editorial */}
       {status === "idle" && (
-        <header className="space-y-4 max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 text-[11px] font-medium uppercase tracking-widest text-neutral-400 backdrop-blur-md">
-            <span>Programa de Sala · Archivo Cinematográfico</span>
+        <header className="space-y-3 max-w-2xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] px-3 py-0.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
+            <span>Archivo Cinematográfico · Curaduría de Autor</span>
           </div>
 
-          <h1 className="font-serif text-3xl sm:text-5xl font-normal tracking-tight text-white leading-[1.15]">
+          <h1 className="font-serif text-3xl sm:text-5xl font-normal tracking-tight text-white leading-[1.1]">
             Watchlist con Criterio
           </h1>
 
-          <p className="mx-auto max-w-xl text-xs sm:text-sm text-neutral-300 leading-relaxed font-normal">
+          <p className="mx-auto max-w-lg text-xs sm:text-sm text-neutral-400 leading-relaxed font-normal">
             Una cartografía viva del cine conectada por autoría, atmósfera y obsesiones compartidas.
-            Cada película es un portal: selecciona una obra para abrir su constelación de{" "}
-            <span className="text-white font-medium">6 conexiones directas</span>, o navega por sensaciones y ciclos de autor.
+            Selecciona una obra para desplegar su constelación de{" "}
+            <span className="text-neutral-200 font-medium">6 conexiones directas</span>.
           </p>
-
-          {/* Tira de Celuloide: El Criterio en 3 Movimientos Cinematográficos */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs font-mono text-neutral-400">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 backdrop-blur-sm">
-              <span className="text-amber-400 font-semibold tracking-wider">01</span>
-              <span className="text-neutral-200 font-sans text-xs">Elige una obra o sensación</span>
-            </div>
-            <span className="text-neutral-600 hidden sm:inline select-none">──▶</span>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 backdrop-blur-sm">
-              <span className="text-amber-400 font-semibold tracking-wider">02</span>
-              <span className="text-neutral-200 font-sans text-xs">Despliega 6 conexiones de autor</span>
-            </div>
-            <span className="text-neutral-600 hidden sm:inline select-none">──▶</span>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 backdrop-blur-sm">
-              <span className="text-amber-400 font-semibold tracking-wider">03</span>
-              <span className="text-neutral-200 font-sans text-xs">Lee la crítica y streaming</span>
-            </div>
-          </div>
         </header>
       )}
 
-      {/* 2. LA GRAN PANTALLA: Selección Dinámica de Cabecera (Theatrical Cinema Stage) */}
+      {/* 2. LA GRAN PANTALLA: Selección Dinámica de Cabecera (Editorial Stage) */}
       {status === "idle" && currentSpotlight && (
         <section
           onMouseEnter={() => setHeroHovered(true)}
           onMouseLeave={() => setHeroHovered(false)}
-          className={`relative mt-8 w-full text-left rounded-3xl border ${
-            currentSpotlight.isPending ? "border-indigo-500/30" : "border-amber-500/20"
-          } bg-gradient-to-b from-neutral-900/90 via-neutral-900/75 to-neutral-950/95 p-5 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all duration-500`}
-          aria-label="Obra en foco de la sala"
+          onFocus={() => setHeroFocused(true)}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+              setHeroFocused(false);
+            }
+          }}
+          className="relative mt-8 sm:mt-10 w-full text-left border-y border-white/[0.06] py-8 sm:py-10"
+          aria-label="Obra en foco del archivo"
         >
-          {/* Resplandor cromático sutil en la marquesina */}
-          <div
-            className="pointer-events-none absolute -right-10 -top-10 h-72 w-72 rounded-full opacity-20 blur-3xl"
-            style={{
-              backgroundImage: `url(https://image.tmdb.org/t/p/w342${currentSpotlight.poster_path})`,
-              backgroundSize: "cover",
-            }}
-          />
-
           <div
             key={`${currentSpotlight.id}-${currentSpotlight.isPending ? "pending" : "seen"}`}
-            className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 animate-view-enter"
+            className="flex flex-col md:flex-row items-center md:items-start gap-7 sm:gap-10 animate-view-enter"
           >
-            {/* Afiche cinematográfico 2:3 con marco táctil y sello distintivo */}
-            <div className="shrink-0 transition-transform duration-300 hover:scale-[1.02] flex flex-col items-center">
-              <div
-                className="relative group cursor-pointer"
+            {/* Afiche cinematográfico 2:3 */}
+            <div className="shrink-0 flex flex-col items-center">
+              <button
+                type="button"
+                className="relative group cursor-pointer focus-ring-cinematic rounded-xl text-left"
+                aria-label={`Ver detalles de ${currentSpotlight.title}`}
                 onClick={() => {
                   if (currentSpotlight.isPending) {
                     onPickExternal(currentSpotlight);
@@ -479,40 +473,27 @@ export default function HomeSearch({
                 <MoviePosterCard
                   movie={currentSpotlight}
                   size="xl"
-                  accentColor={currentSpotlight.isPending ? "cyan" : "amber"}
-                  className="shadow-[0_16px_36px_rgba(0,0,0,0.9)] ring-1 ring-white/20"
+                  showBadge={false}
                 />
-                <div
-                  className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-950/90 px-3 py-0.5 border text-[10px] font-mono font-semibold shadow-lg backdrop-blur-sm ${
-                    currentSpotlight.isPending
-                      ? "border-indigo-400/50 text-indigo-300"
-                      : "border-amber-400/40 text-amber-300"
-                  }`}
-                >
-                  {currentSpotlight.isPending ? "🔮 POR VER · AFINIDAD" : "★ PALMA PERSONAL"}
-                </div>
+              </button>
+              <div className="mt-2.5 text-center">
+                <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400">
+                  {currentSpotlight.isPending ? "Por ver · Afinidad" : "Palma del Archivo"}
+                </span>
               </div>
             </div>
 
             {/* Metadatos editoriales y Reseña o Afinidades */}
             <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch">
               <div>
-                {/* Barra de claqueta y control de reel */}
-                <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+                {/* Cabecera técnica y control de reel */}
+                <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] pb-2.5">
                   <div className="inline-flex items-center gap-2">
-                    <span
-                      className={`flex h-2 w-2 rounded-full animate-pulse ${
-                        currentSpotlight.isPending ? "bg-indigo-400" : "bg-amber-400"
-                      }`}
-                    />
-                    <span
-                      className={`text-[10px] sm:text-[11px] font-mono uppercase tracking-widest font-medium ${
-                        currentSpotlight.isPending ? "text-indigo-300" : "text-amber-300"
-                      }`}
-                    >
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400/90" />
+                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-neutral-400 font-medium">
                       {currentSpotlight.isPending
                         ? "Descubrimiento Pendiente · En tu Sintonía"
-                        : "Selección del Archivo · Recomendación de Autor"}
+                        : "Selección Oficial · Recomendación de Autor"}
                     </span>
                   </div>
 
@@ -521,63 +502,62 @@ export default function HomeSearch({
                       type="button"
                       onClick={handleRandomSpotlight}
                       title="Explorar otra recomendación al azar"
-                      className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-mono text-neutral-300 hover:border-amber-400/40 hover:bg-white/10 hover:text-white transition-all active:scale-95"
+                      className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-0.5 text-[10px] font-mono text-neutral-300 hover:border-white/20 hover:text-white transition-all active:scale-95"
                     >
-                      <Dices size={12} className="text-amber-400" />
+                      <Dices size={11} className="text-amber-400" />
                       <span className="hidden sm:inline">Al azar</span>
                     </button>
 
                     {spotlightGems.length > 1 && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 font-mono text-[10px] text-neutral-400">
                         <button
                           type="button"
                           onClick={prevSpotlight}
                           aria-label="Obra anterior en foco"
-                          className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+                          className="rounded p-1 hover:bg-white/[0.06] hover:text-white transition-colors"
                         >
-                          <ChevronLeft size={16} />
+                          <ChevronLeft size={14} />
                         </button>
-                        <span className="font-mono text-[11px] text-neutral-300 min-w-[50px] text-center">
-                          {((spotlightIndex % spotlightGems.length) + 1)} / {spotlightGems.length}
+                        <span className="tabular-nums min-w-[40px] text-center">
+                          {String((spotlightIndex % spotlightGems.length) + 1).padStart(2, "0")} / {String(spotlightGems.length).padStart(2, "0")}
                         </span>
                         <button
                           type="button"
                           onClick={nextSpotlight}
                           aria-label="Siguiente obra en foco"
-                          className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+                          className="rounded p-1 hover:bg-white/[0.06] hover:text-white transition-colors"
                         >
-                          <ChevronRight size={16} />
+                          <ChevronRight size={14} />
                         </button>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Ficha técnica editorial */}
-                <p className="mt-3.5 font-mono text-[11px] tracking-wider text-neutral-400 uppercase">
+                {/* Metadatos técnicos */}
+                <p className="mt-3 font-mono text-[10px] tracking-[0.14em] text-neutral-400 uppercase">
                   {[
                     currentSpotlight.director ? `Dir. ${currentSpotlight.director}` : null,
                     currentSpotlight.release_year,
                     currentSpotlight.main_genre,
-                    currentSpotlight.isPending ? "Pendiente por ver" : "Criterio Archive",
                   ]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
 
-                {/* Título de gran escala cinematográfica */}
-                <h2 className="mt-1.5 font-serif text-3xl sm:text-4xl lg:text-5xl font-medium text-white tracking-tight leading-[1.1]">
+                {/* Título Display de escala cinematográfica */}
+                <h2 className="mt-1 font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-white tracking-tight leading-[1.08]">
                   {currentSpotlight.title}
                 </h2>
 
                 {/* Calificación de autor o Porcentaje de afinidad cinéfila */}
                 {!currentSpotlight.isPending && currentSpotlight.rating && (
-                  <div className="mt-3 flex items-center gap-1.5" aria-label={`${currentSpotlight.rating} de 5 estrellas`}>
-                    <div className="flex items-center gap-1">
+                  <div className="mt-2.5 flex items-center gap-2" aria-label={`${currentSpotlight.rating} de 5 estrellas`}>
+                    <div className="flex items-center gap-0.5">
                       {Array.from({ length: 5 }, (_, i) => (
                         <Star
                           key={i}
-                          size={14}
+                          size={12}
                           className={
                             i < currentSpotlight.rating
                               ? "fill-amber-400 text-amber-400"
@@ -586,70 +566,70 @@ export default function HomeSearch({
                         />
                       ))}
                     </div>
-                    <span className="ml-1 text-xs text-neutral-300 font-medium">
-                      {currentSpotlight.rating} / 5 · Calificación Máxima
+                    <span className="font-mono text-[11px] text-neutral-400">
+                      {currentSpotlight.rating} / 5 · Calificación del autor
                     </span>
                   </div>
                 )}
 
                 {currentSpotlight.isPending && (
-                  <div className="mt-3 flex items-center gap-2 text-xs font-mono text-indigo-300">
-                    <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/80 border border-indigo-500/30 px-2.5 py-1 font-semibold text-indigo-200">
-                      <Sparkles size={12} className="text-indigo-400" />
-                      {Math.round((currentSpotlight.score || 0.85) * 100)}% de sintonía estética
+                  <div className="mt-2.5 flex items-center gap-2 text-xs font-mono text-neutral-300">
+                    <span className="inline-flex items-center gap-1 rounded border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-neutral-200">
+                      <Sparkles size={11} className="text-amber-400" />
+                      {Math.round((currentSpotlight.score || 0.85) * 100)}% afinidad estética
                     </span>
-                    <span className="text-neutral-400 text-[11px]">con tus obras favoritas</span>
+                    <span className="text-neutral-500 text-[10px]">con tu canon personal</span>
                   </div>
                 )}
 
-                {/* Crítica personal del autor o Explicación de afinidad */}
+                {/* Crítica personal editorial (sin caja envolvente pesada) */}
                 {!currentSpotlight.isPending && currentSpotlight.review && (
-                  <div className="my-4 rounded-xl border-l-2 border-amber-500/70 bg-amber-950/15 p-4 text-left">
-                    <p className="font-serif text-sm sm:text-base italic leading-relaxed text-neutral-100">
+                  <div className="my-4 border-l border-amber-500/40 pl-4 py-0.5 text-left">
+                    <p className="font-serif text-sm sm:text-base italic leading-relaxed text-neutral-200">
                       “{currentSpotlight.review}”
                     </p>
-                    <span className="mt-2 block font-mono text-[10px] tracking-wider text-amber-400/80 uppercase">
-                      — Juan Camilo · Cuaderno de Crítica
+                    <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-neutral-400 uppercase">
+                      — Juan Camilo · Cuaderno de notas
                     </span>
                   </div>
                 )}
 
                 {currentSpotlight.isPending && (
-                  <div className="my-4 rounded-xl border-l-2 border-indigo-400/80 bg-gradient-to-r from-indigo-950/30 via-neutral-900/40 to-transparent p-4 text-left">
-                    <p className="font-serif text-sm sm:text-base italic leading-relaxed text-indigo-100">
+                  <div className="my-4 border-l border-white/20 pl-4 py-0.5 text-left">
+                    <p className="font-serif text-sm sm:text-base italic leading-relaxed text-neutral-300">
                       “Aún no la has visto, pero su atmósfera y autoría conectan directamente con{" "}
-                      <span className="text-white font-medium underline decoration-amber-400/60">
+                      <span className="text-white font-medium">
                         {currentSpotlight.because?.map((b) => b.title).join(" y ") || "obras de tu archivo"}
                       </span>
-                      , títulos que recomendaste y forman parte de tu canon personal.”
+                      , títulos que forman parte de tu registro personal.”
                     </p>
-                    <span className="mt-2 block font-mono text-[10px] tracking-wider text-indigo-300/80 uppercase">
-                      — Recomendación por afinidad semántica vectorial
+                    <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-neutral-400 uppercase">
+                      — Afinidad semántica vectorial
                     </span>
                   </div>
                 )}
               </div>
 
-              {/* Acciones principales de la marquesina */}
-              <div className="mt-5 pt-3 flex flex-wrap items-center gap-3">
+              {/* Botones de acción jerarquizados: 1 Primario + Secundarios limpios */}
+              <div className="mt-5 pt-2 flex flex-wrap items-center gap-2.5">
                 {!currentSpotlight.isPending ? (
                   <>
                     <button
                       type="button"
                       onClick={() => onPick(currentSpotlight.id)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-neutral-950 transition-all hover:bg-neutral-200 active:scale-95 shadow-xl"
+                      className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs sm:text-sm font-medium text-neutral-950 transition-all hover:bg-neutral-200 active:scale-95 shadow-sm"
                     >
-                      <span>Explorar constelación (6 conexiones directas)</span>
-                      <ArrowRight size={15} />
+                      <span>Explorar constelación (6 conexiones)</span>
+                      <ArrowRight size={14} />
                     </button>
 
                     <button
                       type="button"
                       onClick={onShowNextUp}
-                      className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-4 py-3 text-xs sm:text-sm font-medium text-emerald-200 transition-all hover:border-emerald-500/70 hover:bg-emerald-950/60 active:scale-95"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs sm:text-sm font-medium text-neutral-300 transition-all hover:border-white/20 hover:bg-white/[0.07] hover:text-white active:scale-95"
                     >
-                      <Popcorn size={15} className="text-emerald-400" />
-                      <span>¿Qué veo hoy? (Streaming)</span>
+                      <Popcorn size={14} className="text-neutral-400" />
+                      <span>¿Qué veo hoy?</span>
                     </button>
                   </>
                 ) : (
@@ -658,29 +638,29 @@ export default function HomeSearch({
                       <button
                         type="button"
                         onClick={() => onPick(currentSpotlight.anchorMovieId)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-neutral-950 transition-all hover:bg-neutral-200 active:scale-95 shadow-xl"
+                        className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs sm:text-sm font-medium text-neutral-950 transition-all hover:bg-neutral-200 active:scale-95 shadow-sm"
                       >
                         <span>Ver constelación de {currentSpotlight.because?.[0]?.title || "tu archivo"}</span>
-                        <ArrowRight size={15} />
+                        <ArrowRight size={14} />
                       </button>
                     )}
 
                     <button
                       type="button"
                       onClick={() => onPickExternal(currentSpotlight)}
-                      className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-950/40 px-4 py-3 text-xs sm:text-sm font-medium text-indigo-200 transition-all hover:border-indigo-500/70 hover:bg-indigo-950/60 active:scale-95"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs sm:text-sm font-medium text-neutral-300 transition-all hover:border-white/20 hover:bg-white/[0.07] hover:text-white active:scale-95"
                     >
-                      <Film size={15} className="text-indigo-400" />
-                      <span>Ficha de la obra y afinidades</span>
+                      <Film size={14} className="text-neutral-400" />
+                      <span>Ficha de la obra</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={onShowNextUp}
-                      className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-4 py-3 text-xs sm:text-sm font-medium text-emerald-200 transition-all hover:border-emerald-500/70 hover:bg-emerald-950/60 active:scale-95"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-xs sm:text-sm font-medium text-neutral-300 transition-all hover:border-white/20 hover:bg-white/[0.07] hover:text-white active:scale-95"
                     >
-                      <Popcorn size={15} className="text-emerald-400" />
-                      <span>¿Dónde verla? (Streaming)</span>
+                      <Popcorn size={14} className="text-neutral-400" />
+                      <span>Dónde verla</span>
                     </button>
                   </>
                 )}
@@ -688,9 +668,9 @@ export default function HomeSearch({
                 <button
                   type="button"
                   onClick={nextSpotlight}
-                  className="text-xs text-neutral-400 hover:text-white transition-colors ml-auto sm:ml-0"
+                  className="text-xs text-neutral-400 hover:text-white transition-colors ml-auto sm:ml-2 font-mono text-[11px]"
                 >
-                  Siguiente recomendación →
+                  Siguiente obra →
                 </button>
               </div>
             </div>
@@ -728,8 +708,15 @@ export default function HomeSearch({
             aria-expanded={showDropdown}
             aria-controls="home-suggestions"
             aria-autocomplete="list"
+            aria-activedescendant={
+              activeIndex >= 0
+                ? activeIndex < suggestions.length
+                  ? `suggestion-${suggestions[activeIndex]?.id}`
+                  : `tmdb-${externalSuggestions[activeIndex - suggestions.length]?.tmdb_id}`
+                : undefined
+            }
             autoComplete="off"
-            className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500 font-sans"
+            className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-400 font-sans"
           />
           {inputValue && (
             <button
@@ -751,7 +738,7 @@ export default function HomeSearch({
             className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-white/15 bg-neutral-900 text-left shadow-2xl"
           >
             {suggestions.length > 0 && (
-              <li role="presentation" className="px-4 pb-1 pt-3 text-[11px] font-mono uppercase tracking-wider text-neutral-500">
+              <li role="presentation" className="px-4 pb-1 pt-3 text-[11px] font-mono uppercase tracking-wider text-neutral-400">
                 En el archivo ({suggestions.length})
               </li>
             )}
@@ -787,7 +774,7 @@ export default function HomeSearch({
             {(externalSuggestions.length > 0 || tmdbLoading) && (
               <li
                 role="presentation"
-                className={`flex items-center gap-2 px-4 pb-1 pt-3 text-[11px] font-mono uppercase tracking-wider text-neutral-500 ${
+                className={`flex items-center gap-2 px-4 pb-1 pt-3 text-[11px] font-mono uppercase tracking-wider text-neutral-400 ${
                   suggestions.length > 0 ? "mt-1 border-t border-white/10" : ""
                 }`}
               >
@@ -835,7 +822,7 @@ export default function HomeSearch({
                 <span className="block truncate text-sm text-neutral-100 font-medium">
                   Buscar por afinidad de atmósfera: “{inputValue.trim()}”
                 </span>
-                <span className="block text-xs text-neutral-500">
+                <span className="block text-xs text-neutral-400">
                   Presiona Enter para calcular conexiones
                 </span>
               </span>
@@ -882,7 +869,7 @@ export default function HomeSearch({
                 Obras maestras con máxima calificación y criterio personal registrado en Notion
               </p>
             </div>
-            <span className="text-[11px] font-mono text-neutral-500 mt-1 sm:mt-0">
+            <span className="text-[11px] font-mono text-neutral-400 mt-1 sm:mt-0">
               Toca una para abrir su constelación de 6 conexiones
             </span>
           </div>
@@ -894,7 +881,7 @@ export default function HomeSearch({
                 type="button"
                 onClick={() => onPick(movie.id)}
                 aria-label={`Abrir constelación de ${movie.title}`}
-                className="group flex flex-col items-center text-center focus:outline-none"
+                className="group flex flex-col items-center text-center focus-ring-cinematic rounded-xl p-1"
               >
                 <div className="relative transition-all duration-300 group-hover:-translate-y-1.5 group-hover:scale-103">
                   <div className="absolute -top-2 left-1.5 z-20 rounded bg-neutral-950/90 px-1.5 py-0.5 border border-amber-500/40 text-[9px] font-mono font-bold text-amber-400 tracking-wider shadow">
@@ -952,14 +939,14 @@ export default function HomeSearch({
                   key={name}
                   type="button"
                   onClick={() => setSelectedDirector(isSelected ? null : name)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
                     isSelected
                       ? "bg-white text-neutral-950 font-semibold"
                       : "border border-white/10 bg-white/[0.03] text-neutral-300 hover:border-white/25 hover:bg-white/[0.08] hover:text-white"
                   }`}
                 >
                   <span>{name}</span>
-                  <span className={`text-[10px] ${isSelected ? "text-neutral-700" : "text-neutral-500"}`}>
+                  <span className={`text-[10px] ${isSelected ? "text-neutral-700" : "text-neutral-400"}`}>
                     ({count})
                   </span>
                 </button>
@@ -980,13 +967,13 @@ export default function HomeSearch({
                     type="button"
                     onClick={() => onPick(movie.id)}
                     aria-label={`Abrir constelación de ${movie.title}`}
-                    className="group flex flex-col items-center text-center focus:outline-none"
+                    className="group flex flex-col items-center text-center focus-ring-cinematic rounded-xl p-1"
                   >
                     <MoviePosterCard movie={movie} size="sm" />
                     <span className="mt-1.5 line-clamp-1 max-w-[100px] text-xs font-medium text-neutral-200 group-hover:text-white transition-colors">
                       {movie.title}
                     </span>
-                    <span className="text-[10px] text-neutral-500">
+                    <span className="text-[10px] text-neutral-400">
                       {movie.release_year}
                     </span>
                   </button>
@@ -1035,7 +1022,7 @@ export default function HomeSearch({
                 type="button"
                 onClick={() => onPick(movie.id)}
                 aria-label={`Abrir constelación de ${movie.title}`}
-                className="group flex flex-col items-center focus:outline-none"
+                className="group flex flex-col items-center focus-ring-cinematic rounded-xl p-1"
               >
                 <div className="transition-transform duration-300 group-hover:-translate-y-1">
                   <MoviePosterCard movie={movie} size="md" />
@@ -1043,7 +1030,7 @@ export default function HomeSearch({
                 <span className="mt-2.5 line-clamp-2 max-w-[120px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-white transition-colors">
                   {movie.title}
                 </span>
-                <span className="mt-0.5 text-[11px] text-neutral-500">
+                <span className="mt-0.5 text-[11px] text-neutral-400">
                   {[movie.release_year, movie.director].filter(Boolean).join(" · ")}
                 </span>
               </button>
@@ -1053,7 +1040,7 @@ export default function HomeSearch({
           <button
             type="button"
             onClick={handleReset}
-            className="mt-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs text-neutral-300 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
+            className="mt-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs text-neutral-300 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white focus-ring-cinematic"
           >
             <RotateCcw size={13} />
             <span>Volver al inicio del archivo</span>
@@ -1066,13 +1053,13 @@ export default function HomeSearch({
           <p className="text-sm text-neutral-300 font-medium">
             No encontré conexiones directas para esa búsqueda.
           </p>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="text-xs text-neutral-400 mt-1">
             Prueba con otra sensación o selecciona una obra del archivo.
           </p>
           <button
             type="button"
             onClick={handleReset}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white focus-ring-cinematic"
           >
             Volver
           </button>
@@ -1082,22 +1069,22 @@ export default function HomeSearch({
       {status === "error" && (
         <p className="mt-6 max-w-sm text-sm text-red-400">
           No pudimos buscar en este momento. Intenta de nuevo en unos segundos.
-          <span className="mt-1 block text-xs text-neutral-500">{errorMsg}</span>
+          <span className="mt-1 block text-xs text-neutral-400">{errorMsg}</span>
         </p>
       )}
 
       {/* 7. Mapa global y Sello de Sala del Archivo */}
-      <footer className="mt-20 pt-8 border-t border-white/10 w-full flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 font-mono">
+      <footer className="mt-20 pt-8 border-t border-white/10 w-full flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400 font-mono">
         <button
           type="button"
           onClick={onShowMap}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-medium text-neutral-300 backdrop-blur-md transition-all duration-200 hover:border-white/25 hover:bg-white/[0.08] hover:text-white active:scale-95"
+          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-medium text-neutral-300 backdrop-blur-md transition-all duration-200 hover:border-white/25 hover:bg-white/[0.08] hover:text-white active:scale-95 focus-ring-cinematic"
         >
           <Film size={13} className="text-amber-400" />
           <span>Ver mapa de conexiones completo</span>
         </button>
 
-        <span className="text-[10px] text-neutral-500 uppercase tracking-widest text-center sm:text-right">
+        <span className="text-[10px] text-neutral-400 uppercase tracking-widest text-center sm:text-right">
           Watchlist con Criterio · Notion & Neon · Curaduría de Juan Camilo
         </span>
       </footer>

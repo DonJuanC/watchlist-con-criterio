@@ -2,31 +2,44 @@
 // Endpoint seguro para disparar la sincronización de Notion desde webhooks,
 // GitHub Actions, automatizaciones o peticiones HTTP autorizadas.
 
+const crypto = require("crypto");
 const { syncNotionCatalog } = require("../services/notionSync");
 
 let isSyncing = false;
 
 function isAuthorized(req) {
-  const syncSecret = process.env.SYNC_SECRET;
-  const notionToken = process.env.NOTION_TOKEN;
-  const validSecrets = [syncSecret, notionToken].filter(Boolean);
-
-  if (validSecrets.length === 0) return false;
+  const syncSecret = process.env.SYNC_SECRET || process.env.NOTION_TOKEN;
+  if (!syncSecret) {
+    console.error(
+      "❌ Ni SYNC_SECRET ni NOTION_TOKEN están configurados en el entorno.",
+    );
+    return false;
+  }
 
   const authHeader = req.headers.authorization;
   const bearerToken = authHeader?.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : null;
-  const querySecret = req.query?.secret?.trim();
 
-  const provided = bearerToken || querySecret;
-  return Boolean(provided && validSecrets.includes(provided));
+  if (!bearerToken) {
+    return false;
+  }
+
+  const secretBuf = Buffer.from(syncSecret);
+  const providedBuf = Buffer.from(bearerToken);
+
+  if (secretBuf.length !== providedBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(secretBuf, providedBuf);
 }
 
 async function triggerSync(req, res) {
   if (!isAuthorized(req)) {
     return res.status(401).json({
-      error: "No autorizado. Proporciona un secret válido en 'Authorization: Bearer <token>' o '?secret=<token>'.",
+      error:
+        "No autorizado. Proporciona un secret válido en la cabecera 'Authorization: Bearer <token>'.",
     });
   }
 

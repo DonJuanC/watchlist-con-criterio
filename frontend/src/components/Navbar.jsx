@@ -3,8 +3,10 @@
 // Proporciona identidad visual, navegación entre secciones, conteo del catálogo
 // y un botón omnipresente para "Empezar de nuevo" / limpiar estado.
 
-import { Film, Popcorn, Network, RotateCcw, Compass } from "lucide-react";
+import { useState } from "react";
+import { Film, Popcorn, Network, RotateCcw, Compass, Scale } from "lucide-react";
 import useCineStore from "../store/useCineStore";
+import LegalModal from "./LegalModal";
 
 /**
  * @param {object} props
@@ -13,6 +15,7 @@ import useCineStore from "../store/useCineStore";
  * @param {() => void} [props.onResetAll]
  */
 export default function Navbar({ currentView, onNavigate, onResetAll }) {
+  const [showLegal, setShowLegal] = useState(false);
   const rawNodes = useCineStore((s) => s.rawGraph.nodes);
   const movieCount = rawNodes.length;
 
@@ -34,7 +37,7 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           type="button"
           onClick={handleBrandClick}
           aria-label="Ir al inicio y reiniciar"
-          className="group flex items-center gap-2.5 text-left focus:outline-none"
+          className="group flex items-center gap-2.5 text-left focus-ring-cinematic rounded-lg p-1"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/[0.04] text-neutral-200 transition-all duration-300 group-hover:scale-105 group-hover:border-white/30 group-hover:bg-white/[0.08]">
             <Film size={15} />
@@ -50,11 +53,12 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
         </button>
 
         {/* Enlaces de Navegación Centrales */}
-        <nav className="flex items-center gap-1 sm:gap-2">
+        <nav className="flex items-center gap-1 sm:gap-2" aria-label="Navegación principal">
           <button
             type="button"
             onClick={() => onNavigate("home")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+            aria-current={isHome ? "page" : undefined}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
               isHome
                 ? "bg-white/10 text-white shadow-sm border border-white/20"
                 : "text-neutral-400 hover:text-white hover:bg-white/5"
@@ -67,7 +71,8 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           <button
             type="button"
             onClick={() => onNavigate("next")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+            aria-current={currentView === "next" ? "page" : undefined}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
               currentView === "next"
                 ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/30"
                 : "text-neutral-400 hover:text-emerald-300 hover:bg-white/5"
@@ -80,7 +85,8 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           <button
             type="button"
             onClick={() => onNavigate("map")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+            aria-current={currentView === "map" ? "page" : undefined}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
               currentView === "map"
                 ? "bg-white/10 text-white border border-white/20"
                 : "text-neutral-400 hover:text-white hover:bg-white/5"
@@ -107,14 +113,27 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
             type="button"
             onClick={handleBrandClick}
             title="Reiniciar todo y volver al inicio"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-neutral-300 backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-95"
+            aria-label="Reiniciar y volver al inicio"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-neutral-300 backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-95 focus-ring-cinematic"
           >
             <RotateCcw size={12} className="text-neutral-400" />
-            <span className="hidden sm:inline">Inicio</span>
-            <span className="sm:hidden">Inicio</span>
+            <span>Inicio</span>
+          </button>
+
+          {/* Botón de Marco Legal, Privacidad y Atribuciones */}
+          <button
+            type="button"
+            onClick={() => setShowLegal(true)}
+            title="Marco Legal, Privacidad y Atribución"
+            aria-label="Ver Marco Legal, Privacidad y Atribución"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-neutral-400 backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-95 focus-ring-cinematic"
+          >
+            <Scale size={13} />
           </button>
         </div>
       </div>
+
+      <LegalModal isOpen={showLegal} onClose={() => setShowLegal(false)} />
     </header>
   );
 }
