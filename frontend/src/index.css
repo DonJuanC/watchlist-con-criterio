@@ -8,9 +8,12 @@
    Oscuro = "sala con luces bajas". Claro = "programa de mano".
    ========================================================================== */
 @theme {
-  --font-serif: "Playfair Display", Georgia, Cambria, serif;
-  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  /* Dos familias: Fraunces (display, títulos de película, citas) y Geist (UI y lectura).
+     La mono sale de la interfaz: font-mono apunta a Geist con cifras tabulares,
+     así las etiquetas y metadatos existentes cambian sin tocar cada componente. */
+  --font-serif: "Fraunces", Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Superficies semánticas */
   --color-canvas: #14110E;
@@ -131,6 +134,7 @@ html, body, #root {
   background-color: var(--color-canvas);
   color: var(--color-white);
   font-family: var(--font-sans);
+  font-optical-sizing: auto;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -299,3 +303,8 @@ body::before {
   }
 }
 
+
+/* Metadatos (años, conteos, notas) alineados en columnas */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}

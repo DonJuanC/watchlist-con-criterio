@@ -214,7 +214,7 @@ export default function LegalModal({ isOpen, onClose }) {
               <section>
                 <h3 className="font-semibold text-white text-sm mb-1">4. Tipografías e Iconos</h3>
                 <p>
-                  Tipografías: <em>Playfair Display</em> y <em>Plus Jakarta Sans</em> bajo licencia SIL Open Font License 1.1. Iconografía provista por <em>Lucide Icons</em> bajo licencia ISC.
+                  Tipografías: <em>Fraunces</em> y <em>Geist</em> bajo licencia SIL Open Font License 1.1. Iconografía provista por <em>Lucide Icons</em> bajo licencia ISC.
                 </p>
               </section>
 
