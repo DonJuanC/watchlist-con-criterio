@@ -14,7 +14,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Star,
-  User,
   Popcorn,
   Sparkles,
   ArrowRight,
@@ -680,7 +679,7 @@ export default function HomeSearch({
 
       {/* 3. Buscador Cinéfilo y Selector de Atmósfera */}
       <div
-        className="relative mt-12 w-full max-w-2xl"
+        className="relative mt-8 sm:mt-10 w-full max-w-2xl"
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget)) {
             setSuggestOpen(false);
@@ -690,19 +689,19 @@ export default function HomeSearch({
       >
         <form
           onSubmit={handleSubmit}
-          className="flex w-full items-center gap-3 rounded-2xl border border-white/15 bg-neutral-900/90 px-4 py-3.5 shadow-2xl backdrop-blur-xl transition-all duration-300 focus-within:border-amber-400/50 focus-within:ring-2 focus-within:ring-amber-400/20"
+          className="flex w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-[#121215]/90 px-4 py-3 shadow-surface-elevated transition-all duration-200 focus-within:border-amber-400/50"
         >
           {isLoading ? (
-            <Loader2 size={18} className="animate-spin text-neutral-300" />
+            <Loader2 size={16} className="animate-spin text-neutral-400" />
           ) : (
-            <Search size={18} className="text-neutral-400" />
+            <Search size={16} className="text-neutral-400" />
           )}
           <input
             type="text"
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Busca una película, director o atmósfera (ej: paranoia nocturna, laberintos mentales, neón)..."
+            placeholder="Busca una película, director o atmósfera (ej: paranoia nocturna, laberintos mentales)..."
             aria-label="Buscar película o atmósfera"
             role="combobox"
             aria-expanded={showDropdown}
@@ -716,16 +715,16 @@ export default function HomeSearch({
                 : undefined
             }
             autoComplete="off"
-            className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-400 font-sans"
+            className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500 font-sans"
           />
           {inputValue && (
             <button
               type="button"
               onClick={handleReset}
               aria-label="Limpiar búsqueda"
-              className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+              className="rounded p-1 text-neutral-400 hover:text-white transition-colors"
             >
-              <X size={16} />
+              <X size={15} />
             </button>
           )}
         </form>
@@ -735,10 +734,10 @@ export default function HomeSearch({
             id="home-suggestions"
             role="listbox"
             onMouseDown={(e) => e.preventDefault()}
-            className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-white/15 bg-neutral-900 text-left shadow-2xl"
+            className="absolute left-0 right-0 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-white/[0.08] bg-[#121215] text-left shadow-2xl"
           >
             {suggestions.length > 0 && (
-              <li role="presentation" className="px-4 pb-1 pt-3 text-[11px] font-mono uppercase tracking-wider text-neutral-400">
+              <li role="presentation" className="px-4 pb-1 pt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400">
                 En el archivo ({suggestions.length})
               </li>
             )}
@@ -751,21 +750,21 @@ export default function HomeSearch({
                 onClick={() => handlePickSuggestion(movie)}
                 onMouseMove={() => setActiveIndex(i)}
                 className={`group flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors ${
-                  activeIndex === i ? "bg-white/10" : ""
+                  activeIndex === i ? "bg-white/[0.06]" : ""
                 }`}
               >
                 <MoviePosterCard movie={movie} size="xs" showBadge={false} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-neutral-100 group-hover:text-white">
+                  <span className="block truncate text-sm font-medium text-neutral-200 group-hover:text-white">
                     {movie.title}
                   </span>
-                  <span className="block truncate text-xs text-neutral-400">
+                  <span className="block truncate text-xs text-neutral-400 font-mono text-[11px]">
                     {[movie.release_year, movie.director].filter(Boolean).join(" · ")}
                   </span>
                 </span>
                 {movie.rating && (
-                  <span className="text-[11px] text-amber-400/90 font-medium">
-                    ⭐ {movie.rating}
+                  <span className="text-[11px] text-amber-400/90 font-mono">
+                    ★ {movie.rating}
                   </span>
                 )}
               </li>
@@ -774,8 +773,8 @@ export default function HomeSearch({
             {(externalSuggestions.length > 0 || tmdbLoading) && (
               <li
                 role="presentation"
-                className={`flex items-center gap-2 px-4 pb-1 pt-3 text-[11px] font-mono uppercase tracking-wider text-neutral-400 ${
-                  suggestions.length > 0 ? "mt-1 border-t border-white/10" : ""
+                className={`flex items-center gap-2 px-4 pb-1 pt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400 ${
+                  suggestions.length > 0 ? "mt-1 border-t border-white/[0.06]" : ""
                 }`}
               >
                 Fuera del archivo (TMDB)
@@ -792,15 +791,15 @@ export default function HomeSearch({
                   onClick={() => handlePickExternal(movie)}
                   onMouseMove={() => setActiveIndex(i)}
                   className={`group flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors ${
-                    activeIndex === i ? "bg-white/10" : ""
+                    activeIndex === i ? "bg-white/[0.06]" : ""
                   }`}
                 >
                   <MoviePosterCard movie={movie} size="xs" showBadge={false} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-neutral-100 group-hover:text-white">
+                    <span className="block truncate text-sm font-medium text-neutral-200 group-hover:text-white">
                       {movie.title}
                     </span>
-                    <span className="block truncate text-xs text-neutral-400">
+                    <span className="block truncate text-xs text-neutral-400 font-mono text-[11px]">
                       {movie.release_year || "Sin año"} · Base TMDB
                     </span>
                   </span>
@@ -814,10 +813,10 @@ export default function HomeSearch({
               onClick={() => search(inputValue.trim(), `“${inputValue.trim()}”`)}
               onMouseMove={() => setActiveIndex(semanticIndex)}
               className={`flex cursor-pointer items-center gap-3 px-4 py-3 ${
-                semanticIndex > 0 || tmdbLoading ? "mt-1 border-t border-white/10" : ""
-              } ${activeIndex === semanticIndex ? "bg-white/10" : ""}`}
+                semanticIndex > 0 || tmdbLoading ? "mt-1 border-t border-white/[0.06]" : ""
+              } ${activeIndex === semanticIndex ? "bg-white/[0.06]" : ""}`}
             >
-              <Sparkles size={16} className="shrink-0 text-neutral-300" />
+              <Sparkles size={15} className="shrink-0 text-amber-400/80" />
               <span className="min-w-0">
                 <span className="block truncate text-sm text-neutral-100 font-medium">
                   Buscar por afinidad de atmósfera: “{inputValue.trim()}”
@@ -833,13 +832,13 @@ export default function HomeSearch({
 
       {/* Chips de Atmósferas Cinéfilas Reales */}
       {status === "idle" && (
-        <div className="mt-4 flex flex-wrap justify-center items-center gap-2 max-w-3xl">
+        <div className="mt-3.5 flex flex-wrap justify-center items-center gap-1.5 max-w-3xl">
           {CINEMATIC_MOODS.map((mood) => (
             <button
               key={mood.label}
               type="button"
               onClick={() => handleMoodClick(mood)}
-              className="rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs text-neutral-300 backdrop-blur-md transition-all duration-200 hover:border-amber-400/40 hover:bg-white/[0.08] hover:text-white active:scale-95"
+              className="rounded-full border border-white/[0.07] bg-white/[0.02] px-3 py-1 text-xs text-neutral-400 hover:border-white/20 hover:bg-white/[0.05] hover:text-neutral-200 transition-all duration-150 active:scale-95"
             >
               {mood.label}
             </button>
@@ -848,56 +847,55 @@ export default function HomeSearch({
             type="button"
             onClick={handleSurprise}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-950/20 px-3.5 py-1.5 text-xs font-medium text-amber-200 backdrop-blur-md transition-all duration-200 hover:border-amber-500/60 hover:bg-amber-950/40 active:scale-95 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-950/20 px-3 py-1 text-xs font-mono text-amber-300 hover:border-amber-500/50 hover:bg-amber-950/30 transition-all duration-150 active:scale-95 disabled:opacity-50"
           >
-            <Dices size={13} className="text-amber-400" />
-            Atmósfera al azar
+            <Dices size={12} className="text-amber-400" />
+            <span>Al azar</span>
           </button>
         </div>
       )}
 
-      {/* 4. SECCIÓN EDITORIAL: JOYAS DEL ARCHIVO (Criterion Spine Edition) */}
+      {/* 4. SECCIÓN EDITORIAL: JOYAS DEL ARCHIVO */}
       {status === "idle" && curatedGems.length > 0 && (
         <section className="mt-14 w-full text-left" aria-label="Joyas del archivo">
-          <div className="mb-5 flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/10 pb-3">
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/[0.06] pb-3">
             <div>
-              <h3 className="font-serif text-lg sm:text-xl font-medium text-white flex items-center gap-2">
-                <Star size={16} className="text-amber-400" />
-                Selección Oficial · Joyas del Archivo
+              <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
+                № · Selección Oficial
+              </span>
+              <h3 className="font-serif text-xl sm:text-2xl font-normal text-white mt-0.5">
+                Joyas del Archivo
               </h3>
-              <p className="mt-0.5 text-xs text-neutral-400">
-                Obras maestras con máxima calificación y criterio personal registrado en Notion
-              </p>
             </div>
-            <span className="text-[11px] font-mono text-neutral-400 mt-1 sm:mt-0">
-              Toca una para abrir su constelación de 6 conexiones
+            <span className="text-[10px] font-mono text-neutral-400 mt-1 sm:mt-0">
+              Obras de máxima calificación · Toca para abrir constelación
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3.5 sm:gap-4">
             {curatedGems.slice(0, 6).map((movie, idx) => (
               <button
                 key={movie.id}
                 type="button"
                 onClick={() => onPick(movie.id)}
                 aria-label={`Abrir constelación de ${movie.title}`}
-                className="group flex flex-col items-center text-center focus-ring-cinematic rounded-xl p-1"
+                className="group flex flex-col items-center text-center focus-ring-cinematic rounded-lg p-1"
               >
-                <div className="relative transition-all duration-300 group-hover:-translate-y-1.5 group-hover:scale-103">
-                  <div className="absolute -top-2 left-1.5 z-20 rounded bg-neutral-950/90 px-1.5 py-0.5 border border-amber-500/40 text-[9px] font-mono font-bold text-amber-400 tracking-wider shadow">
+                <div className="relative">
+                  <div className="absolute -top-2 left-1 z-20 rounded bg-neutral-950/90 px-1 py-0.2 border border-white/10 text-[8px] font-mono font-medium text-neutral-400 tracking-wider">
                     № {String(idx + 1).padStart(2, "0")}
                   </div>
-                  <MoviePosterCard movie={movie} size="sm" />
+                  <MoviePosterCard movie={movie} size="sm" showBadge={false} />
                 </div>
                 <span className="mt-2 line-clamp-1 max-w-[110px] text-xs font-medium text-neutral-200 group-hover:text-white transition-colors">
                   {movie.title}
                 </span>
-                <span className="text-[10px] text-neutral-400 truncate max-w-[110px]">
+                <span className="text-[10px] font-mono text-neutral-400 truncate max-w-[110px]">
                   {[movie.release_year, movie.director].filter(Boolean).join(" · ")}
                 </span>
                 {movie.rating && (
-                  <span className="mt-0.5 text-[10px] text-amber-400/90 font-medium">
-                    ⭐ {movie.rating}/5
+                  <span className="mt-0.5 text-[10px] font-mono text-amber-400/80">
+                    ★ {movie.rating}
                   </span>
                 )}
               </button>
@@ -909,21 +907,20 @@ export default function HomeSearch({
       {/* 5. SECCIÓN EDITORIAL: CICLOS DE DIRECTORES CLAVE */}
       {status === "idle" && keyDirectors.length > 0 && (
         <section className="mt-14 w-full text-left" aria-label="Ciclos de directores clave">
-          <div className="mb-4 flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/10 pb-3">
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/[0.06] pb-3">
             <div>
-              <h3 className="font-serif text-lg sm:text-xl font-medium text-white flex items-center gap-2">
-                <User size={16} className="text-neutral-400" />
+              <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
+                Filmografías
+              </span>
+              <h3 className="font-serif text-xl sm:text-2xl font-normal text-white mt-0.5">
                 Directores de Cabecera
               </h3>
-              <p className="mt-0.5 text-xs text-neutral-400">
-                Auteurs con mayor presencia y constelaciones conectadas en la curaduría
-              </p>
             </div>
             {selectedDirector && (
               <button
                 type="button"
                 onClick={() => setSelectedDirector(null)}
-                className="text-[11px] text-neutral-400 hover:text-white transition-colors mt-1 sm:mt-0"
+                className="text-[11px] font-mono text-neutral-400 hover:text-white transition-colors mt-1 sm:mt-0"
               >
                 Cerrar ciclo de {selectedDirector}
               </button>
@@ -931,7 +928,7 @@ export default function HomeSearch({
           </div>
 
           {/* Filtros de Directores */}
-          <div className="flex flex-wrap gap-2 mb-5">
+          <div className="flex flex-wrap gap-1.5 mb-5">
             {keyDirectors.slice(0, 6).map(({ name, count }) => {
               const isSelected = selectedDirector === name;
               return (
@@ -939,15 +936,15 @@ export default function HomeSearch({
                   key={name}
                   type="button"
                   onClick={() => setSelectedDirector(isSelected ? null : name)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all focus-ring-cinematic ${
                     isSelected
-                      ? "bg-white text-neutral-950 font-semibold"
-                      : "border border-white/10 bg-white/[0.03] text-neutral-300 hover:border-white/25 hover:bg-white/[0.08] hover:text-white"
+                      ? "bg-white text-neutral-950 font-medium"
+                      : "border border-white/[0.08] bg-white/[0.02] text-neutral-400 hover:border-white/20 hover:text-neutral-200"
                   }`}
                 >
                   <span>{name}</span>
-                  <span className={`text-[10px] ${isSelected ? "text-neutral-700" : "text-neutral-400"}`}>
-                    ({count})
+                  <span className={`text-[10px] font-mono ${isSelected ? "text-neutral-700" : "text-neutral-400"}`}>
+                    {count}
                   </span>
                 </button>
               );
@@ -956,8 +953,8 @@ export default function HomeSearch({
 
           {/* Shelf de Películas del Director Seleccionado */}
           {selectedDirector && directorMovies.length > 0 && (
-            <div className="rounded-2xl border border-white/10 bg-neutral-900/50 p-4 mb-6">
-              <p className="text-xs font-mono uppercase tracking-wider text-neutral-400 mb-3">
+            <div className="rounded-xl border border-white/[0.06] bg-[#121215]/60 p-4 mb-6">
+              <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-neutral-400 mb-3">
                 Películas de {selectedDirector} en el archivo:
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
@@ -967,13 +964,13 @@ export default function HomeSearch({
                     type="button"
                     onClick={() => onPick(movie.id)}
                     aria-label={`Abrir constelación de ${movie.title}`}
-                    className="group flex flex-col items-center text-center focus-ring-cinematic rounded-xl p-1"
+                    className="group flex flex-col items-center text-center focus-ring-cinematic rounded-lg p-1"
                   >
-                    <MoviePosterCard movie={movie} size="sm" />
+                    <MoviePosterCard movie={movie} size="sm" showBadge={false} />
                     <span className="mt-1.5 line-clamp-1 max-w-[100px] text-xs font-medium text-neutral-200 group-hover:text-white transition-colors">
                       {movie.title}
                     </span>
-                    <span className="text-[10px] text-neutral-400">
+                    <span className="text-[10px] font-mono text-neutral-400">
                       {movie.release_year}
                     </span>
                   </button>
@@ -1005,11 +1002,11 @@ export default function HomeSearch({
 
       {showResults && results.length > 0 && (
         <section className="mt-8 w-full" aria-label="Resultados de búsqueda">
-          <div className="mb-6 text-center border-b border-white/10 pb-4">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
+          <div className="mb-6 text-center border-b border-white/[0.06] pb-4">
+            <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
               Conexiones del archivo
             </span>
-            <h2 className="font-serif text-2xl font-medium text-white mt-1">{heading}</h2>
+            <h2 className="font-serif text-2xl font-normal text-white mt-1">{heading}</h2>
             <p className="mt-1 text-xs text-neutral-400">
               6 obras conectadas por atmósfera y temática. Selecciona una para abrir su constelación completa.
             </p>
@@ -1022,15 +1019,15 @@ export default function HomeSearch({
                 type="button"
                 onClick={() => onPick(movie.id)}
                 aria-label={`Abrir constelación de ${movie.title}`}
-                className="group flex flex-col items-center focus-ring-cinematic rounded-xl p-1"
+                className="group flex flex-col items-center focus-ring-cinematic rounded-lg p-1"
               >
-                <div className="transition-transform duration-300 group-hover:-translate-y-1">
-                  <MoviePosterCard movie={movie} size="md" />
+                <div className="transition-transform duration-300">
+                  <MoviePosterCard movie={movie} size="md" showBadge={false} />
                 </div>
                 <span className="mt-2.5 line-clamp-2 max-w-[120px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-white transition-colors">
                   {movie.title}
                 </span>
-                <span className="mt-0.5 text-[11px] text-neutral-400">
+                <span className="mt-0.5 text-[11px] font-mono text-neutral-400">
                   {[movie.release_year, movie.director].filter(Boolean).join(" · ")}
                 </span>
               </button>
@@ -1040,7 +1037,7 @@ export default function HomeSearch({
           <button
             type="button"
             onClick={handleReset}
-            className="mt-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs text-neutral-300 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white focus-ring-cinematic"
+            className="mt-10 inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs text-neutral-300 transition-colors hover:border-white/20 hover:text-white focus-ring-cinematic"
           >
             <RotateCcw size={13} />
             <span>Volver al inicio del archivo</span>
@@ -1059,7 +1056,7 @@ export default function HomeSearch({
           <button
             type="button"
             onClick={handleReset}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white focus-ring-cinematic"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs text-neutral-300 transition-colors hover:border-white/20 hover:text-white focus-ring-cinematic"
           >
             Volver
           </button>
@@ -1074,17 +1071,17 @@ export default function HomeSearch({
       )}
 
       {/* 7. Mapa global y Sello de Sala del Archivo */}
-      <footer className="mt-20 pt-8 border-t border-white/10 w-full flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400 font-mono">
+      <footer className="mt-20 pt-8 border-t border-white/[0.06] w-full flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400 font-mono">
         <button
           type="button"
           onClick={onShowMap}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-medium text-neutral-300 backdrop-blur-md transition-all duration-200 hover:border-white/25 hover:bg-white/[0.08] hover:text-white active:scale-95 focus-ring-cinematic"
+          className="inline-flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3.5 py-2 text-xs font-medium text-neutral-300 hover:border-white/20 hover:text-white active:scale-95 focus-ring-cinematic transition-all"
         >
           <Film size={13} className="text-amber-400" />
           <span>Ver mapa de conexiones completo</span>
         </button>
 
-        <span className="text-[10px] text-neutral-400 uppercase tracking-widest text-center sm:text-right">
+        <span className="text-[10px] text-neutral-400 uppercase tracking-[0.14em] text-center sm:text-right">
           Watchlist con Criterio · Notion & Neon · Curaduría de Juan Camilo
         </span>
       </footer>
