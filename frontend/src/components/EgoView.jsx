@@ -78,11 +78,11 @@ export default function EgoView({ centerId, onSelect }) {
 
             const strokeColor = isDirector
               ? isHovered
-                ? "#f59e0b"
-                : "rgba(245, 158, 11, 0.45)"
+                ? "#d97706"
+                : "rgba(217, 119, 6, 0.35)"
               : isHovered
                 ? "#ffffff"
-                : "rgba(255, 255, 255, 0.25)";
+                : "rgba(255, 255, 255, 0.14)";
 
             return (
               <line
@@ -92,11 +92,11 @@ export default function EgoView({ centerId, onSelect }) {
                 x2={p.x}
                 y2={p.y}
                 stroke={strokeColor}
-                strokeWidth={isHovered ? "1.8" : "1"}
+                strokeWidth={isHovered ? "1.4" : "0.75"}
                 strokeDasharray={isDirector ? undefined : "1.5 1"}
                 className="transition-all duration-300"
                 style={{
-                  opacity: isAnyHovered && !isHovered ? 0.2 : 1,
+                  opacity: isAnyHovered && !isHovered ? 0.15 : 1,
                 }}
                 vectorEffect="non-scaling-stroke"
               />
@@ -104,21 +104,22 @@ export default function EgoView({ centerId, onSelect }) {
           })}
         </svg>
 
-        {/* Película central: afiche vertical con resplandor */}
+        {/* Película central: afiche vertical */}
         <button
           type="button"
           onClick={() => setShowInfo((v) => !v)}
           aria-expanded={showInfo}
           aria-controls="ego-movie-info"
           aria-label={`${showInfo ? "Ocultar" : "Ver"} ficha de ${center.title}`}
-          className="group absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 focus-ring-cinematic rounded-2xl z-10 transition-transform duration-300 hover:scale-105 active:scale-95"
+          className="group absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 focus-ring-cinematic rounded-xl z-10 transition-transform duration-300 hover:scale-[1.02] active:scale-98"
         >
           <MoviePosterCard
             movie={center}
             size="lg"
             isCenter={true}
+            showBadge={false}
           />
-          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-900/90 px-2.5 py-0.5 text-[11px] font-medium text-neutral-200 border border-white/20 backdrop-blur-md shadow-lg transition-opacity duration-200">
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#121215]/90 px-2.5 py-0.5 text-[10px] font-mono tracking-wider uppercase text-neutral-300 border border-white/10 shadow-lg transition-opacity duration-200">
             {showInfo ? "Cerrar ficha" : "Ver ficha"}
           </div>
         </button>
@@ -139,34 +140,34 @@ export default function EgoView({ centerId, onSelect }) {
               onBlur={() => setHoveredNeighborId(null)}
               aria-label={`Ir a ${p.node.title}. ${REASON_LABEL[p.type] ?? "Conectada"}`}
               style={{ left: `${p.x}%`, top: `${p.y}%` }}
-              className="group absolute flex w-24 sm:w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center focus-ring-cinematic rounded-xl z-20 p-1"
+              className="group absolute flex w-24 sm:w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center focus-ring-cinematic rounded-lg z-20 p-1"
             >
               <div
                 className={`transition-all duration-300 ${
-                  isHovered ? "scale-110 -translate-y-1" : "hover:scale-105"
+                  isHovered ? "-translate-y-1" : ""
                 }`}
               >
                 <MoviePosterCard
                   movie={p.node}
                   size="sm"
                   selected={isHovered}
-                  accentColor={isDirector ? "amber" : "cyan"}
+                  showBadge={false}
                 />
               </div>
 
-              {/* Etiqueta flotante con estilo glassmorphic */}
+              {/* Etiqueta flotante con estilo editorial */}
               <div className="mt-1 flex flex-col items-center max-w-[100px] sm:max-w-[110px]">
-                <span className="line-clamp-2 rounded bg-neutral-950/90 px-1.5 py-0.5 text-[11px] font-medium leading-tight text-neutral-200 border border-white/5 backdrop-blur-sm group-hover:text-white transition-colors">
+                <span className="line-clamp-2 rounded bg-[#0a0a0c]/85 px-1.5 py-0.5 text-[11px] font-medium leading-tight text-neutral-200 group-hover:text-white transition-colors">
                   {p.node.title}
                 </span>
                 <span
-                  className={`mt-0.5 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-medium leading-none backdrop-blur-sm border ${
+                  className={`mt-0.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono leading-none border ${
                     isDirector
-                      ? "bg-amber-950/80 text-amber-300 border-amber-500/30"
-                      : "bg-neutral-900/90 text-neutral-300 border-white/15"
+                      ? "bg-amber-950/40 text-amber-300/90 border-amber-500/30"
+                      : "bg-[#121215]/80 text-neutral-400 border-white/10"
                   }`}
                 >
-                  {isDirector ? <User size={9} /> : <Sparkles size={9} />}
+                  {isDirector ? <User size={8} /> : <Sparkles size={8} />}
                   {REASON_LABEL[p.type] ?? "Conectada"}
                 </span>
               </div>

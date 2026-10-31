@@ -39,7 +39,7 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
           <Award size={12} className="text-neutral-400" />
           La Crítica Externa
         </h4>
-        <div className="flex items-center gap-1 text-[10px] font-mono text-neutral-500">
+        <div className="flex items-center gap-1 text-[10px] font-mono text-neutral-400">
           <span>OMDb</span>
           {imdbId && (
             <a

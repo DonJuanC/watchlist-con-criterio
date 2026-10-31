@@ -30,7 +30,7 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
   const isHome = currentView === "home";
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-neutral-950/80 backdrop-blur-xl transition-all">
+    <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-[#0a0a0c]/85 backdrop-blur-md transition-all">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
         {/* Identidad de Marca y Logo Cinéfilo */}
         <button
@@ -39,29 +39,29 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           aria-label="Ir al inicio y reiniciar"
           className="group flex items-center gap-2.5 text-left focus-ring-cinematic rounded-lg p-1"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/[0.04] text-neutral-200 transition-all duration-300 group-hover:scale-105 group-hover:border-white/30 group-hover:bg-white/[0.08]">
-            <Film size={15} />
+          <div className="flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-neutral-300 transition-all duration-200 group-hover:border-white/20 group-hover:text-white">
+            <Film size={14} />
           </div>
-          <div>
-            <span className="block font-serif text-sm font-semibold tracking-wider text-white group-hover:text-neutral-200 transition-colors">
-              WATCHLIST <span className="font-sans text-[9px] uppercase tracking-widest text-neutral-300 font-medium ml-1.5 px-1.5 py-0.5 rounded bg-white/10 border border-white/15">Criterio</span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-serif text-sm font-normal tracking-wide text-white group-hover:text-neutral-200 transition-colors">
+              Watchlist
             </span>
-            <span className="hidden sm:block text-[10px] text-neutral-400">
-              Archivo y conexiones de cine
+            <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400">
+              / Criterio
             </span>
           </div>
         </button>
 
         {/* Enlaces de Navegación Centrales */}
-        <nav className="flex items-center gap-1 sm:gap-2" aria-label="Navegación principal">
+        <nav className="flex items-center gap-1" aria-label="Navegación principal">
           <button
             type="button"
             onClick={() => onNavigate("home")}
             aria-current={isHome ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
               isHome
-                ? "bg-white/10 text-white shadow-sm border border-white/20"
-                : "text-neutral-400 hover:text-white hover:bg-white/5"
+                ? "bg-white/[0.08] text-white border border-white/[0.1]"
+                : "text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04]"
             }`}
           >
             <Compass size={13} />
@@ -72,10 +72,10 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
             type="button"
             onClick={() => onNavigate("next")}
             aria-current={currentView === "next" ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
               currentView === "next"
-                ? "bg-emerald-950/60 text-emerald-300 border border-emerald-500/30"
-                : "text-neutral-400 hover:text-emerald-300 hover:bg-white/5"
+                ? "bg-white/[0.08] text-white border border-white/[0.1]"
+                : "text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04]"
             }`}
           >
             <Popcorn size={13} />
@@ -86,10 +86,10 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
             type="button"
             onClick={() => onNavigate("map")}
             aria-current={currentView === "map" ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
               currentView === "map"
-                ? "bg-white/10 text-white border border-white/20"
-                : "text-neutral-400 hover:text-white hover:bg-white/5"
+                ? "bg-white/[0.08] text-white border border-white/[0.1]"
+                : "text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04]"
             }`}
           >
             <Network size={13} />
@@ -97,14 +97,14 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           </button>
         </nav>
 
-        {/* Botón de Reinicio / Empezar de nuevo y contador */}
+        {/* Botón de Reinicio y contador */}
         <div className="flex items-center gap-2">
           {movieCount > 0 && (
             <div
               title="Películas vistas registradas en el catálogo con criterio"
-              className="hidden lg:inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-neutral-400"
+              className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-0.5 text-[10px] font-mono text-neutral-400"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80" />
+              <span className="h-1 w-1 rounded-full bg-amber-400/90" />
               <span>{movieCount} obras</span>
             </div>
           )}
@@ -114,10 +114,10 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
             onClick={handleBrandClick}
             title="Reiniciar todo y volver al inicio"
             aria-label="Reiniciar y volver al inicio"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-neutral-300 backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-95 focus-ring-cinematic"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 text-xs font-medium text-neutral-300 transition-all hover:border-white/20 hover:text-white active:scale-95 focus-ring-cinematic"
           >
             <RotateCcw size={12} className="text-neutral-400" />
-            <span>Inicio</span>
+            <span className="hidden sm:inline">Inicio</span>
           </button>
 
           {/* Botón de Marco Legal, Privacidad y Atribuciones */}
@@ -126,9 +126,9 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
             onClick={() => setShowLegal(true)}
             title="Marco Legal, Privacidad y Atribución"
             aria-label="Ver Marco Legal, Privacidad y Atribución"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-neutral-400 backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 hover:text-white active:scale-95 focus-ring-cinematic"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.02] text-neutral-400 transition-all hover:border-white/20 hover:text-white active:scale-95 focus-ring-cinematic"
           >
-            <Scale size={13} />
+            <Scale size={12} />
           </button>
         </div>
       </div>
