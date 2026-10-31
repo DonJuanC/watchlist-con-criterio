@@ -20,7 +20,7 @@ import {
   ArrowRight,
   RotateCcw,
 } from "lucide-react";
-import { semanticSearch } from "../services/api";
+import { semanticSearch, fetchNextUp } from "../services/api";
 import useCineStore from "../store/useCineStore";
 import useTmdbSuggestions from "../hooks/useTmdbSuggestions";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
@@ -29,6 +29,15 @@ const RESULTS_LIMIT = 6;
 const SUGGESTIONS_LIMIT = 5;
 const SUGGESTIONS_MIN_CHARS = 2;
 const EXTERNAL_LIMIT = 4;
+
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 // Atmósferas cinéfilas reales para búsqueda semántica por sensación
 const CINEMATIC_MOODS = [
@@ -107,10 +116,36 @@ export default function HomeSearch({
   const [errorMsg, setErrorMsg] = useState("");
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [spotlightIndex, setSpotlightIndex] = useState(0);
+  const [spotlightIndex, setSpotlightIndex] = useState(() => Math.floor(Math.random() * 5));
   const [heroHovered, setHeroHovered] = useState(false);
   const [selectedDirector, setSelectedDirector] = useState(null);
+  const [pendingGems, setPendingGems] = useState([]);
   const requestIdRef = useRef(0);
+
+  // Consultar recomendaciones de películas pendientes afines al gusto marcado con 🟢
+  useEffect(() => {
+    let cancelled = false;
+    fetchNextUp(10, 0, "affinity")
+      .then((data) => {
+        if (cancelled) return;
+        const valid = (data.results || [])
+          .filter((r) => r.node && r.node.poster_path)
+          .map((r) => ({
+            ...r.node,
+            isPending: true,
+            score: r.score,
+            because: r.because,
+            anchorMovieId: r.because?.[0]?.id,
+          }));
+        setPendingGems(valid);
+      })
+      .catch(() => {
+        // En caso de cold start o error de red, fallback transparente a joyas vistas
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Obras maestras del archivo con calificación máxima o reseña personal escrita
   const curatedGems = useMemo(() => {
@@ -131,13 +166,44 @@ export default function HomeSearch({
       });
   }, [catalog]);
 
-  // Selección de obras para el carrusel de Obra en Foco (las que tienen reseña de autor)
+  // Selección viva y dinámica de cabecera:
+  // Combina obras maestras del archivo y descubrimientos pendientes en sintonía con el criterio,
+  // barajados aleatoriamente en cada recarga para que la sala nunca se sienta estática.
   const spotlightGems = useMemo(() => {
-    const withReview = curatedGems.filter((m) => m.review && m.poster_path);
-    return withReview.length > 0 ? withReview : curatedGems.slice(0, 5);
-  }, [curatedGems]);
+    const seenWithPoster = curatedGems
+      .filter((m) => m.poster_path)
+      .map((m) => ({ ...m, isPending: false }));
+
+    if (seenWithPoster.length === 0 && pendingGems.length === 0) return [];
+
+    // Muestra aleatoria barajada de obras vistas (4 a 5)
+    const shuffledSeen = shuffleArray(seenWithPoster).slice(0, 5);
+
+    // Muestra aleatoria barajada de descubrimientos pendientes afines (3 a 4)
+    const shuffledPending = shuffleArray(pendingGems).slice(0, 4);
+
+    // Intercalar orgánicamente: joya vista -> pendiente afin -> joya vista...
+    const combined = [];
+    const maxLen = Math.max(shuffledSeen.length, shuffledPending.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < shuffledSeen.length) combined.push(shuffledSeen[i]);
+      if (i < shuffledPending.length) combined.push(shuffledPending[i]);
+    }
+
+    return combined.length > 0 ? combined : seenWithPoster.slice(0, 5);
+  }, [curatedGems, pendingGems]);
 
   const currentSpotlight = spotlightGems[spotlightIndex % Math.max(1, spotlightGems.length)];
+
+  // Saltar de inmediato a otra obra recomendada al azar
+  const handleRandomSpotlight = useCallback(() => {
+    if (spotlightGems.length <= 1) return;
+    setSpotlightIndex((prev) => {
+      let next = Math.floor(Math.random() * spotlightGems.length);
+      if (next === prev) next = (prev + 1) % spotlightGems.length;
+      return next;
+    });
+  }, [spotlightGems.length]);
 
   // Sincronizar el afiche de la obra en foco con la atmósfera ambiental de la sala
   useEffect(() => {
@@ -375,13 +441,15 @@ export default function HomeSearch({
         </header>
       )}
 
-      {/* 2. LA GRAN PANTALLA: Obra Maestra en Foco (Theatrical Cinema Stage) */}
+      {/* 2. LA GRAN PANTALLA: Selección Dinámica de Cabecera (Theatrical Cinema Stage) */}
       {status === "idle" && currentSpotlight && (
         <section
           onMouseEnter={() => setHeroHovered(true)}
           onMouseLeave={() => setHeroHovered(false)}
-          className="relative mt-8 w-full text-left rounded-3xl border border-amber-500/20 bg-gradient-to-b from-neutral-900/90 via-neutral-900/75 to-neutral-950/95 p-5 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all duration-500"
-          aria-label="Obra en foco del archivo"
+          className={`relative mt-8 w-full text-left rounded-3xl border ${
+            currentSpotlight.isPending ? "border-indigo-500/30" : "border-amber-500/20"
+          } bg-gradient-to-b from-neutral-900/90 via-neutral-900/75 to-neutral-950/95 p-5 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all duration-500`}
+          aria-label="Obra en foco de la sala"
         >
           {/* Resplandor cromático sutil en la marquesina */}
           <div
@@ -393,58 +461,96 @@ export default function HomeSearch({
           />
 
           <div
-            key={currentSpotlight.id}
+            key={`${currentSpotlight.id}-${currentSpotlight.isPending ? "pending" : "seen"}`}
             className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 animate-view-enter"
           >
-            {/* Afiche cinematográfico 2:3 con marco táctil y palma personal */}
+            {/* Afiche cinematográfico 2:3 con marco táctil y sello distintivo */}
             <div className="shrink-0 transition-transform duration-300 hover:scale-[1.02] flex flex-col items-center">
-              <div className="relative group cursor-pointer" onClick={() => onPick(currentSpotlight.id)}>
+              <div
+                className="relative group cursor-pointer"
+                onClick={() => {
+                  if (currentSpotlight.isPending) {
+                    onPickExternal(currentSpotlight);
+                  } else {
+                    onPick(currentSpotlight.id);
+                  }
+                }}
+              >
                 <MoviePosterCard
                   movie={currentSpotlight}
                   size="xl"
+                  accentColor={currentSpotlight.isPending ? "cyan" : "amber"}
                   className="shadow-[0_16px_36px_rgba(0,0,0,0.9)] ring-1 ring-white/20"
                 />
-                <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-950/90 px-3 py-0.5 border border-amber-400/40 text-[10px] font-mono font-semibold text-amber-300 shadow-lg backdrop-blur-sm">
-                  ★ PALMA PERSONAL
+                <div
+                  className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-950/90 px-3 py-0.5 border text-[10px] font-mono font-semibold shadow-lg backdrop-blur-sm ${
+                    currentSpotlight.isPending
+                      ? "border-indigo-400/50 text-indigo-300"
+                      : "border-amber-400/40 text-amber-300"
+                  }`}
+                >
+                  {currentSpotlight.isPending ? "🔮 POR VER · AFINIDAD" : "★ PALMA PERSONAL"}
                 </div>
               </div>
             </div>
 
-            {/* Metadatos editoriales y Reseña de autor */}
+            {/* Metadatos editoriales y Reseña o Afinidades */}
             <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch">
               <div>
                 {/* Barra de claqueta y control de reel */}
                 <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
                   <div className="inline-flex items-center gap-2">
-                    <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                    <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-amber-300 font-medium">
-                      Selección de Cabecera · Obra en Foco
+                    <span
+                      className={`flex h-2 w-2 rounded-full animate-pulse ${
+                        currentSpotlight.isPending ? "bg-indigo-400" : "bg-amber-400"
+                      }`}
+                    />
+                    <span
+                      className={`text-[10px] sm:text-[11px] font-mono uppercase tracking-widest font-medium ${
+                        currentSpotlight.isPending ? "text-indigo-300" : "text-amber-300"
+                      }`}
+                    >
+                      {currentSpotlight.isPending
+                        ? "Descubrimiento Pendiente · En tu Sintonía"
+                        : "Selección del Archivo · Recomendación de Autor"}
                     </span>
                   </div>
 
-                  {spotlightGems.length > 1 && (
-                    <div className="flex items-center gap-2 text-xs text-neutral-400">
-                      <button
-                        type="button"
-                        onClick={prevSpotlight}
-                        aria-label="Obra anterior en foco"
-                        className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
-                      >
-                        <ChevronLeft size={16} />
-                      </button>
-                      <span className="font-mono text-[11px] text-neutral-300">
-                        REEL {((spotlightIndex % spotlightGems.length) + 1)} / {spotlightGems.length}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={nextSpotlight}
-                        aria-label="Siguiente obra en foco"
-                        className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
-                      >
-                        <ChevronRight size={16} />
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 text-xs text-neutral-400">
+                    <button
+                      type="button"
+                      onClick={handleRandomSpotlight}
+                      title="Explorar otra recomendación al azar"
+                      className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-mono text-neutral-300 hover:border-amber-400/40 hover:bg-white/10 hover:text-white transition-all active:scale-95"
+                    >
+                      <Dices size={12} className="text-amber-400" />
+                      <span className="hidden sm:inline">Al azar</span>
+                    </button>
+
+                    {spotlightGems.length > 1 && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={prevSpotlight}
+                          aria-label="Obra anterior en foco"
+                          className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        <span className="font-mono text-[11px] text-neutral-300 min-w-[50px] text-center">
+                          {((spotlightIndex % spotlightGems.length) + 1)} / {spotlightGems.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={nextSpotlight}
+                          aria-label="Siguiente obra en foco"
+                          className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+                        >
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Ficha técnica editorial */}
@@ -453,7 +559,7 @@ export default function HomeSearch({
                     currentSpotlight.director ? `Dir. ${currentSpotlight.director}` : null,
                     currentSpotlight.release_year,
                     currentSpotlight.main_genre,
-                    "Criterio Archive",
+                    currentSpotlight.isPending ? "Pendiente por ver" : "Criterio Archive",
                   ]
                     .filter(Boolean)
                     .join(" · ")}
@@ -464,8 +570,8 @@ export default function HomeSearch({
                   {currentSpotlight.title}
                 </h2>
 
-                {/* Puntuación de estrellas cálidas */}
-                {currentSpotlight.rating && (
+                {/* Calificación de autor o Porcentaje de afinidad cinéfila */}
+                {!currentSpotlight.isPending && currentSpotlight.rating && (
                   <div className="mt-3 flex items-center gap-1.5" aria-label={`${currentSpotlight.rating} de 5 estrellas`}>
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }, (_, i) => (
@@ -486,8 +592,18 @@ export default function HomeSearch({
                   </div>
                 )}
 
-                {/* Cita de crítica personal de Juan Camilo */}
-                {currentSpotlight.review && (
+                {currentSpotlight.isPending && (
+                  <div className="mt-3 flex items-center gap-2 text-xs font-mono text-indigo-300">
+                    <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-950/80 border border-indigo-500/30 px-2.5 py-1 font-semibold text-indigo-200">
+                      <Sparkles size={12} className="text-indigo-400" />
+                      {Math.round((currentSpotlight.score || 0.85) * 100)}% de sintonía estética
+                    </span>
+                    <span className="text-neutral-400 text-[11px]">con tus obras favoritas</span>
+                  </div>
+                )}
+
+                {/* Crítica personal del autor o Explicación de afinidad */}
+                {!currentSpotlight.isPending && currentSpotlight.review && (
                   <div className="my-4 rounded-xl border-l-2 border-amber-500/70 bg-amber-950/15 p-4 text-left">
                     <p className="font-serif text-sm sm:text-base italic leading-relaxed text-neutral-100">
                       “{currentSpotlight.review}”
@@ -497,27 +613,77 @@ export default function HomeSearch({
                     </span>
                   </div>
                 )}
+
+                {currentSpotlight.isPending && (
+                  <div className="my-4 rounded-xl border-l-2 border-indigo-400/80 bg-gradient-to-r from-indigo-950/30 via-neutral-900/40 to-transparent p-4 text-left">
+                    <p className="font-serif text-sm sm:text-base italic leading-relaxed text-indigo-100">
+                      “Aún no la has visto, pero su atmósfera y autoría conectan directamente con{" "}
+                      <span className="text-white font-medium underline decoration-amber-400/60">
+                        {currentSpotlight.because?.map((b) => b.title).join(" y ") || "obras de tu archivo"}
+                      </span>
+                      , títulos que recomendaste y forman parte de tu canon personal.”
+                    </p>
+                    <span className="mt-2 block font-mono text-[10px] tracking-wider text-indigo-300/80 uppercase">
+                      — Recomendación por afinidad semántica vectorial
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Acciones principales de la marquesina */}
               <div className="mt-5 pt-3 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => onPick(currentSpotlight.id)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-neutral-950 transition-all hover:bg-neutral-200 active:scale-95 shadow-xl"
-                >
-                  <span>Explorar constelación (6 conexiones directas)</span>
-                  <ArrowRight size={15} />
-                </button>
+                {!currentSpotlight.isPending ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onPick(currentSpotlight.id)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-neutral-950 transition-all hover:bg-neutral-200 active:scale-95 shadow-xl"
+                    >
+                      <span>Explorar constelación (6 conexiones directas)</span>
+                      <ArrowRight size={15} />
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={onShowNextUp}
-                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-4 py-3 text-xs sm:text-sm font-medium text-emerald-200 transition-all hover:border-emerald-500/70 hover:bg-emerald-950/60 active:scale-95"
-                >
-                  <Popcorn size={15} className="text-emerald-400" />
-                  <span>¿Qué veo hoy? (Streaming)</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={onShowNextUp}
+                      className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-4 py-3 text-xs sm:text-sm font-medium text-emerald-200 transition-all hover:border-emerald-500/70 hover:bg-emerald-950/60 active:scale-95"
+                    >
+                      <Popcorn size={15} className="text-emerald-400" />
+                      <span>¿Qué veo hoy? (Streaming)</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {currentSpotlight.anchorMovieId && (
+                      <button
+                        type="button"
+                        onClick={() => onPick(currentSpotlight.anchorMovieId)}
+                        className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-neutral-950 transition-all hover:bg-neutral-200 active:scale-95 shadow-xl"
+                      >
+                        <span>Ver constelación de {currentSpotlight.because?.[0]?.title || "tu archivo"}</span>
+                        <ArrowRight size={15} />
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => onPickExternal(currentSpotlight)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-950/40 px-4 py-3 text-xs sm:text-sm font-medium text-indigo-200 transition-all hover:border-indigo-500/70 hover:bg-indigo-950/60 active:scale-95"
+                    >
+                      <Film size={15} className="text-indigo-400" />
+                      <span>Ficha de la obra y afinidades</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={onShowNextUp}
+                      className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-4 py-3 text-xs sm:text-sm font-medium text-emerald-200 transition-all hover:border-emerald-500/70 hover:bg-emerald-950/60 active:scale-95"
+                    >
+                      <Popcorn size={15} className="text-emerald-400" />
+                      <span>¿Dónde verla? (Streaming)</span>
+                    </button>
+                  </>
+                )}
 
                 <button
                   type="button"
