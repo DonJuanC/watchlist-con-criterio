@@ -16,6 +16,7 @@ import HomeSearch from "./components/HomeSearch";
 import EgoView from "./components/EgoView";
 import ExternalView from "./components/ExternalView";
 import NextUpView from "./components/NextUpView";
+import SelectorView from "./components/SelectorView";
 import AmbientBackdrop from "./components/AmbientBackdrop";
 import useCineStore from "./store/useCineStore";
 import { fetchGraph } from "./services/api";
@@ -75,6 +76,9 @@ function parseRouteFromHash() {
   }
   if (hash === "#/mapa") {
     return { view: "map", centerId: null };
+  }
+  if (hash === "#/selector") {
+    return { view: "selector", centerId: null };
   }
   return { view: "home", centerId: null };
 }
@@ -140,6 +144,8 @@ export default function App() {
       document.title = "¿Qué veo hoy? — Watchlist con Criterio";
     } else if (view === "map") {
       document.title = "Mapa de Conexiones — Watchlist con Criterio";
+    } else if (view === "selector") {
+      document.title = "Quién elige — Watchlist con Criterio";
     } else {
       document.title = "Watchlist con Criterio — Cine & Conexiones";
     }
@@ -162,6 +168,9 @@ export default function App() {
     } else if (targetView === "map") {
       window.location.hash = "#/mapa";
       setView("map");
+    } else if (targetView === "selector") {
+      window.location.hash = "#/selector";
+      setView("selector");
     }
   }, []);
 
@@ -213,6 +222,7 @@ export default function App() {
             onPickExternal={handlePickExternal}
             onShowNextUp={() => navigate("next")}
             onShowMap={() => navigate("map")}
+            onShowSelector={() => navigate("selector")}
             onSpotlightPosterChange={setHomeSpotlightPoster}
           />
         </div>
@@ -230,6 +240,12 @@ export default function App() {
               </button>
             </nav>
             <ExternalView movie={externalMovie} onPick={handlePick} />
+          </div>
+        )}
+
+        {view === "selector" && (
+          <div className="h-full overflow-y-auto animate-view-enter">
+            <SelectorView onStart={() => navigate("home")} />
           </div>
         )}
 

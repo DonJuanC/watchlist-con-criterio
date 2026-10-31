@@ -23,6 +23,7 @@ import { semanticSearch, fetchNextUp } from "../services/api";
 import useCineStore from "../store/useCineStore";
 import useTmdbSuggestions from "../hooks/useTmdbSuggestions";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
+import LegalModal from "./LegalModal";
 
 const RESULTS_LIMIT = 6;
 const SUGGESTIONS_LIMIT = 5;
@@ -117,6 +118,7 @@ export default function HomeSearch({
   onShowNextUp,
   onShowMap,
   onSpotlightPosterChange,
+  onShowSelector,
 }) {
   const catalog = useCineStore((s) => s.rawGraph.nodes);
   const [inputValue, setInputValue] = useState("");
@@ -130,6 +132,7 @@ export default function HomeSearch({
   const [heroHovered, setHeroHovered] = useState(false);
   const [heroFocused, setHeroFocused] = useState(false);
   const [selectedDirector, setSelectedDirector] = useState(null);
+  const [showLegal, setShowLegal] = useState(false);
   const [pendingGems, setPendingGems] = useState([]);
   const requestIdRef = useRef(0);
 
@@ -451,7 +454,15 @@ export default function HomeSearch({
       {status === "idle" && (
         <header className="flex max-w-4xl flex-col items-center gap-4">
           <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-400">
-            Una selección de <span className="text-amber-400">El Selector</span> ·{" "}
+            Una selección de{" "}
+            <button
+              type="button"
+              onClick={onShowSelector}
+              className="uppercase tracking-[0.14em] text-amber-400 underline decoration-amber-400/30 underline-offset-4 transition-colors hover:decoration-amber-400 focus-ring-cinematic rounded"
+            >
+              El Selector
+            </button>{" "}
+            ·{" "}
             <span className="tabular-nums">{catalog.length > 0 ? catalog.length : "casi 300"}</span> películas vistas
           </span>
 
@@ -462,7 +473,7 @@ export default function HomeSearch({
 
           <p className="mx-auto max-w-xl text-sm sm:text-base text-neutral-400 leading-relaxed">
             Cada película está conectada con otras por su director o por cómo se siente.
-            Todas tienen mi nota y mi reseña.
+            Y cuando tengo algo que decir, va mi nota y mi reseña.
           </p>
         </header>
       )}
@@ -1129,9 +1140,16 @@ export default function HomeSearch({
           <span>Ver mapa de conexiones completo</span>
         </button>
 
-        <span className="text-[10px] text-neutral-400 uppercase tracking-[0.14em] text-center sm:text-right">
-          Watchlist con Criterio · Una selección de El Selector
-        </span>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[10px] uppercase tracking-[0.14em] text-neutral-400 sm:justify-end">
+          <button type="button" onClick={onShowSelector} className="uppercase tracking-[0.14em] hover:text-white transition-colors focus-ring-cinematic rounded">
+            Quién elige
+          </button>
+          <button type="button" onClick={() => setShowLegal(true)} className="uppercase tracking-[0.14em] hover:text-white transition-colors focus-ring-cinematic rounded">
+            Aviso legal y atribución
+          </button>
+          <span>Datos de TMDB</span>
+        </div>
+        <LegalModal isOpen={showLegal} onClose={() => setShowLegal(false)} />
       </footer>
     </main>
   );

@@ -1,154 +1,93 @@
 // src/components/Navbar.jsx
-// Barra superior de navegación y marca cinematográfica:
-// Proporciona identidad visual, navegación entre secciones, conteo del catálogo
-// y un botón omnipresente para "Empezar de nuevo" / limpiar estado.
+// Barra superior: wordmark (vuelve al inicio y limpia el estado), cuatro destinos
+// y el toggle de tema. En móvil los destinos se muestran solo como íconos con
+// aria-label; el aviso legal vive en el footer de la portada.
 
-import { useState } from "react";
-import { Film, Popcorn, Network, RotateCcw, Compass, Scale, Sun, Moon } from "lucide-react";
-import useCineStore from "../store/useCineStore";
+import { Film, Popcorn, Network, Compass, UserRound, Sun, Moon } from "lucide-react";
 import useThemeStore from "../store/useThemeStore";
-import LegalModal from "./LegalModal";
+
+const NAV_ITEMS = [
+  { view: "home", label: "Explorar", icon: Compass },
+  { view: "next", label: "¿Qué veo hoy?", icon: Popcorn },
+  { view: "map", label: "Mapa", icon: Network },
+  { view: "selector", label: "Quién elige", icon: UserRound },
+];
 
 /**
  * @param {object} props
- * @param {string} props.currentView "home" | "ego" | "next" | "map" | "external"
+ * @param {string} props.currentView "home" | "ego" | "next" | "map" | "external" | "selector"
  * @param {(view: string, id?: number|null) => void} props.onNavigate
  * @param {() => void} [props.onResetAll]
  */
 export default function Navbar({ currentView, onNavigate, onResetAll }) {
-  const [showLegal, setShowLegal] = useState(false);
-  const rawNodes = useCineStore((s) => s.rawGraph.nodes);
-  const movieCount = rawNodes.length;
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const nextThemeLabel = theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
 
   const handleBrandClick = () => {
-    if (onResetAll) {
-      onResetAll();
-    } else {
-      onNavigate("home");
-    }
+    if (onResetAll) onResetAll();
+    else onNavigate("home");
   };
 
-  const isHome = currentView === "home";
-
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-canvas/85 backdrop-blur-md transition-all">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
-        {/* Identidad de Marca y Logo Cinéfilo */}
+    <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-canvas/85 backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-2 px-3 sm:px-6">
         <button
           type="button"
           onClick={handleBrandClick}
-          aria-label="Ir al inicio y reiniciar"
-          className="group flex items-center gap-2.5 text-left focus-ring-cinematic rounded-lg p-1"
+          aria-label="Watchlist con Criterio, ir al inicio"
+          className="group flex shrink-0 items-center gap-2.5 rounded-lg p-1 text-left focus-ring-cinematic"
         >
-          <div className="flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-neutral-300 transition-all duration-200 group-hover:border-white/20 group-hover:text-white">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-neutral-300 transition-colors group-hover:border-white/20 group-hover:text-white">
             <Film size={14} />
-          </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-serif text-sm font-normal tracking-wide text-white group-hover:text-neutral-200 transition-colors">
-              Watchlist
+          </span>
+          <span className="flex items-baseline gap-1.5 whitespace-nowrap">
+            <span className="font-serif text-[15px] text-white">Watchlist</span>
+            <span className="hidden text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400 sm:inline">
+              con Criterio
             </span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-neutral-400">
-              / Criterio
-            </span>
-          </div>
+          </span>
         </button>
 
-        {/* Enlaces de Navegación Centrales */}
-        <nav className="flex items-center gap-1" aria-label="Navegación principal">
-          <button
-            type="button"
-            onClick={() => onNavigate("home")}
-            aria-current={isHome ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
-              isHome
-                ? "bg-white/[0.08] text-white border border-white/[0.1]"
-                : "text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04]"
-            }`}
-          >
-            <Compass size={13} />
-            <span className="hidden sm:inline">Archivo</span>
-          </button>
+        <div className="flex items-center gap-1">
+          <nav className="flex items-center gap-0.5 sm:gap-1" aria-label="Navegación principal">
+            {NAV_ITEMS.map(({ view, label, icon: Icon }) => {
+              const active =
+                currentView === view || (view === "home" && (currentView === "ego" || currentView === "external"));
+              return (
+                <button
+                  key={view}
+                  type="button"
+                  onClick={() => onNavigate(view)}
+                  aria-current={active ? "page" : undefined}
+                  aria-label={label}
+                  title={label}
+                  className={`inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[13px] font-medium transition-colors focus-ring-cinematic ${
+                    active
+                      ? "bg-white/[0.08] text-white"
+                      : "text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-200"
+                  }`}
+                >
+                  <Icon size={15} aria-hidden="true" />
+                  <span className="hidden md:inline">{label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-          <button
-            type="button"
-            onClick={() => onNavigate("next")}
-            aria-current={currentView === "next" ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
-              currentView === "next"
-                ? "bg-white/[0.08] text-white border border-white/[0.1]"
-                : "text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04]"
-            }`}
-          >
-            <Popcorn size={13} />
-            <span>¿Qué veo hoy?</span>
-          </button>
+          <span className="mx-1 h-5 w-px bg-white/10" aria-hidden="true" />
 
-          <button
-            type="button"
-            onClick={() => onNavigate("map")}
-            aria-current={currentView === "map" ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all focus-ring-cinematic ${
-              currentView === "map"
-                ? "bg-white/[0.08] text-white border border-white/[0.1]"
-                : "text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.04]"
-            }`}
-          >
-            <Network size={13} />
-            <span className="hidden sm:inline">Mapa</span>
-          </button>
-        </nav>
-
-        {/* Botón de Reinicio y contador */}
-        <div className="flex items-center gap-2">
-          {movieCount > 0 && (
-            <div
-              title="Películas vistas registradas en el catálogo con criterio"
-              className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-0.5 text-[10px] font-mono text-neutral-400"
-            >
-              <span className="h-1 w-1 rounded-full bg-amber-400/90" />
-              <span>{movieCount} obras</span>
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={handleBrandClick}
-            title="Reiniciar todo y volver al inicio"
-            aria-label="Reiniciar y volver al inicio"
-            className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 text-xs font-medium text-neutral-300 transition-all hover:border-white/20 hover:text-white active:scale-95 focus-ring-cinematic"
-          >
-            <RotateCcw size={12} className="text-neutral-400" />
-            <span className="hidden sm:inline">Inicio</span>
-          </button>
-
-          {/* Toggle de tema claro/oscuro */}
           <button
             type="button"
             onClick={toggleTheme}
             title={nextThemeLabel}
             aria-label={nextThemeLabel}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.02] text-neutral-400 transition-all hover:border-white/20 hover:text-white active:scale-95 focus-ring-cinematic"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-white/[0.04] hover:text-white focus-ring-cinematic"
           >
-            {theme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
-          </button>
-
-          {/* Botón de Marco Legal, Privacidad y Atribuciones */}
-          <button
-            type="button"
-            onClick={() => setShowLegal(true)}
-            title="Marco Legal, Privacidad y Atribución"
-            aria-label="Ver Marco Legal, Privacidad y Atribución"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.02] text-neutral-400 transition-all hover:border-white/20 hover:text-white active:scale-95 focus-ring-cinematic"
-          >
-            <Scale size={12} />
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
           </button>
         </div>
       </div>
-
-      <LegalModal isOpen={showLegal} onClose={() => setShowLegal(false)} />
     </header>
   );
 }
