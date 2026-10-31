@@ -220,7 +220,7 @@ function TrailerModal({ trailer, movieTitle, onClose }) {
 
 function TmdbAttribution() {
   return (
-    <p className="border-t border-white/10 pt-3 text-[11px] leading-snug text-neutral-400">
+    <footer className="border-t border-white/10 pt-3 pb-6 text-[11px] leading-relaxed text-neutral-400 break-words">
       Datos e imágenes de{" "}
       <a
         href="https://www.themoviedb.org/"
@@ -232,7 +232,7 @@ function TmdbAttribution() {
         TMDB
       </a>
       . This product uses the TMDB API but is not endorsed or certified by TMDB.
-    </p>
+    </footer>
   );
 }
 

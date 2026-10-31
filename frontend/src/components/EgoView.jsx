@@ -48,7 +48,7 @@ export default function EgoView({ centerId, onSelect }) {
 
   return (
     <section
-      className="relative mx-auto flex w-full max-w-xl flex-col items-center px-4 pb-12"
+      className="relative mx-auto flex w-full max-w-xl flex-col items-center px-4 pb-24"
       aria-label={`Películas conectadas con ${center.title}`}
     >
       {/* Cabecera elegante de la película central */}

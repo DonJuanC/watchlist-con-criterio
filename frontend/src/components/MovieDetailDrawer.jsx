@@ -86,7 +86,7 @@ export default function MovieDetailDrawer() {
         </div>
       )}
 
-      <div className="space-y-3 p-4">
+      <div className="space-y-3 p-4 pb-20">
         <MovieInfo movieId={selectedMovie.id} />
 
         <button

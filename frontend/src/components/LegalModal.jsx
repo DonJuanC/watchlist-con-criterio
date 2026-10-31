@@ -3,6 +3,7 @@
 // atribución de propiedad intelectual (TMDB, JustWatch, OMDb) y canal de contacto/retirada.
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, ShieldCheck, FileText, Scale, Mail, ExternalLink } from "lucide-react";
 
 /**
@@ -23,30 +24,43 @@ export default function LegalModal({ isOpen, onClose }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Bloquear scroll de fondo de forma segura
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
 
-  return (
+  if (!isOpen || typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="legal-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative flex flex-col w-full max-w-2xl max-h-[85vh] rounded-2xl border border-white/15 bg-neutral-900/95 shadow-2xl overflow-hidden text-neutral-200">
-        {/* Cabecera del Modal */}
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+      <div
+        className="relative flex flex-col w-full max-w-2xl max-h-[88dvh] sm:max-h-[84vh] my-auto rounded-2xl border border-white/15 bg-[#121215] shadow-2xl overflow-hidden text-neutral-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Cabecera del Modal (Fija) */}
+        <div className="shrink-0 flex items-center justify-between border-b border-white/10 px-5 sm:px-6 py-3.5 sm:py-4 bg-[#121215]">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-amber-300">
               <Scale size={16} />
             </div>
             <div>
-              <h2 id="legal-modal-title" className="font-serif text-base font-semibold text-white">
+              <h2 id="legal-modal-title" className="font-serif text-sm sm:text-base font-semibold text-white">
                 Marco Legal & Transparencia
               </h2>
-              <p className="text-[11px] text-neutral-400">
+              <p className="text-[10px] sm:text-[11px] text-neutral-400">
                 Términos, privacidad, licencias y atribución de datos
               </p>
             </div>
@@ -61,12 +75,12 @@ export default function LegalModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Pestañas de Navegación Interna */}
-        <div className="flex border-b border-white/10 bg-neutral-950/40 px-6 gap-2 text-xs">
+        {/* Pestañas de Navegación Interna (Fijas con scroll horizontal seguro) */}
+        <div className="shrink-0 flex overflow-x-auto border-b border-white/10 bg-neutral-950/70 px-4 sm:px-6 gap-2 text-xs no-scrollbar">
           <button
             type="button"
             onClick={() => setActiveTab("terms")}
-            className={`py-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
+            className={`shrink-0 whitespace-nowrap py-2.5 sm:py-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
               activeTab === "terms"
                 ? "border-amber-400 text-amber-300"
                 : "border-transparent text-neutral-400 hover:text-neutral-200"
@@ -78,7 +92,7 @@ export default function LegalModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={() => setActiveTab("privacy")}
-            className={`py-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
+            className={`shrink-0 whitespace-nowrap py-2.5 sm:py-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
               activeTab === "privacy"
                 ? "border-amber-400 text-amber-300"
                 : "border-transparent text-neutral-400 hover:text-neutral-200"
@@ -90,7 +104,7 @@ export default function LegalModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={() => setActiveTab("ip")}
-            className={`py-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
+            className={`shrink-0 whitespace-nowrap py-2.5 sm:py-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
               activeTab === "ip"
                 ? "border-amber-400 text-amber-300"
                 : "border-transparent text-neutral-400 hover:text-neutral-200"
@@ -101,8 +115,8 @@ export default function LegalModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Contenido con Scroll */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-xs sm:text-sm leading-relaxed text-neutral-300">
+        {/* Contenido con Scroll (min-h-0 obligatorio para flexbox) */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-4 sm:py-5 space-y-4 text-xs sm:text-sm leading-relaxed text-neutral-300 overscroll-contain">
           {activeTab === "terms" && (
             <div className="space-y-4">
               <section>
@@ -150,15 +164,15 @@ export default function LegalModal({ isOpen, onClose }) {
                   En conformidad con la Ley 1581 de 2012 (Colombia) y el RGPD (Unión Europea), informamos que se utilizan únicamente datos estrictamente funcionales guardados de forma local en su navegador:
                 </p>
                 <ul className="list-disc list-inside mt-1.5 space-y-1 text-neutral-400">
-                  <li><code className="text-amber-300/90">watchlist.country</code>: Recuerda su selección de país para consultar plataformas de streaming.</li>
-                  <li><code className="text-amber-300/90">watchlist_selected_providers</code>: Guarda sus plataformas preferidas en la vista <em>«¿Qué veo hoy?»</em>.</li>
+                  <li><code className="text-amber-300/90 font-mono">watchlist.country</code>: Recuerda su selección de país para consultar plataformas de streaming.</li>
+                  <li><code className="text-amber-300/90 font-mono">watchlist_selected_providers</code>: Guarda sus plataformas preferidas en la vista <em>«¿Qué veo hoy?»</em>.</li>
                 </ul>
               </section>
 
               <section>
                 <h3 className="font-semibold text-white text-sm mb-1">3. Búsquedas Semánticas y Procesamiento con IA</h3>
                 <p>
-                  Cuando realiza una búsqueda por sensación (ej. <em>«atmósfera melancólica con giros»</em>), el texto ingresado se procesa de forma efímera a través de la API de Google Gemini (<code className="text-neutral-200">gemini-embedding-001</code>) para generar representaciones matemáticas vectoriales. Estas consultas <strong>no se asocian a su identidad personal</strong>.
+                  Cuando realiza una búsqueda por sensación (ej. <em>«atmósfera melancólica con giros»</em>), el texto ingresado se procesa de forma efímera a través de la API de Google Gemini (<code className="text-neutral-200 font-mono">gemini-embedding-001</code>) para generar representaciones matemáticas vectoriales. Estas consultas <strong>no se asocian a su identidad personal</strong>.
                 </p>
               </section>
 
@@ -228,18 +242,19 @@ export default function LegalModal({ isOpen, onClose }) {
           )}
         </div>
 
-        {/* Pie del Modal */}
-        <div className="border-t border-white/10 px-6 py-3 bg-neutral-950/60 flex items-center justify-between text-[11px] text-neutral-400">
-          <span>Watchlist con Criterio · Actualizado 2026</span>
+        {/* Pie del Modal (Fijo con botón claro) */}
+        <div className="shrink-0 border-t border-white/10 px-5 sm:px-6 py-3 bg-neutral-950/80 flex items-center justify-between text-[11px] text-neutral-400">
+          <span>Watchlist con Criterio · 2026</span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-full border border-white/15 bg-white/5 text-xs text-white hover:bg-white/10 transition-colors focus-ring-cinematic"
+            className="px-4 py-1.5 rounded-md border border-white/15 bg-white/5 text-xs font-medium text-white hover:bg-white/10 transition-colors focus-ring-cinematic"
           >
-            Entendido
+            Cerrar
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
