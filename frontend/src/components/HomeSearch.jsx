@@ -24,6 +24,8 @@ import useCineStore from "../store/useCineStore";
 import useTmdbSuggestions from "../hooks/useTmdbSuggestions";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 import LegalModal from "./LegalModal";
+import ConnectionDemo from "./landing/ConnectionDemo";
+import CriterioSection from "./landing/CriterioSection";
 
 const RESULTS_LIMIT = 6;
 const SUGGESTIONS_LIMIT = 5;
@@ -914,54 +916,9 @@ export default function HomeSearch({
         </p>
       )}
 
-      {/* 4. SECCIÓN EDITORIAL: JOYAS DEL ARCHIVO */}
-      {status === "idle" && curatedGems.length > 0 && (
-        <section className="mt-14 w-full text-left" aria-label="Joyas del archivo">
-          <div className="mb-5 flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/[0.06] pb-3">
-            <div>
-              <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
-                № · Selección Oficial
-              </span>
-              <h3 className="font-serif text-xl sm:text-2xl font-normal text-white mt-0.5">
-                Joyas del Archivo
-              </h3>
-            </div>
-            <span className="text-[10px] font-mono text-neutral-400 mt-1 sm:mt-0">
-              Obras de máxima calificación · Toca para abrir constelación
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3.5 sm:gap-4">
-            {curatedGems.slice(0, 6).map((movie, idx) => (
-              <button
-                key={movie.id}
-                type="button"
-                onClick={() => onPick(movie.id)}
-                aria-label={`Abrir constelación de ${movie.title}`}
-                className="group flex flex-col items-center text-center focus-ring-cinematic rounded-lg p-1"
-              >
-                <div className="relative">
-                  <div className="absolute -top-2 left-1 z-20 rounded bg-neutral-950/90 px-1 py-0.2 border border-white/10 text-[8px] font-mono font-medium text-neutral-400 tracking-wider">
-                    № {String(idx + 1).padStart(2, "0")}
-                  </div>
-                  <MoviePosterCard movie={movie} size="sm" showBadge={false} />
-                </div>
-                <span className="mt-2 line-clamp-1 max-w-[110px] text-xs font-medium text-neutral-200 group-hover:text-white transition-colors">
-                  {movie.title}
-                </span>
-                <span className="text-[10px] font-mono text-neutral-400 truncate max-w-[110px]">
-                  {[movie.release_year, movie.director].filter(Boolean).join(" · ")}
-                </span>
-                {movie.rating && (
-                  <span className="mt-0.5 text-[10px] font-mono text-amber-400/80">
-                    ★ {movie.rating}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* 4. Así funciona (ejemplo real) y Mi criterio (reseñas) */}
+      {status === "idle" && <ConnectionDemo onPick={onPick} />}
+      {status === "idle" && <CriterioSection onPick={onPick} />}
 
       {/* 5. SECCIÓN EDITORIAL: CICLOS DE DIRECTORES CLAVE */}
       {status === "idle" && keyDirectors.length > 0 && (
@@ -986,24 +943,38 @@ export default function HomeSearch({
             )}
           </div>
 
-          {/* Filtros de Directores */}
-          <div className="flex flex-wrap gap-1.5 mb-5">
+          {/* Directores: tarjetas con sus pósters apilados */}
+          <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {keyDirectors.slice(0, 6).map(({ name, count }) => {
               const isSelected = selectedDirector === name;
+              const posters = catalog.filter((m) => m.director === name && m.poster_path).slice(0, 3);
               return (
                 <button
                   key={name}
                   type="button"
                   onClick={() => setSelectedDirector(isSelected ? null : name)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all focus-ring-cinematic ${
+                  aria-pressed={isSelected}
+                  className={`group flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors focus-ring-cinematic ${
                     isSelected
-                      ? "bg-white text-neutral-950 font-medium"
-                      : "border border-white/[0.08] bg-white/[0.02] text-neutral-400 hover:border-white/20 hover:text-neutral-200"
+                      ? "border-amber-400/60 bg-amber-950/30"
+                      : "border-white/[0.08] bg-surface/50 hover:border-white/20"
                   }`}
                 >
-                  <span>{name}</span>
-                  <span className={`text-[10px] font-mono ${isSelected ? "text-neutral-700" : "text-neutral-400"}`}>
-                    {count}
+                  <span className="relative h-12 w-14 shrink-0" aria-hidden="true">
+                    {posters.map((m, i) => (
+                      <img
+                        key={m.id}
+                        src={`https://image.tmdb.org/t/p/w92${m.poster_path}`}
+                        alt=""
+                        loading="lazy"
+                        className="absolute top-0 h-12 w-8 rounded-[3px] object-cover shadow-poster"
+                        style={{ left: `${i * 10}px`, zIndex: 3 - i }}
+                      />
+                    ))}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-white">{name}</span>
+                    <span className="block text-xs text-neutral-400">{count} películas</span>
                   </span>
                 </button>
               );
@@ -1037,6 +1008,26 @@ export default function HomeSearch({
               </div>
             </div>
           )}
+        </section>
+      )}
+
+      {/* 5b. Salida alternativa: sin película en mente */}
+      {status === "idle" && (
+        <section className="mt-14 w-full" aria-label="¿Qué veo hoy?">
+          <div className="flex flex-col items-start gap-4 rounded-2xl border border-white/[0.08] bg-surface/60 px-5 py-5 text-left sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div className="min-w-0">
+              <h3 className="font-serif text-xl text-white">¿Sin una película en mente?</h3>
+              <p className="mt-1 text-sm text-neutral-400">Elige tus plataformas y te sugiero qué ver hoy.</p>
+            </div>
+            <button
+              type="button"
+              onClick={onShowNextUp}
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-medium text-neutral-950 transition-all hover:bg-amber-300 active:scale-95 focus-ring-cinematic"
+            >
+              <Popcorn size={15} />
+              ¿Qué veo hoy?
+            </button>
+          </div>
         </section>
       )}
 
