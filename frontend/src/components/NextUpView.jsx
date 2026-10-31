@@ -4,7 +4,7 @@
 // esqueletos de carga animados y filtros en vivo por plataforma de streaming (JustWatch vía TMDB).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RefreshCw, Search, X, Popcorn, Tv, Globe, Filter, Sparkles, User } from "lucide-react";
+import { RefreshCw, Search, X, Popcorn, Tv, Globe, Filter, Sparkles, User, Check } from "lucide-react";
 import { fetchNextUp, semanticSearch, fetchWatchProviders } from "../services/api";
 import useCountry from "../hooks/useCountry";
 import MovieInfo from "./MovieInfo";
@@ -36,7 +36,15 @@ export default function NextUpView() {
   const [activeMood, setActiveMood] = useState("");
   const [recommendMode, setRecommendMode] = useState("affinity"); // "affinity" | "director"
   const [selectedId, setSelectedId] = useState(null);
-  const [selectedProvider, setSelectedProvider] = useState("all");
+  const [selectedProviders, setSelectedProviders] = useState(() => {
+    try {
+      const saved = localStorage.getItem("watchlist_selected_providers");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [streamOnly, setStreamOnly] = useState(false);
   const [providersMap, setProvidersMap] = useState({});
   const [providersLoading, setProvidersLoading] = useState(false);
 
@@ -154,24 +162,65 @@ export default function NextUpView() {
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [items, providersMap]);
 
-  // Filtrado de las películas según la plataforma seleccionada
+  // Alternar selección de una plataforma (selección múltiple / OR lógico)
+  const handleToggleProvider = useCallback((name) => {
+    setStreamOnly(false);
+    setSelectedProviders((prev) => {
+      const exists = prev.some((p) => p.toLowerCase() === name.toLowerCase());
+      const next = exists
+        ? prev.filter((p) => p.toLowerCase() !== name.toLowerCase())
+        : [...prev, name];
+      try {
+        localStorage.setItem("watchlist_selected_providers", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  // Seleccionar todas (sin filtro por plataforma específica)
+  const handleSelectAll = useCallback(() => {
+    setSelectedProviders([]);
+    setStreamOnly(false);
+    try {
+      localStorage.removeItem("watchlist_selected_providers");
+    } catch {}
+  }, []);
+
+  // Filtrar por cualquier servicio de suscripción
+  const handleSelectStreamOnly = useCallback(() => {
+    setSelectedProviders([]);
+    setStreamOnly(true);
+    try {
+      localStorage.removeItem("watchlist_selected_providers");
+    } catch {}
+  }, []);
+
+  // Filtrado de las películas según una o varias plataformas seleccionadas
   const filteredItems = useMemo(() => {
-    if (selectedProvider === "all") return items;
-    if (selectedProvider === "stream") {
+    // Si no hay plataformas seleccionadas ni filtro global, mostrar todas
+    if (!streamOnly && selectedProviders.length === 0) return items;
+
+    // Si se activa "Cualquier suscripción" sin plataformas específicas
+    if (streamOnly && selectedProviders.length === 0) {
       return items.filter((it) => {
         const streamList = providersMap[it.node.tmdb_id]?.stream;
         return Array.isArray(streamList) && streamList.length > 0;
       });
     }
+
+    // Filtrar por una o varias plataformas (disponible en CUALQUIERA de las elegidas)
     return items.filter((it) => {
       const streamList = providersMap[it.node.tmdb_id]?.stream;
-      if (!Array.isArray(streamList)) return false;
+      if (!Array.isArray(streamList) || streamList.length === 0) return false;
+
       return streamList.some((p) => {
         const clean = p.name.replace(/ Amazon Channel$/, "").replace(/ with Ads$/, "").toLowerCase();
-        return clean.includes(selectedProvider.toLowerCase());
+        return selectedProviders.some(
+          (sp) => clean.includes(sp.toLowerCase()) || sp.toLowerCase().includes(clean)
+        );
       });
     });
-  }, [items, providersMap, selectedProvider]);
+  }, [items, providersMap, selectedProviders, streamOnly]);
 
   return (
     <section
@@ -254,14 +303,32 @@ export default function NextUpView() {
       {/* Barra de Filtros de Streaming y Selector de País */}
       {status === "done" && items.length > 0 && (
         <div className="mt-5 w-full max-w-xl flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-white/[0.02] p-3 backdrop-blur-md">
-          <div className="flex items-center justify-between text-xs text-neutral-400 px-1">
-            <span className="flex items-center gap-1.5 font-medium">
-              <Filter size={12} className="text-emerald-400" />
-              Filtrar por streaming:
-              {providersLoading && (
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" title="Cargando plataformas..." />
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2 mb-1 text-xs text-neutral-400 px-1">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Filter size={12} className="text-emerald-400" />
+                Filtrar por streaming:
+                {providersLoading && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" title="Cargando plataformas..." />
+                )}
+              </span>
+
+              {selectedProviders.length > 0 && (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-mono text-emerald-300">
+                  <span>
+                    {selectedProviders.length} seleccionada{selectedProviders.length > 1 ? "s" : ""}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSelectAll}
+                    title="Quitar filtros"
+                    className="hover:text-white transition-colors"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
               )}
-            </span>
+            </div>
 
             {/* Selector de País */}
             <div className="flex items-center gap-1">
@@ -281,14 +348,14 @@ export default function NextUpView() {
             </div>
           </div>
 
-          {/* Chips de plataformas */}
+          {/* Chips de plataformas con selección múltiple */}
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
             <button
               type="button"
-              onClick={() => setSelectedProvider("all")}
+              onClick={handleSelectAll}
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
-                selectedProvider === "all"
-                  ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/50"
+                !streamOnly && selectedProviders.length === 0
+                  ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/60 ring-1 ring-emerald-500/20"
                   : "bg-white/5 text-neutral-400 hover:text-white border border-white/5 hover:bg-white/10"
               }`}
             >
@@ -297,27 +364,29 @@ export default function NextUpView() {
 
             <button
               type="button"
-              onClick={() => setSelectedProvider("stream")}
+              onClick={handleSelectStreamOnly}
               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
-                selectedProvider === "stream"
-                  ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/50"
+                streamOnly
+                  ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/60 ring-1 ring-emerald-500/20"
                   : "bg-white/5 text-neutral-400 hover:text-white border border-white/5 hover:bg-white/10"
               }`}
             >
               <Tv size={11} />
-              En suscripción
+              Cualquier suscripción
             </button>
 
             {availablePlatforms.map((p) => {
-              const isSelected = selectedProvider.toLowerCase() === p.name.toLowerCase();
+              const isSelected = selectedProviders.some(
+                (sp) => sp.toLowerCase() === p.name.toLowerCase()
+              );
               return (
                 <button
                   key={p.name}
                   type="button"
-                  onClick={() => setSelectedProvider(isSelected ? "all" : p.name)}
+                  onClick={() => handleToggleProvider(p.name)}
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
                     isSelected
-                      ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/60"
+                      ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/70 ring-1 ring-emerald-500/30 shadow-sm font-semibold"
                       : "bg-white/5 text-neutral-300 hover:text-white border border-white/10 hover:bg-white/10"
                   }`}
                 >
@@ -329,6 +398,7 @@ export default function NextUpView() {
                     />
                   )}
                   <span>{p.name}</span>
+                  {isSelected && <Check size={11} className="text-emerald-400 shrink-0 font-bold" />}
                 </button>
               );
             })}
@@ -365,12 +435,14 @@ export default function NextUpView() {
         <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center max-w-md">
           <Tv size={24} className="mx-auto text-neutral-500 mb-2" />
           <p className="text-sm font-medium text-neutral-300">
-            Ninguna de estas recomendaciones está disponible en {selectedProvider} en {countryName(country)}.
+            {selectedProviders.length > 0
+              ? `Ninguna de estas recomendaciones está disponible en ${selectedProviders.join(", ")} en ${countryName(country)}.`
+              : `Ninguna de estas recomendaciones está disponible en suscripción en ${countryName(country)}.`}
           </p>
           <div className="mt-4 flex justify-center gap-2">
             <button
               type="button"
-              onClick={() => setSelectedProvider("all")}
+              onClick={handleSelectAll}
               className="rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs text-white hover:bg-white/20 transition-all"
             >
               Ver todas ({items.length})
