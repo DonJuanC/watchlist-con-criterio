@@ -133,6 +133,7 @@ original para marcar el match como OK, y deja el resto en "Revisar" para decidir
 
 - **Criterio en las vecinas (Implementado):** El ranking de afinidad prioriza las películas recomendadas e ignora las calificadas negativamente.
 - **Cold start mitigado:** Mitigado activamente mediante un cron job periódico en GitHub Actions (`.github/workflows/warmup.yml`) que mantiene despierto el servidor en horarios activos, sumado a una caché en memoria de 1 hora en la API.
+- **Sincronización automática de Notion:** GitHub Actions (`.github/workflows/sync-notion.yml`) corre automáticamente 2 veces al día (00:00 y 12:00 hora Colombia / UTC-5) para sincronizar nuevas películas y reseñas editadas directamente a Neon y regenerar embeddings. Requiere configurar en los secretos del repositorio de GitHub (`Settings > Secrets and variables > Actions`): `DATABASE_URL`, `NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, `TMDB_API_KEY` y `GEMINI_API_KEY`.
 - **Embeddings enriquecidos con criterio (Implementado):** Los vectores semánticos de 768 dimensiones incorporan el director y la reseña personal de Notion además de la metadata de TMDB.
 - **Solo películas:** Las series del registro de Notion no entran todavía.
 
