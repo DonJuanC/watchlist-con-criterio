@@ -33,7 +33,7 @@ on:
 jobs:
   sync-catalog:
     name: Sincronizar Notion y Generar Embeddings
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout del repositorio
         uses: actions/checkout@v5
