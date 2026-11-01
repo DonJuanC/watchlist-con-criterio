@@ -23,7 +23,7 @@ export default function AdminGate({ onBackToHome }) {
       {/* Halo ambiental suave */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute h-96 w-96 rounded-full bg-amber-500/10 blur-[100px]"
+        className="pointer-events-none absolute h-96 w-96 rounded-full bg-accent-500/10 blur-[100px]"
       />
 
       <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-canvas/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
@@ -37,7 +37,7 @@ export default function AdminGate({ onBackToHome }) {
         </button>
 
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 shadow-inner">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-accent-500/30 bg-accent-500/10 text-accent-300 shadow-inner">
             <Lock size={22} />
           </div>
           <h2 className="font-serif text-2xl font-bold tracking-tight text-white">
@@ -75,7 +75,7 @@ export default function AdminGate({ onBackToHome }) {
                 placeholder="Ingresa la clave..."
                 autoFocus
                 disabled={isCheckingAuth}
-                className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-10 pr-10 text-sm text-white placeholder-neutral-500 transition-all focus:border-amber-400/80 focus:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-amber-400/80"
+                className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-10 pr-10 text-sm text-white placeholder-neutral-500 transition-all focus:border-accent-400/80 focus:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-accent-400/80"
               />
               <button
                 type="button"
@@ -91,7 +91,7 @@ export default function AdminGate({ onBackToHome }) {
           <button
             type="submit"
             disabled={isCheckingAuth || !password.trim()}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-600 to-amber-500 py-2.5 px-4 text-sm font-semibold text-neutral-950 shadow-lg shadow-amber-950/40 transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-accent-500/50 bg-gradient-to-r from-accent-600 to-accent-500 py-2.5 px-4 text-sm font-semibold text-neutral-950 shadow-lg shadow-accent-950/40 transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isCheckingAuth ? (
               <>

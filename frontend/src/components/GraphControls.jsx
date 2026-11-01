@@ -81,7 +81,7 @@ export default function GraphControls() {
                             step={MIN_SIMILARITY_RANGE.step}
                             value={minSimilarity}
                             onChange={(e) => setMinSimilarity(parseFloat(e.target.value))}
-                            className="w-full accent-amber-500 focus-ring-cinematic"
+                            className="w-full accent-accent-500 focus-ring-cinematic"
                         />
                         <div className="mt-1 flex items-center justify-between text-[10px] text-neutral-400">
                             <span>Más variedad</span>
@@ -93,7 +93,7 @@ export default function GraphControls() {
                         <LinkTypeChip
                             active={showDirectorLinks}
                             onClick={toggleDirectorLinks}
-                            colorClass="bg-amber-400"
+                            colorClass="bg-accent-400"
                             label="Mismo director"
                         />
                         <LinkTypeChip

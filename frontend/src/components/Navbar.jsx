@@ -37,14 +37,14 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
         <button
           type="button"
           onClick={handleBrandClick}
-          aria-label="Watchlist con Criterio, ir al inicio"
+          aria-label="Cine con Criterio, ir al inicio"
           className="group flex shrink-0 items-center gap-2.5 rounded-lg p-1 text-left focus-ring-cinematic"
         >
           <span className="flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-neutral-300 transition-colors group-hover:border-white/20 group-hover:text-white">
             <Film size={14} />
           </span>
           <span className="flex items-baseline gap-1.5 whitespace-nowrap">
-            <span className="font-serif text-[15px] text-white">Watchlist</span>
+            <span className="font-serif text-[15px] text-white">Cine</span>
             <span className="hidden text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400 sm:inline">
               con Criterio
             </span>
@@ -97,7 +97,7 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
               aria-label="Studio"
               className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-ring-cinematic ${
                 currentView === "admin"
-                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                  ? "bg-accent-500/20 text-accent-300 border border-accent-500/30"
                   : "text-neutral-400 hover:bg-white/[0.04] hover:text-white"
               }`}
             >

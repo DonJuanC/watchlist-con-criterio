@@ -88,7 +88,7 @@ export default function SearchOverlay() {
         <div className="fixed top-16 sm:top-18 left-1/2 -translate-x-1/2 z-20 w-full max-w-xl px-4">
             <form
                 onSubmit={handleSubmit}
-                className="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-900/90 px-4 py-3 shadow-2xl backdrop-blur focus-within:border-amber-400/50 focus-within:ring-2 focus-within:ring-amber-400/30 transition-all"
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-neutral-900/90 px-4 py-3 shadow-2xl backdrop-blur focus-within:border-accent-400/50 focus-within:ring-2 focus-within:ring-accent-400/30 transition-all"
             >
                 {isSearching ? (
                     <Loader2 size={18} className="animate-spin text-neutral-400" />

@@ -10,7 +10,7 @@ import { SELECTOR } from "../content/selector";
 
 const VERDICT_DOT = {
   1: "bg-emerald-400",
-  0: "bg-amber-400",
+  0: "bg-accent-400",
   "-1": "bg-red-400",
 };
 
@@ -31,7 +31,7 @@ function Prose({ paragraphs, pendingHint }) {
   if (!paragraphs || paragraphs.length === 0) {
     if (!import.meta.env.DEV) return null;
     return (
-      <p className="rounded-xl border border-dashed border-amber-500/40 px-4 py-3 text-sm text-amber-300">
+      <p className="rounded-xl border border-dashed border-accent-500/40 px-4 py-3 text-sm text-accent-300">
         Pendiente: {pendingHint} (src/content/selector.js)
       </p>
     );
@@ -88,7 +88,7 @@ export default function SelectorView({ onStart }) {
         ) : (
           <div
             aria-hidden="true"
-            className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border border-amber-500/40 bg-amber-950/40 font-serif text-3xl text-amber-300"
+            className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border border-accent-500/40 bg-accent-950/40 font-serif text-3xl text-accent-300"
           >
             ES
           </div>
@@ -124,7 +124,7 @@ export default function SelectorView({ onStart }) {
                       <Star
                         key={i}
                         size={11}
-                        className={i < value ? "fill-amber-400 text-amber-400" : "text-neutral-600"}
+                        className={i < value ? "fill-accent-400 text-accent-400" : "text-neutral-600"}
                       />
                     ))}
                   </span>

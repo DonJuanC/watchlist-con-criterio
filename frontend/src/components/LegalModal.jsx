@@ -53,7 +53,7 @@ export default function LegalModal({ isOpen, onClose }) {
         {/* Cabecera del Modal (Fija) */}
         <div className="shrink-0 flex items-center justify-between border-b border-white/10 px-5 sm:px-6 py-3.5 sm:py-4 bg-surface">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-amber-300">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-accent-300">
               <Scale size={16} />
             </div>
             <div>
@@ -82,7 +82,7 @@ export default function LegalModal({ isOpen, onClose }) {
             onClick={() => setActiveTab("terms")}
             className={`shrink-0 whitespace-nowrap py-2.5 sm:py-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
               activeTab === "terms"
-                ? "border-amber-400 text-amber-300"
+                ? "border-accent-400 text-accent-300"
                 : "border-transparent text-neutral-400 hover:text-neutral-200"
             }`}
           >
@@ -94,7 +94,7 @@ export default function LegalModal({ isOpen, onClose }) {
             onClick={() => setActiveTab("privacy")}
             className={`shrink-0 whitespace-nowrap py-2.5 sm:py-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
               activeTab === "privacy"
-                ? "border-amber-400 text-amber-300"
+                ? "border-accent-400 text-accent-300"
                 : "border-transparent text-neutral-400 hover:text-neutral-200"
             }`}
           >
@@ -106,7 +106,7 @@ export default function LegalModal({ isOpen, onClose }) {
             onClick={() => setActiveTab("ip")}
             className={`shrink-0 whitespace-nowrap py-2.5 sm:py-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
               activeTab === "ip"
-                ? "border-amber-400 text-amber-300"
+                ? "border-accent-400 text-accent-300"
                 : "border-transparent text-neutral-400 hover:text-neutral-200"
             }`}
           >
@@ -122,7 +122,7 @@ export default function LegalModal({ isOpen, onClose }) {
               <section>
                 <h3 className="font-semibold text-white text-sm mb-1">1. Naturaleza del Servicio</h3>
                 <p>
-                  <strong>Watchlist con Criterio</strong> es un catálogo exploratorio y archivo cinematográfico personal creado por El Selector con fines culturales, educativos y de divulgación cinéfila.
+                  <strong>Cine con Criterio</strong> es un catálogo exploratorio y archivo cinematográfico personal creado por El Selector con fines culturales, educativos y de divulgación cinéfila.
                 </p>
               </section>
 
@@ -164,8 +164,8 @@ export default function LegalModal({ isOpen, onClose }) {
                   En conformidad con la Ley 1581 de 2012 (Colombia) y el RGPD (Unión Europea), informamos que se utilizan únicamente datos estrictamente funcionales guardados de forma local en su navegador:
                 </p>
                 <ul className="list-disc list-inside mt-1.5 space-y-1 text-neutral-400">
-                  <li><code className="text-amber-300/90 font-mono">watchlist.country</code>: Recuerda su selección de país para consultar plataformas de streaming.</li>
-                  <li><code className="text-amber-300/90 font-mono">watchlist_selected_providers</code>: Guarda sus plataformas preferidas en la vista <em>«¿Qué veo hoy?»</em>.</li>
+                  <li><code className="text-accent-300/90 font-mono">watchlist.country</code>: Recuerda su selección de país para consultar plataformas de streaming.</li>
+                  <li><code className="text-accent-300/90 font-mono">watchlist_selected_providers</code>: Guarda sus plataformas preferidas en la vista <em>«¿Qué veo hoy?»</em>.</li>
                 </ul>
               </section>
 
@@ -219,7 +219,7 @@ export default function LegalModal({ isOpen, onClose }) {
               </section>
 
               <section className="border-t border-white/10 pt-3">
-                <h3 className="font-semibold text-amber-300 text-sm mb-1 flex items-center gap-1.5">
+                <h3 className="font-semibold text-accent-300 text-sm mb-1 flex items-center gap-1.5">
                   <Mail size={13} />
                   Canal de Notificación y Retirada (DMCA / Takedown Notice)
                 </h3>
@@ -232,7 +232,7 @@ export default function LegalModal({ isOpen, onClose }) {
                     href="https://github.com/DonJuanC/watchlist-con-criterio/issues"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-amber-400 underline hover:text-amber-300 inline-flex items-center gap-1 mt-1"
+                    className="text-accent-400 underline hover:text-accent-300 inline-flex items-center gap-1 mt-1"
                   >
                     github.com/DonJuanC/watchlist-con-criterio <ExternalLink size={11} />
                   </a>
@@ -244,7 +244,7 @@ export default function LegalModal({ isOpen, onClose }) {
 
         {/* Pie del Modal (Fijo con botón claro) */}
         <div className="shrink-0 border-t border-white/10 px-5 sm:px-6 py-3 bg-neutral-950/80 flex items-center justify-between text-[11px] text-neutral-400">
-          <span>Watchlist con Criterio · 2026</span>
+          <span>Cine con Criterio · 2026</span>
           <button
             type="button"
             onClick={onClose}

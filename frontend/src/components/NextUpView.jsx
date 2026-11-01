@@ -268,7 +268,7 @@ export default function NextUpView() {
               : "text-neutral-400 hover:text-white"
           }`}
         >
-          <User size={13} className="text-amber-400" />
+          <User size={13} className="text-accent-400" />
           <span>De autores en tu archivo</span>
         </button>
       </div>
@@ -481,7 +481,7 @@ export default function NextUpView() {
                     movie={node}
                     size="md"
                     selected={isSelected}
-                    accentColor={recommendMode === "director" && !activeMood ? "amber" : "emerald"}
+                    accentColor={recommendMode === "director" && !activeMood ? "accent" : "emerald"}
                   />
                 </div>
                 <span className="mt-2.5 line-clamp-2 max-w-[125px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-white transition-colors">
@@ -527,12 +527,12 @@ export default function NextUpView() {
                     }
                     className={`mt-1.5 flex items-center justify-center gap-1 max-w-[125px] rounded-full px-2 py-0.5 text-[9px] font-medium leading-tight ${
                       recommendMode === "director" && !activeMood
-                        ? "bg-amber-950/70 border border-amber-500/30 text-amber-300"
+                        ? "bg-accent-950/70 border border-accent-500/30 text-accent-300"
                         : "bg-emerald-950/70 border border-emerald-500/30 text-emerald-300"
                     }`}
                   >
                     {recommendMode === "director" && !activeMood ? (
-                      <User size={9} className="shrink-0 text-amber-400" />
+                      <User size={9} className="shrink-0 text-accent-400" />
                     ) : (
                       <span className="block h-1 w-1 rounded-full bg-emerald-400 shrink-0" />
                     )}

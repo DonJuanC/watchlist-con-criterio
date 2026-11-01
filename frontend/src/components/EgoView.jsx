@@ -81,8 +81,8 @@ export default function EgoView({ centerId, onSelect }) {
 
             const strokeColor = isDirector
               ? isHovered
-                ? "var(--color-amber-600)"
-                : "color-mix(in oklab, var(--color-amber-600) 35%, transparent)"
+                ? "var(--color-accent-600)"
+                : "color-mix(in oklab, var(--color-accent-600) 35%, transparent)"
               : isHovered
                 ? "var(--color-white)"
                 : "color-mix(in oklab, var(--color-white) 14%, transparent)";
@@ -166,7 +166,7 @@ export default function EgoView({ centerId, onSelect }) {
                 <span
                   className={`mt-0.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono leading-none border ${
                     isDirector
-                      ? "bg-amber-950/40 text-amber-300/90 border-amber-500/30"
+                      ? "bg-accent-950/40 text-accent-300/90 border-accent-500/30"
                       : "bg-surface/80 text-neutral-400 border-white/10"
                   }`}
                 >

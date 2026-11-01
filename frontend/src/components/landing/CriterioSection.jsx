@@ -14,7 +14,7 @@ function Stars({ value }) {
   return (
     <span className="flex gap-0.5" aria-label={`${value} de 5`}>
       {Array.from({ length: 5 }).map((_, i) => (
-        <Star key={i} size={11} className={i < value ? "fill-amber-400 text-amber-400" : "text-neutral-600"} />
+        <Star key={i} size={11} className={i < value ? "fill-accent-400 text-accent-400" : "text-neutral-600"} />
       ))}
     </span>
   );

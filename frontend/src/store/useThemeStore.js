@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 
 const STORAGE_KEY = 'theme';
-const META_COLOR = { dark: '#14110E', light: '#F2EFEA' };
+const META_COLOR = { dark: '#121316', light: '#F4F1EA' };
 const LIGHT_QUERY = '(prefers-color-scheme: light)';
 
 function readStored() {

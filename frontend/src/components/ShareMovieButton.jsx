@@ -35,7 +35,7 @@ export default function ShareMovieButton({
     ) {
       try {
         await navigator.share({
-          title: `${movie.title} · Watchlist con Criterio`,
+          title: `${movie.title} · Cine con Criterio`,
           text: `Mira ${movie.title} y sus conexiones cinematográficas:`,
           url: shareUrl,
         });

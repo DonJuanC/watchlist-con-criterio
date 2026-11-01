@@ -24,7 +24,7 @@ function Neighbor({ entry, onPick }) {
       <span className="line-clamp-1 text-xs font-medium text-neutral-200 group-hover:text-white">{entry.node.title}</span>
       <span
         className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] leading-none ${
-          isDirector ? "border-amber-500/40 text-amber-300" : "border-white/15 text-neutral-400"
+          isDirector ? "border-accent-500/40 text-accent-300" : "border-white/15 text-neutral-400"
         }`}
       >
         {isDirector ? <User size={9} /> : <Sparkles size={9} />}
@@ -86,7 +86,7 @@ export default function ConnectionDemo({ onPick }) {
           <button
             type="button"
             onClick={() => onPick(ego.center.id)}
-            className="inline-flex items-center gap-2 text-sm font-medium text-amber-400 transition-colors hover:text-amber-300 focus-ring-cinematic rounded"
+            className="inline-flex items-center gap-2 text-sm font-medium text-accent-400 transition-colors hover:text-accent-300 focus-ring-cinematic rounded"
           >
             Ver sus 6 vecinas
             <ArrowRight size={14} />

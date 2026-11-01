@@ -29,8 +29,8 @@ function ServerWarmingBanner() {
   if (!isServerWarming) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 z-50 flex w-max max-w-[92vw] -translate-x-1/2 items-center gap-2.5 rounded-full border border-amber-500/40 bg-amber-950/90 px-4 py-2.5 text-xs sm:text-sm text-amber-200 shadow-2xl backdrop-blur-xl">
-      <ServerCog size={16} className="shrink-0 animate-spin text-amber-400" />
+    <div className="fixed bottom-6 left-1/2 z-50 flex w-max max-w-[92vw] -translate-x-1/2 items-center gap-2.5 rounded-full border border-accent-500/40 bg-accent-950/90 px-4 py-2.5 text-xs sm:text-sm text-accent-200 shadow-2xl backdrop-blur-xl">
+      <ServerCog size={16} className="shrink-0 animate-spin text-accent-400" />
       <span>Despertando el servidor... la primera carga puede tardar unos segundos.</span>
     </div>
   );
@@ -54,7 +54,7 @@ function GraphLoading({ label }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 px-6 py-24 text-neutral-400">
       <div className="relative flex items-center justify-center">
-        <div className="h-12 w-12 rounded-full border-2 border-white/15 border-t-amber-400 animate-spin" />
+        <div className="h-12 w-12 rounded-full border-2 border-white/15 border-t-accent-400 animate-spin" />
       </div>
       <p className="font-serif text-sm text-neutral-300 tracking-wide">{label}</p>
     </div>
@@ -143,15 +143,15 @@ export default function App() {
   useEffect(() => {
     if (view === "ego" && centerId) {
       const node = rawGraph.nodes.find((n) => n.id === centerId);
-      document.title = node ? `${node.title} — Watchlist con Criterio` : "Película — Watchlist con Criterio";
+      document.title = node ? `${node.title} — Cine con Criterio` : "Película — Cine con Criterio";
     } else if (view === "next") {
-      document.title = "¿Qué veo hoy? — Watchlist con Criterio";
+      document.title = "¿Qué veo hoy? — Cine con Criterio";
     } else if (view === "map") {
-      document.title = "Mapa de Conexiones — Watchlist con Criterio";
+      document.title = "Mapa de Conexiones — Cine con Criterio";
     } else if (view === "selector") {
-      document.title = "Quién elige — Watchlist con Criterio";
+      document.title = "Quién elige — Cine con Criterio";
     } else {
-      document.title = "Watchlist con Criterio — Cine & Conexiones";
+      document.title = "Cine con Criterio — Archivo y conexiones de cine";
     }
   }, [view, centerId, rawGraph.nodes]);
 
@@ -296,7 +296,7 @@ export default function App() {
 
               {isLoading && !graphReady && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 text-neutral-400">
-                  <div className="h-10 w-10 rounded-full border-2 border-white/15 border-t-amber-400 animate-spin" />
+                  <div className="h-10 w-10 rounded-full border-2 border-white/15 border-t-accent-400 animate-spin" />
                   <p className="text-sm font-medium">Cargando el mapa…</p>
                 </div>
               )}
@@ -312,7 +312,7 @@ export default function App() {
                   <Suspense
                     fallback={
                       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 text-neutral-400">
-                        <div className="h-10 w-10 rounded-full border-2 border-white/15 border-t-amber-400 animate-spin" />
+                        <div className="h-10 w-10 rounded-full border-2 border-white/15 border-t-accent-400 animate-spin" />
                         <p className="text-sm font-medium">Iniciando motor gráfico…</p>
                       </div>
                     }

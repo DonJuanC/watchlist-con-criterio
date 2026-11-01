@@ -138,7 +138,7 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
             value={movieSearchQuery}
             onChange={(e) => setMovieSearchQuery(e.target.value)}
             placeholder="Filtrar por título, director o palabras en tu reseña..."
-            className="w-full rounded-xl border border-white/15 bg-white/5 py-2 pl-9 pr-3 text-xs text-white placeholder-neutral-500 transition-all focus:border-amber-400/80 focus:bg-white/[0.08] focus:outline-none"
+            className="w-full rounded-xl border border-white/15 bg-white/5 py-2 pl-9 pr-3 text-xs text-white placeholder-neutral-500 transition-all focus:border-accent-400/80 focus:bg-white/[0.08] focus:outline-none"
           />
         </div>
 
@@ -155,7 +155,7 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
               onClick={() => setMovieFilterStatus(tab.id)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
                 movieFilterStatus === tab.id
-                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                  ? "bg-accent-500/20 text-accent-300 border border-accent-500/40"
                   : "bg-white/5 text-neutral-400 border border-white/10 hover:text-white hover:border-white/20"
               }`}
             >
@@ -168,7 +168,7 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
       {/* Lista de Películas */}
       {isLoadingMovies ? (
         <div className="flex flex-col items-center justify-center py-16 text-neutral-400">
-          <Loader2 size={24} className="animate-spin text-amber-400 mb-2" />
+          <Loader2 size={24} className="animate-spin text-accent-400 mb-2" />
           <p className="text-xs">Cargando catálogo...</p>
         </div>
       ) : adminMovies.length === 0 ? (
@@ -210,7 +210,7 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
                       <span
                         className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
                           isSeen
-                            ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                            ? "bg-accent-500/15 text-accent-300 border border-accent-500/30"
                             : "bg-sky-500/15 text-sky-300 border border-sky-500/30"
                         }`}
                       >
@@ -227,8 +227,8 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
                     {/* Calificación y Recomendación */}
                     <div className="flex items-center gap-2 mt-2">
                       {m.rating ? (
-                        <div className="flex items-center text-amber-400 text-[11px]">
-                          <Star size={11} className="fill-amber-400 mr-0.5" />
+                        <div className="flex items-center text-accent-400 text-[11px]">
+                          <Star size={11} className="fill-accent-400 mr-0.5" />
                           <span className="font-semibold">{m.rating}</span>
                           <span className="text-neutral-500">/5</span>
                         </div>
@@ -276,7 +276,7 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
                       <button
                         type="button"
                         onClick={() => onNavigateToMovie(m.id)}
-                        className="inline-flex items-center gap-1 rounded px-2 py-1 text-amber-300/80 hover:text-amber-200 hover:bg-amber-500/10 transition-colors"
+                        className="inline-flex items-center gap-1 rounded px-2 py-1 text-accent-300/80 hover:text-accent-200 hover:bg-accent-500/10 transition-colors"
                       >
                         <ExternalLink size={12} />
                         <span>Ver en grafo</span>
@@ -329,7 +329,7 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
                     onClick={() => setEditStatus("seen")}
                     className={`rounded-lg border p-2 text-xs font-medium ${
                       editStatus === "seen"
-                        ? "border-amber-400 bg-amber-500/15 text-amber-200"
+                        ? "border-accent-400 bg-accent-500/15 text-accent-200"
                         : "border-white/10 text-neutral-400 hover:text-white"
                     }`}
                   >
@@ -366,8 +366,8 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
                         size={22}
                         className={
                           editRating && s <= editRating
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-neutral-600 hover:text-amber-300"
+                            ? "fill-accent-400 text-accent-400"
+                            : "text-neutral-600 hover:text-accent-300"
                         }
                       />
                     </button>
@@ -420,7 +420,7 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
                   rows={4}
                   value={editReview}
                   onChange={(e) => setEditReview(e.target.value)}
-                  className="w-full rounded-xl border border-white/15 bg-white/5 p-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 p-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-accent-400"
                 />
               </div>
 
@@ -435,7 +435,7 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/20 px-4 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/30 transition-all"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-accent-500/40 bg-accent-500/20 px-4 py-1.5 text-xs font-semibold text-accent-200 hover:bg-accent-500/30 transition-all"
                 >
                   {isUpdating ? <Loader2 size={13} className="animate-spin" /> : null}
                   <span>Guardar cambios</span>
@@ -459,7 +459,7 @@ export default function AdminCatalogTab({ onNavigateToMovie }) {
               Estás a punto de eliminar <strong className="text-white">"{deletingMovie.display_title || deletingMovie.title}"</strong> de tu catálogo.
             </p>
             <p className="mt-2 text-[11px] text-neutral-400">
-              Si está conectada a Notion, su fila correspondiente se marcará como <span className="text-amber-300">Archivada</span> para no perder tu historial.
+              Si está conectada a Notion, su fila correspondiente se marcará como <span className="text-accent-300">Archivada</span> para no perder tu historial.
             </p>
 
             {deleteError && (

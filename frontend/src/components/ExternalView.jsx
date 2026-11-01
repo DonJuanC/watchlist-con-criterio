@@ -104,7 +104,7 @@ export default function ExternalView({ movie, onPick }) {
                     <MoviePosterCard
                       movie={r.node}
                       size="md"
-                      accentColor={isDirector ? "amber" : "neutral"}
+                      accentColor={isDirector ? "accent" : "neutral"}
                     />
                   </div>
                   <span className="mt-2.5 line-clamp-2 max-w-[120px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-white transition-colors">
@@ -113,7 +113,7 @@ export default function ExternalView({ movie, onPick }) {
                   <span
                     className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium leading-none border ${
                       isDirector
-                        ? "bg-amber-950/80 text-amber-300 border-amber-500/30"
+                        ? "bg-accent-950/80 text-accent-300 border-accent-500/30"
                         : "bg-neutral-900/90 text-neutral-300 border-white/15"
                     }`}
                   >

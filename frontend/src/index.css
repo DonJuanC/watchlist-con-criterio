@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@layer base {
+  .font-serif { font-weight: 600; letter-spacing: -0.015em; }
+}
+
 /* ==========================================================================
    Sistema de color claro/oscuro
    La paleta de Tailwind se remapea a tokens semánticos: en ambos modos
@@ -8,39 +12,40 @@
    Oscuro = "sala con luces bajas". Claro = "programa de mano".
    ========================================================================== */
 @theme {
-  /* Dos familias: Fraunces (display, títulos de película, citas) y Geist (UI y lectura).
-     La mono sale de la interfaz: font-mono apunta a Geist con cifras tabulares,
-     así las etiquetas y metadatos existentes cambian sin tocar cada componente. */
-  --font-serif: "Fraunces", Georgia, Cambria, "Times New Roman", serif;
-  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Una sola familia: Bricolage Grotesque. font-serif queda como alias de "display"
+     (títulos y citas, con más peso vía @layer base); sans y mono apuntan a la misma
+     familia para no tocar cada componente. Paleta: "Tinta y papel" (acento cobalto
+     en los tokens accent-*). */
+  --font-serif: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Superficies semánticas */
-  --color-canvas: #14110E;
-  --color-surface: #1C1814;
+  --color-canvas: #121316;
+  --color-surface: #1B1C20;
 
   /* Tinta y escala neutra cálida (oscuro) */
-  --color-white: #F2EDE6;
+  --color-white: #EDEBE6;
   --color-black: #000000;
-  --color-neutral-50: #F7F3EE;
-  --color-neutral-100: #F2EDE6;
-  --color-neutral-200: #DCD5CB;
-  --color-neutral-300: #C6BEB3;
-  --color-neutral-400: #A69D92;
-  --color-neutral-500: #82796F;
-  --color-neutral-600: #5F574F;
-  --color-neutral-700: #453F38;
-  --color-neutral-800: #2D2823;
-  --color-neutral-900: #1C1814;
-  --color-neutral-950: #14110E;
+  --color-neutral-50: #F5F4F0;
+  --color-neutral-100: #EDEBE6;
+  --color-neutral-200: #D6D5D0;
+  --color-neutral-300: #BDBCB6;
+  --color-neutral-400: #9A9890;
+  --color-neutral-500: #78776F;
+  --color-neutral-600: #5A5B5F;
+  --color-neutral-700: #3F4046;
+  --color-neutral-800: #2A2C32;
+  --color-neutral-900: #1B1C20;
+  --color-neutral-950: #121316;
 
   /* Ámbar tungsteno: acción primaria, estado activo y calificación */
-  --color-amber-200: #F7D9A8;
-  --color-amber-300: #F2C57E;
-  --color-amber-400: #EBA640;
-  --color-amber-500: #DE8F22;
-  --color-amber-600: #C27515;
-  --color-amber-950: #2A1A07;
+  --color-accent-200: #C9D3FF;
+  --color-accent-300: #A6B6FF;
+  --color-accent-400: #7D97FF;
+  --color-accent-500: #5F7CF2;
+  --color-accent-600: #4763DB;
+  --color-accent-950: #121A3A;
 
   /* Semánticos: recomendada / no recomendada */
   --color-emerald-200: #B5E8CF;
@@ -58,16 +63,16 @@
 /* Tokens fuera de la paleta de Tailwind (canvas del grafo, ambiente, sombras) */
 :root {
   color-scheme: dark;
-  --graph-bg: #14110E;
-  --graph-node: #8F877D;
-  --graph-label: rgba(242, 237, 230, 0.85);
-  --graph-match: #EBA640;
-  --graph-director: rgba(235, 166, 64, 0.65);
-  --graph-semantic: rgba(242, 237, 230, 0.28);
-  --ambient-dot: rgba(242, 237, 230, 0.15);
-  --ambient-beam: rgba(235, 166, 64, 0.13);
-  --ambient-beam-edge: rgba(194, 117, 21, 0.04);
-  --ambient-cursor: rgba(235, 166, 64, 0.09);
+  --graph-bg: #121316;
+  --graph-node: #8E8D87;
+  --graph-label: rgba(237, 235, 230, 0.85);
+  --graph-match: #7D97FF;
+  --graph-director: rgba(125, 151, 255, 0.6);
+  --graph-semantic: rgba(237, 235, 230, 0.28);
+  --ambient-dot: rgba(237, 235, 230, 0.15);
+  --ambient-beam: rgba(125, 151, 255, 0.10);
+  --ambient-beam-edge: rgba(71, 99, 219, 0.04);
+  --ambient-cursor: rgba(125, 151, 255, 0.08);
   --ambient-vignette: rgba(0, 0, 0, 0.55);
   --shadow-color: 0, 0, 0;
   --shadow-alpha-a: 0.4;
@@ -77,28 +82,28 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --color-canvas: #F2EFEA;
-  --color-surface: #FBFAF7;
+  --color-canvas: #F4F1EA;
+  --color-surface: #FCFAF6;
 
-  --color-white: #1B1814;
-  --color-neutral-50: #12100D;
-  --color-neutral-100: #1B1814;
-  --color-neutral-200: #2E2924;
-  --color-neutral-300: #3F3933;
-  --color-neutral-400: #5A534B;
-  --color-neutral-500: #776F66;
-  --color-neutral-600: #9B9389;
-  --color-neutral-700: #BDB6AC;
-  --color-neutral-800: #DAD5CD;
-  --color-neutral-900: #FBFAF7;
-  --color-neutral-950: #F2EFEA;
+  --color-white: #141414;
+  --color-neutral-50: #0B0B0B;
+  --color-neutral-100: #141414;
+  --color-neutral-200: #262624;
+  --color-neutral-300: #383734;
+  --color-neutral-400: #5E5B55;
+  --color-neutral-500: #75726B;
+  --color-neutral-600: #99958D;
+  --color-neutral-700: #BCB8AF;
+  --color-neutral-800: #DDD8CE;
+  --color-neutral-900: #FCFAF6;
+  --color-neutral-950: #F4F1EA;
 
-  --color-amber-200: #7A4606;
-  --color-amber-300: #8C5208;
-  --color-amber-400: #9A5B0A;
-  --color-amber-500: #A8620B;
-  --color-amber-600: #B86E14;
-  --color-amber-950: #F7E9D2;
+  --color-accent-200: #182F8F;
+  --color-accent-300: #1F3CB0;
+  --color-accent-400: #2B4EDB;
+  --color-accent-500: #3A5CE6;
+  --color-accent-600: #4B6BEE;
+  --color-accent-950: #E4E9FB;
 
   --color-emerald-200: #0F5139;
   --color-emerald-300: #17694B;
@@ -111,18 +116,18 @@
   --color-red-500: #C94444;
   --color-red-950: #FBE6E6;
 
-  --graph-bg: #F2EFEA;
-  --graph-node: #8A8279;
-  --graph-label: rgba(27, 24, 20, 0.85);
-  --graph-match: #9A5B0A;
-  --graph-director: rgba(154, 91, 10, 0.6);
-  --graph-semantic: rgba(27, 24, 20, 0.22);
-  --ambient-dot: rgba(27, 24, 20, 0.12);
-  --ambient-beam: rgba(235, 166, 64, 0.16);
-  --ambient-beam-edge: rgba(235, 166, 64, 0.05);
-  --ambient-cursor: rgba(235, 166, 64, 0.08);
-  --ambient-vignette: rgba(120, 100, 80, 0.10);
-  --shadow-color: 60, 45, 30;
+  --graph-bg: #F4F1EA;
+  --graph-node: #8A877F;
+  --graph-label: rgba(20, 20, 20, 0.85);
+  --graph-match: #2B4EDB;
+  --graph-director: rgba(43, 78, 219, 0.55);
+  --graph-semantic: rgba(20, 20, 20, 0.22);
+  --ambient-dot: rgba(20, 20, 20, 0.12);
+  --ambient-beam: rgba(43, 78, 219, 0.08);
+  --ambient-beam-edge: rgba(43, 78, 219, 0.03);
+  --ambient-cursor: rgba(43, 78, 219, 0.06);
+  --ambient-vignette: rgba(60, 60, 70, 0.10);
+  --shadow-color: 30, 30, 40;
   --shadow-alpha-a: 0.08;
   --shadow-alpha-b: 0.14;
   --bevel: rgba(255, 255, 255, 0.7);
@@ -268,7 +273,7 @@ body::before {
    ========================================================================== */
 
 :focus-visible {
-  outline: 2px solid var(--color-amber-500);
+  outline: 2px solid var(--color-accent-500);
   outline-offset: 2px;
 }
 
@@ -277,9 +282,9 @@ body::before {
 }
 
 .focus-ring-cinematic:focus-visible {
-  outline: 2px solid var(--color-amber-500) !important;
+  outline: 2px solid var(--color-accent-500) !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-amber-500) 22%, transparent) !important;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-accent-500) 22%, transparent) !important;
 }
 
 /* ==========================================================================

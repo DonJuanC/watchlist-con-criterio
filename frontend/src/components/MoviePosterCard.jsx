@@ -14,7 +14,7 @@ const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/";
  * @param {boolean} [props.isCenter=false]
  * @param {boolean} [props.selected=false]
  * @param {string} [props.className=""]
- * @param {string} [props.accentColor="neutral"] "neutral" | "amber" | "emerald"
+ * @param {string} [props.accentColor="neutral"] "neutral" | "accent" | "emerald"
  * @param {boolean} [props.showBadge=true]
  */
 export default function MoviePosterCard({
@@ -45,7 +45,7 @@ export default function MoviePosterCard({
   const elevationStyle = isCenter
     ? "ring-1 ring-white/40 shadow-poster-hover"
     : selected
-      ? "ring-1 ring-amber-400/70 shadow-poster-hover"
+      ? "ring-1 ring-accent-400/70 shadow-poster-hover"
       : "border border-white/[0.08] group-hover:border-white/[0.22] shadow-poster group-hover:shadow-poster-hover group-hover:-translate-y-0.5";
 
   const hasPoster = movie?.poster_path && !imageError;
@@ -94,7 +94,7 @@ export default function MoviePosterCard({
         const badgeColor = isRec
           ? "border-emerald-500/40 bg-neutral-950/80 text-emerald-300"
           : isNeutral
-            ? "border-amber-500/40 bg-neutral-950/80 text-amber-300"
+            ? "border-accent-500/40 bg-neutral-950/80 text-accent-300"
             : "border-red-500/40 bg-neutral-950/80 text-red-300";
 
         return (
@@ -113,8 +113,8 @@ export default function MoviePosterCard({
 
       {/* Badge de estrellas si tiene rating personal */}
       {showBadge && movie?.rating != null && (
-        <div className="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-1 rounded bg-neutral-950/85 px-1.5 py-0.5 text-[9px] font-mono font-medium text-amber-300/90 backdrop-blur-sm border border-white/10">
-          <Star size={9} className="fill-amber-400 text-amber-400" />
+        <div className="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-1 rounded bg-neutral-950/85 px-1.5 py-0.5 text-[9px] font-mono font-medium text-accent-300/90 backdrop-blur-sm border border-white/10">
+          <Star size={9} className="fill-accent-400 text-accent-400" />
           <span>{movie.rating}</span>
         </div>
       )}

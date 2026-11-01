@@ -460,7 +460,7 @@ export default function HomeSearch({
             <button
               type="button"
               onClick={onShowSelector}
-              className="uppercase tracking-[0.14em] text-amber-400 underline decoration-amber-400/30 underline-offset-4 transition-colors hover:decoration-amber-400 focus-ring-cinematic rounded"
+              className="uppercase tracking-[0.14em] text-accent-400 underline decoration-accent-400/30 underline-offset-4 transition-colors hover:decoration-accent-400 focus-ring-cinematic rounded"
             >
               El Selector
             </button>{" "}
@@ -531,7 +531,7 @@ export default function HomeSearch({
                 {/* Cabecera técnica y control de reel */}
                 <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] pb-2.5">
                   <div className="inline-flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400/90" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent-400/90" />
                     <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-neutral-400 font-medium">
                       {currentSpotlight.isPending
                         ? "Descubrimiento Pendiente · En tu Sintonía"
@@ -546,7 +546,7 @@ export default function HomeSearch({
                       title="Explorar otra recomendación al azar"
                       className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-0.5 text-[10px] font-mono text-neutral-300 hover:border-white/20 hover:text-white transition-all active:scale-95"
                     >
-                      <Dices size={11} className="text-amber-400" />
+                      <Dices size={11} className="text-accent-400" />
                       <span className="hidden sm:inline">Al azar</span>
                     </button>
 
@@ -602,7 +602,7 @@ export default function HomeSearch({
                           size={12}
                           className={
                             i < currentSpotlight.rating
-                              ? "fill-amber-400 text-amber-400"
+                              ? "fill-accent-400 text-accent-400"
                               : "text-neutral-700"
                           }
                         />
@@ -617,7 +617,7 @@ export default function HomeSearch({
                 {currentSpotlight.isPending && (
                   <div className="mt-2.5 flex items-center gap-2 text-xs font-mono text-neutral-300">
                     <span className="inline-flex items-center gap-1 rounded border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-neutral-200">
-                      <Sparkles size={11} className="text-amber-400" />
+                      <Sparkles size={11} className="text-accent-400" />
                       {Math.round((currentSpotlight.score || 0.85) * 100)}% afinidad estética
                     </span>
                     <span className="text-neutral-500 text-[10px]">con tu canon personal</span>
@@ -626,7 +626,7 @@ export default function HomeSearch({
 
                 {/* Crítica personal editorial (sin caja envolvente pesada) */}
                 {!currentSpotlight.isPending && currentSpotlight.review && (
-                  <div className="my-4 border-l border-amber-500/40 pl-4 py-0.5 text-left">
+                  <div className="my-4 border-l border-accent-500/40 pl-4 py-0.5 text-left">
                     <p className="font-serif text-sm sm:text-base italic leading-relaxed text-neutral-200">
                       “{currentSpotlight.review}”
                     </p>
@@ -732,7 +732,7 @@ export default function HomeSearch({
       >
         <form
           onSubmit={handleSubmit}
-          className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.12] bg-surface/90 px-5 py-4 shadow-surface-elevated transition-all duration-200 focus-within:border-amber-400/60"
+          className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.12] bg-surface/90 px-5 py-4 shadow-surface-elevated transition-all duration-200 focus-within:border-accent-400/60"
         >
           {isLoading ? (
             <Loader2 size={16} className="animate-spin text-neutral-400" />
@@ -806,7 +806,7 @@ export default function HomeSearch({
                   </span>
                 </span>
                 {movie.rating && (
-                  <span className="text-[11px] text-amber-400/90 font-mono">
+                  <span className="text-[11px] text-accent-400/90 font-mono">
                     ★ {movie.rating}
                   </span>
                 )}
@@ -859,7 +859,7 @@ export default function HomeSearch({
                 semanticIndex > 0 || tmdbLoading ? "mt-1 border-t border-white/[0.06]" : ""
               } ${activeIndex === semanticIndex ? "bg-white/[0.06]" : ""}`}
             >
-              <Sparkles size={15} className="shrink-0 text-amber-400/80" />
+              <Sparkles size={15} className="shrink-0 text-accent-400/80" />
               <span className="min-w-0">
                 <span className="block truncate text-sm text-neutral-100 font-medium">
                   Buscar por sensación: “{inputValue.trim()}”
@@ -890,9 +890,9 @@ export default function HomeSearch({
             type="button"
             onClick={handleSurprise}
             disabled={isLoading}
-            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-950/20 px-3 py-1 text-xs font-mono text-amber-300 hover:border-amber-500/50 hover:bg-amber-950/30 transition-all duration-150 active:scale-95 disabled:opacity-50"
+            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-full border border-accent-500/30 bg-accent-950/20 px-3 py-1 text-xs font-mono text-accent-300 hover:border-accent-500/50 hover:bg-accent-950/30 transition-all duration-150 active:scale-95 disabled:opacity-50"
           >
-            <Dices size={12} className="text-amber-400" />
+            <Dices size={12} className="text-accent-400" />
             <span>Sorpréndeme</span>
           </button>
         </div>
@@ -907,7 +907,7 @@ export default function HomeSearch({
               <button
                 type="button"
                 onClick={() => handleExample(ex)}
-                className="text-neutral-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white hover:decoration-amber-400/60 focus-ring-cinematic rounded"
+                className="text-neutral-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white hover:decoration-accent-400/60 focus-ring-cinematic rounded"
               >
                 {ex.label}
               </button>
@@ -956,7 +956,7 @@ export default function HomeSearch({
                   aria-pressed={isSelected}
                   className={`group flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors focus-ring-cinematic ${
                     isSelected
-                      ? "border-amber-400/60 bg-amber-950/30"
+                      ? "border-accent-400/60 bg-accent-950/30"
                       : "border-white/[0.08] bg-surface/50 hover:border-white/20"
                   }`}
                 >
@@ -1022,7 +1022,7 @@ export default function HomeSearch({
             <button
               type="button"
               onClick={onShowNextUp}
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-medium text-neutral-950 transition-all hover:bg-amber-300 active:scale-95 focus-ring-cinematic"
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-accent-400 px-4 py-2.5 text-sm font-medium text-neutral-950 transition-all hover:bg-accent-300 active:scale-95 focus-ring-cinematic"
             >
               <Popcorn size={15} />
               ¿Qué veo hoy?
@@ -1127,7 +1127,7 @@ export default function HomeSearch({
           onClick={onShowMap}
           className="inline-flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3.5 py-2 text-xs font-medium text-neutral-300 hover:border-white/20 hover:text-white active:scale-95 focus-ring-cinematic transition-all"
         >
-          <Film size={13} className="text-amber-400" />
+          <Film size={13} className="text-accent-400" />
           <span>Ver mapa de conexiones completo</span>
         </button>
 

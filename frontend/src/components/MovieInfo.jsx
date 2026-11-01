@@ -17,8 +17,8 @@ const RECOMMEND_CONFIG = {
   },
   0: {
     label: "Interesante · La recomiendo con reservas",
-    badgeClass: "bg-amber-950/50 text-amber-300 border-amber-500/40",
-    dotClass: "bg-amber-400",
+    badgeClass: "bg-accent-950/50 text-accent-300 border-accent-500/40",
+    dotClass: "bg-accent-400",
   },
   "-1": {
     label: "Prescindible · No la recomendaría",
@@ -72,7 +72,7 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
             title="Calificación IMDb"
             className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 text-xs font-mono text-neutral-300"
           >
-            <span className="font-semibold text-amber-400">IMDb</span>
+            <span className="font-semibold text-accent-400">IMDb</span>
             <span className="font-medium text-white">
               {Number(imdbRating).toFixed(1)}
             </span>
@@ -104,7 +104,7 @@ function MyCriteria({ rating, recommend, review }) {
     <section className="relative rounded-xl border border-white/[0.08] bg-surface/80 p-4 inner-bevel-subtle">
       <div className="mb-2.5 flex items-center justify-between">
         <h4 className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
-          <Compass size={13} className="text-amber-400" />
+          <Compass size={13} className="text-accent-400" />
           Mi Criterio Personal
         </h4>
 
@@ -119,7 +119,7 @@ function MyCriteria({ rating, recommend, review }) {
                 size={11}
                 className={
                   i < rating
-                    ? "fill-amber-400 text-amber-400"
+                    ? "fill-accent-400 text-accent-400"
                     : "text-neutral-700"
                 }
               />
@@ -138,7 +138,7 @@ function MyCriteria({ rating, recommend, review }) {
       )}
 
       {review && (
-        <blockquote className="mt-3 border-l border-amber-500/40 pl-3.5 py-0.5 font-serif text-sm sm:text-base italic leading-relaxed text-neutral-200">
+        <blockquote className="mt-3 border-l border-accent-500/40 pl-3.5 py-0.5 font-serif text-sm sm:text-base italic leading-relaxed text-neutral-200">
           “{review}”
         </blockquote>
       )}

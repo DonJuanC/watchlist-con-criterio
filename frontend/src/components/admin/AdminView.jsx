@@ -43,7 +43,7 @@ export default function AdminView({ onNavigateToHome, onNavigateToMovie }) {
       {/* Barra Superior del Studio */}
       <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-300">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-accent-500/40 bg-accent-500/10 text-accent-300">
             <ShieldCheck size={18} />
           </div>
           <div>
@@ -92,11 +92,11 @@ export default function AdminView({ onNavigateToHome, onNavigateToMovie }) {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium transition-all ${
                 isActive
-                  ? "border border-amber-500/40 bg-amber-500/15 text-amber-200 shadow-md"
+                  ? "border border-accent-500/40 bg-accent-500/15 text-accent-200 shadow-md"
                   : "text-neutral-400 hover:bg-white/5 hover:text-white"
               }`}
             >
-              <Icon size={14} className={isActive ? "text-amber-400" : "text-neutral-400"} />
+              <Icon size={14} className={isActive ? "text-accent-400" : "text-neutral-400"} />
               <span>{tab.label}</span>
             </button>
           );

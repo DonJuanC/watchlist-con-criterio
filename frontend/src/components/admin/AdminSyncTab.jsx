@@ -42,7 +42,7 @@ export default function AdminSyncTab() {
     <div className="space-y-6">
       <div>
         <h3 className="font-serif text-xl font-bold text-white flex items-center gap-2">
-          <ArrowRightLeft size={20} className="text-amber-400" />
+          <ArrowRightLeft size={20} className="text-accent-400" />
           <span>Sincronización Bidireccional (Notion ⇄ App)</span>
         </h3>
         <p className="mt-1 text-xs text-neutral-400">
@@ -62,7 +62,7 @@ export default function AdminSyncTab() {
               type="checkbox"
               checked={dryRun}
               onChange={(e) => setDryRun(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-400"
+              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-accent-500 focus:ring-accent-400"
             />
             <div>
               <span className="block text-xs font-medium text-white">Dry Run (Simulación)</span>
@@ -77,7 +77,7 @@ export default function AdminSyncTab() {
               type="checkbox"
               checked={prune}
               onChange={(e) => setPrune(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-400"
+              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-accent-500 focus:ring-accent-400"
             />
             <div>
               <span className="block text-xs font-medium text-white">Prune (Limpieza)</span>
@@ -92,7 +92,7 @@ export default function AdminSyncTab() {
               type="checkbox"
               checked={reembed}
               onChange={(e) => setReembed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-400"
+              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-accent-500 focus:ring-accent-400"
             />
             <div>
               <span className="block text-xs font-medium text-white">Re-embed</span>
@@ -108,7 +108,7 @@ export default function AdminSyncTab() {
             type="button"
             onClick={handleStartSync}
             disabled={isSyncing}
-            className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-600 to-amber-500 py-2.5 px-5 text-xs font-semibold text-neutral-950 shadow-lg shadow-amber-950/40 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-xl border border-accent-500/50 bg-gradient-to-r from-accent-600 to-accent-500 py-2.5 px-5 text-xs font-semibold text-neutral-950 shadow-lg shadow-accent-950/40 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {isSyncing ? (
               <>
@@ -133,7 +133,7 @@ export default function AdminSyncTab() {
             <span className="text-[11px] text-neutral-400">Sincronizadas</span>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
-            <span className="block text-lg font-bold text-amber-400">{syncResult.stats.embedded}</span>
+            <span className="block text-lg font-bold text-accent-400">{syncResult.stats.embedded}</span>
             <span className="text-[11px] text-neutral-400">Embeddings Gemini</span>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
@@ -158,7 +158,7 @@ export default function AdminSyncTab() {
       <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] p-4 font-mono text-[11px] text-neutral-300 shadow-2xl">
         <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-neutral-500">
           <div className="flex items-center gap-2">
-            <Terminal size={14} className="text-amber-400" />
+            <Terminal size={14} className="text-accent-400" />
             <span className="font-semibold text-neutral-400">Terminal de Sincronización</span>
           </div>
           {syncResult?.durationMs && (
@@ -175,7 +175,7 @@ export default function AdminSyncTab() {
 
               let color = "text-neutral-300";
               if (isOk) color = "text-emerald-400";
-              if (isWarn) color = "text-amber-300";
+              if (isWarn) color = "text-accent-300";
               if (isErr) color = "text-rose-400";
 
               return (

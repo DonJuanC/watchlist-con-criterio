@@ -19,7 +19,7 @@ import useAdminStore from "../../store/useAdminStore";
 
 const RECOMMENDATIONS = [
   { value: 1, label: "Sí sin dudarlo", icon: "🟢", color: "hover:border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-300" },
-  { value: 0, label: "Sí con reservas", icon: "🟡", color: "hover:border-amber-500/50 hover:bg-amber-500/10 text-amber-300" },
+  { value: 0, label: "Sí con reservas", icon: "🟡", color: "hover:border-accent-500/50 hover:bg-accent-500/10 text-accent-300" },
   { value: -1, label: "No realmente", icon: "🔴", color: "hover:border-rose-500/50 hover:bg-rose-500/10 text-rose-300" },
 ];
 
@@ -132,7 +132,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
       {/* Encabezado */}
       <div>
         <h3 className="font-serif text-xl font-bold text-white flex items-center gap-2">
-          <Sparkles size={20} className="text-amber-400" />
+          <Sparkles size={20} className="text-accent-400" />
           <span>Curar Nueva Película</span>
         </h3>
         <p className="mt-1 text-xs text-neutral-400">
@@ -147,7 +147,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
         </label>
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-neutral-400">
-            {isSearching ? <Loader2 size={16} className="animate-spin text-amber-400" /> : <Search size={16} />}
+            {isSearching ? <Loader2 size={16} className="animate-spin text-accent-400" /> : <Search size={16} />}
           </div>
           <input
             id="tmdb-search-input"
@@ -155,7 +155,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Ej: Oppenheimer, La ciénaga, Perfect Days..."
-            className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-white placeholder-neutral-500 transition-all focus:border-amber-400/80 focus:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-amber-400/80"
+            className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-white placeholder-neutral-500 transition-all focus:border-accent-400/80 focus:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-accent-400/80"
           />
         </div>
 
@@ -174,7 +174,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
                 <div
                   key={m.tmdb_id}
                   onClick={() => handleSelectMovie(m)}
-                  className="group flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 transition-all hover:border-amber-400/40 hover:bg-white/[0.07]"
+                  className="group flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 transition-all hover:border-accent-400/40 hover:bg-white/[0.07]"
                 >
                   {m.poster_path ? (
                     <img
@@ -191,7 +191,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h4 className="text-xs font-semibold text-white group-hover:text-amber-300 transition-colors line-clamp-1">
+                      <h4 className="text-xs font-semibold text-white group-hover:text-accent-300 transition-colors line-clamp-1">
                         {m.title}
                       </h4>
                       {m.release_year && (
@@ -206,7 +206,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
                     )}
 
                     {inCat ? (
-                      <span className="mt-2 inline-flex items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
+                      <span className="mt-2 inline-flex items-center gap-1 rounded bg-accent-500/15 px-1.5 py-0.5 text-[10px] font-medium text-accent-300">
                         <CheckCircle2 size={10} /> En catálogo ({m.in_catalog.status === "seen" ? "Visto" : "Pendiente"})
                       </span>
                     ) : (
@@ -275,11 +275,11 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
                   onClick={() => setStatus("seen")}
                   className={`flex items-center justify-center gap-2 rounded-xl border p-3 text-xs font-medium transition-all ${
                     status === "seen"
-                      ? "border-amber-400 bg-amber-500/15 text-amber-200 shadow-md"
+                      ? "border-accent-400 bg-accent-500/15 text-accent-200 shadow-md"
                       : "border-white/10 bg-white/[0.02] text-neutral-400 hover:border-white/20 hover:text-white"
                   }`}
                 >
-                  <CheckCircle2 size={16} className={status === "seen" ? "text-amber-400" : "text-neutral-500"} />
+                  <CheckCircle2 size={16} className={status === "seen" ? "text-accent-400" : "text-neutral-500"} />
                   <span>Visto ✅ (Entra al grafo)</span>
                 </button>
 
@@ -329,8 +329,8 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
                         size={26}
                         className={`transition-colors ${
                           filled
-                            ? "fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                            : "text-neutral-600 group-hover:text-amber-400/50"
+                            ? "fill-accent-400 text-accent-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                            : "text-neutral-600 group-hover:text-accent-400/50"
                         }`}
                       />
                     </button>
@@ -391,7 +391,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
                 placeholder="Escribe tu opinión sincera, sensaciones, ritmo, fotografía o por qué te marcó. Esta reseña se integrará al embedding de Gemini y se sincronizará a Notion..."
-                className="w-full rounded-xl border border-white/15 bg-white/5 p-3 text-sm text-white placeholder-neutral-500 transition-all focus:border-amber-400/80 focus:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-amber-400/80"
+                className="w-full rounded-xl border border-white/15 bg-white/5 p-3 text-sm text-white placeholder-neutral-500 transition-all focus:border-accent-400/80 focus:bg-white/[0.08] focus:outline-none focus:ring-1 focus:ring-accent-400/80"
               />
               <p className="mt-1 text-[11px] text-neutral-500">
                 {review.length} caracteres • Al guardar una película vista, se enriquecerá el cálculo semántico con tus palabras.
@@ -405,7 +405,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
                 type="checkbox"
                 checked={syncToNotion}
                 onChange={(e) => setSyncToNotion(e.target.checked)}
-                className="h-4 w-4 rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-400"
+                className="h-4 w-4 rounded border-white/20 bg-white/5 text-accent-500 focus:ring-accent-400"
               />
               <label htmlFor="sync-notion-checkbox" className="text-xs text-neutral-300 cursor-pointer">
                 Sincronizar inmediatamente con tu base de Notion (<span className="text-neutral-400">crear fila con propiedades y match OK</span>)
@@ -427,7 +427,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
                   <span className="font-medium">{submitSuccess.message}</span>
                 </div>
                 {submitSuccess.warning && (
-                  <p className="text-[11px] text-amber-300">⚠️ {submitSuccess.warning}</p>
+                  <p className="text-[11px] text-accent-300">⚠️ {submitSuccess.warning}</p>
                 )}
                 {submitSuccess.movie?.id && (
                   <div className="pt-2 flex items-center gap-3">
@@ -456,7 +456,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/50 bg-gradient-to-r from-amber-600 to-amber-500 py-3 px-6 text-sm font-semibold text-neutral-950 shadow-xl shadow-amber-950/50 transition-all hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-xl border border-accent-500/50 bg-gradient-to-r from-accent-600 to-accent-500 py-3 px-6 text-sm font-semibold text-neutral-950 shadow-xl shadow-accent-950/50 transition-all hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
