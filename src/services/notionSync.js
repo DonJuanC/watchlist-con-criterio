@@ -66,12 +66,187 @@ const text = (prop) =>
 const select = (prop) => prop?.select?.name ?? null;
 
 const STATUS = { "Visto ✅": "seen", "Pendiente 📌": "pending" };
+const STATUS_TO_NOTION = { seen: "Visto ✅", pending: "Pendiente 📌" };
+
 const RECOMMEND = {
   "Sí sin dudarlo 🟢": 1,
   "Sí con reservas 🟡": 0,
   "No realmente 🔴": -1,
 };
+const RECOMMEND_TO_NOTION = {
+  1: "Sí sin dudarlo 🟢",
+  0: "Sí con reservas 🟡",
+  [-1]: "No realmente 🔴",
+};
+
 const MOVIE_TYPES = new Set(["Película", "Documental"]);
+
+function formatRatingSelect(rating) {
+  if (!rating || rating < 1) return null;
+  const count = Math.min(5, Math.max(1, Math.round(rating)));
+  return "⭐".repeat(count);
+}
+
+function buildNotionProperties({
+  title,
+  year,
+  type = "Película",
+  status = "seen",
+  recommend = null,
+  rating = null,
+  review = null,
+  tmdbId = null,
+  appTitle = null,
+  match = "OK",
+}) {
+  const properties = {};
+
+  if (title) {
+    properties["Título"] = {
+      title: [{ text: { content: title } }],
+    };
+  }
+
+  if (year) {
+    properties["Año de estreno"] = {
+      number: Number(year),
+    };
+  }
+
+  if (type) {
+    properties["Tipo"] = {
+      select: { name: type },
+    };
+  }
+
+  if (status && STATUS_TO_NOTION[status]) {
+    properties["Estado"] = {
+      select: { name: STATUS_TO_NOTION[status] },
+    };
+  }
+
+  if (recommend !== null && recommend !== undefined && RECOMMEND_TO_NOTION[recommend]) {
+    properties["¿Recomendarías?"] = {
+      select: { name: RECOMMEND_TO_NOTION[recommend] },
+    };
+  } else if (recommend === null) {
+    properties["¿Recomendarías?"] = { select: null };
+  }
+
+  const ratingStr = formatRatingSelect(rating);
+  if (ratingStr) {
+    properties["Calificación"] = {
+      select: { name: ratingStr },
+    };
+  } else if (rating === null) {
+    properties["Calificación"] = { select: null };
+  }
+
+  if (review !== undefined) {
+    properties["Reseña personal"] = {
+      rich_text: review ? [{ text: { content: review.slice(0, 2000) } }] : [],
+    };
+  }
+
+  if (tmdbId) {
+    properties["TMDB ID"] = {
+      number: Number(tmdbId),
+    };
+  }
+
+  if (match) {
+    properties["Match"] = {
+      select: { name: match },
+    };
+  }
+
+  if (appTitle) {
+    properties["Título en app"] = {
+      rich_text: [{ text: { content: appTitle } }],
+    };
+  }
+
+  return properties;
+}
+
+async function createNotionPage(data, token, dataSourceId) {
+  const notionToken = token || process.env.NOTION_TOKEN;
+  const dsId = dataSourceId || process.env.NOTION_DATA_SOURCE_ID;
+  if (!notionToken || !dsId) {
+    throw new Error("Faltan NOTION_TOKEN / NOTION_DATA_SOURCE_ID en variables de entorno.");
+  }
+
+  const properties = buildNotionProperties(data);
+
+  // Intento 1: con data_source_id (Notion API 2025-09-03)
+  try {
+    const page = await notionFetch(
+      "/pages",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          parent: { data_source_id: dsId },
+          properties,
+        }),
+      },
+      notionToken,
+    );
+    return { pageId: page.id, editedAt: page.last_edited_time };
+  } catch (err) {
+    // Si la API espera database_id en vez de data_source_id
+    if (
+      err.message &&
+      (err.message.includes("database_id") || err.message.includes("parent"))
+    ) {
+      const page = await notionFetch(
+        "/pages",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            parent: { database_id: dsId },
+            properties,
+          }),
+        },
+        notionToken,
+      );
+      return { pageId: page.id, editedAt: page.last_edited_time };
+    }
+    throw err;
+  }
+}
+
+async function updateNotionPage(pageId, data, token) {
+  const notionToken = token || process.env.NOTION_TOKEN;
+  if (!notionToken) throw new Error("Falta NOTION_TOKEN en variables de entorno.");
+  if (!pageId) throw new Error("Falta pageId para actualizar en Notion.");
+
+  const properties = buildNotionProperties(data);
+  const page = await notionFetch(
+    `/pages/${pageId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ properties }),
+    },
+    notionToken,
+  );
+  return { pageId: page.id, editedAt: page.last_edited_time };
+}
+
+async function archiveNotionPage(pageId, token) {
+  const notionToken = token || process.env.NOTION_TOKEN;
+  if (!notionToken) throw new Error("Falta NOTION_TOKEN en variables de entorno.");
+  if (!pageId) return { archived: false };
+
+  await notionFetch(
+    `/pages/${pageId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ archived: true }),
+    },
+    notionToken,
+  );
+  return { pageId, archived: true };
+}
 
 function parseRow(page) {
   const p = page.properties;
@@ -394,4 +569,11 @@ async function syncNotionCatalog({
 
 module.exports = {
   syncNotionCatalog,
+  createNotionPage,
+  updateNotionPage,
+  archiveNotionPage,
+  buildNotionProperties,
+  getDetails,
+  upsertMovie,
+  generateEmbeddingWithRetry,
 };

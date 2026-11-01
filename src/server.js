@@ -61,7 +61,7 @@ app.use(
         callback(null, false);
       }
     },
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   }),
 );
 app.use(express.json({ limit: "50kb" }));

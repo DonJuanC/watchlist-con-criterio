@@ -34,6 +34,8 @@ calificación, recomendación y reseña), sincronizado a la base de datos con un
 
 ![Mapa completo del grafo](docs/04-map.png)
 
+**6. Criterio Studio (`#/admin`).** Panel de curaduría protegido por contraseña maestra (`ADMIN_PASSWORD`) donde es posible buscar cualquier título directamente en TMDB con afiches y directores oficiales, asignarle estado (*Visto ✅* o *Pendiente 📌*), calificación ⭐, veredicto 🟢🟡🔴 y reseña personal. Al guardar, se actualiza Neon, se enriquece el embedding semántico con Gemini y se sincroniza en vivo con la base de datos de Notion en ambas direcciones. Incluye consola de sincronización y gestor de catálogo.
+
 ## El problema
 
 Los sistemas de recomendación de streaming agrupan por género/keyword y terminan sugiriendo lo

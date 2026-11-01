@@ -22,6 +22,7 @@ import useCineStore from "./store/useCineStore";
 import { fetchGraph } from "./services/api";
 
 const GraphCanvas = lazy(() => import("./components/GraphCanvas"));
+const AdminView = lazy(() => import("./components/admin/AdminView"));
 
 function ServerWarmingBanner() {
   const isServerWarming = useCineStore((s) => s.isServerWarming);
@@ -79,6 +80,9 @@ function parseRouteFromHash() {
   }
   if (hash === "#/selector") {
     return { view: "selector", centerId: null };
+  }
+  if (hash === "#/admin" || hash.startsWith("#/admin")) {
+    return { view: "admin", centerId: null };
   }
   return { view: "home", centerId: null };
 }
@@ -171,6 +175,9 @@ export default function App() {
     } else if (targetView === "selector") {
       window.location.hash = "#/selector";
       setView("selector");
+    } else if (targetView === "admin") {
+      window.location.hash = "#/admin";
+      setView("admin");
     }
   }, []);
 
@@ -246,6 +253,17 @@ export default function App() {
         {view === "selector" && (
           <div className="h-full overflow-y-auto animate-view-enter">
             <SelectorView onStart={() => navigate("home")} />
+          </div>
+        )}
+
+        {view === "admin" && (
+          <div className="h-full overflow-y-auto animate-view-enter">
+            <Suspense fallback={<GraphLoading label="Cargando Criterio Studio…" />}>
+              <AdminView
+                onNavigateToHome={() => navigate("home")}
+                onNavigateToMovie={(id) => navigate("ego", id)}
+              />
+            </Suspense>
           </div>
         )}
 

@@ -16,6 +16,9 @@ const { recommend } = require("../controllers/recommendController");
 const { getNextUp } = require("../controllers/nextUpController");
 const { getWatch } = require("../controllers/watchController");
 const { triggerSync } = require("../controllers/syncController");
+const adminRouter = require("./admin");
+
+router.use("/admin", adminRouter);
 
 router.get("/movies/search", searchExternal);
 router.get("/movies/:id/neighbors", getNeighbors);

@@ -3,8 +3,9 @@
 // y el toggle de tema. En móvil los destinos se muestran solo como íconos con
 // aria-label; el aviso legal vive en el footer de la portada.
 
-import { Film, Popcorn, Network, Compass, UserRound, Sun, Moon } from "lucide-react";
+import { Film, Popcorn, Network, Compass, UserRound, Sun, Moon, SlidersHorizontal } from "lucide-react";
 import useThemeStore from "../store/useThemeStore";
+import useAdminStore from "../store/useAdminStore";
 
 const NAV_ITEMS = [
   { view: "home", label: "Explorar", icon: Compass },
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
 export default function Navbar({ currentView, onNavigate, onResetAll }) {
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
+  const isAuthenticated = useAdminStore((s) => s.isAuthenticated);
   const nextThemeLabel = theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
 
   const handleBrandClick = () => {
@@ -86,6 +88,22 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           >
             {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
           </button>
+
+          {(isAuthenticated || currentView === "admin") && (
+            <button
+              type="button"
+              onClick={() => onNavigate("admin")}
+              title="Studio"
+              aria-label="Studio"
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-ring-cinematic ${
+                currentView === "admin"
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                  : "text-neutral-400 hover:bg-white/[0.04] hover:text-white"
+              }`}
+            >
+              <SlidersHorizontal size={15} />
+            </button>
+          )}
         </div>
       </div>
     </header>
