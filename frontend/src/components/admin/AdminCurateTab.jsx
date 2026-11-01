@@ -14,7 +14,7 @@ import {
   ExternalLink,
   RotateCcw,
 } from "lucide-react";
-import { createAdminMovie } from "../../services/adminApi";
+import { createAdminMovie, searchMoviesTmdb } from "../../services/adminApi";
 import useAdminStore from "../../store/useAdminStore";
 
 const RECOMMENDATIONS = [
@@ -62,15 +62,10 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
     clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/movies/search?q=${encodeURIComponent(q)}`);
-        const data = await res.json();
-        if (res.ok) {
-          setSearchResults(data.results || []);
-        } else {
-          setSearchError(data.error || "No se pudo buscar en TMDB");
-        }
-      } catch {
-        setSearchError("Error de conexión al buscar películas.");
+        const data = await searchMoviesTmdb(q);
+        setSearchResults(data.results || []);
+      } catch (err) {
+        setSearchError(err.message || "Error de conexión al buscar películas.");
       } finally {
         setIsSearching(false);
       }
@@ -141,7 +136,7 @@ export default function AdminCurateTab({ onNavigateToMovie }) {
           <span>Curar Nueva Película</span>
         </h3>
         <p className="mt-1 text-xs text-neutral-400">
-          Busca cualquier título en TMDB, asigna tu criterio personal y sincroniza automáticamente con Notion y Neon.
+          Busca cualquier título en TMDB, asigna tu criterio personal y sincroniza automáticamente con Notion.
         </p>
       </div>
 

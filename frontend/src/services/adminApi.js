@@ -55,6 +55,17 @@ async function adminFetch(path, options = {}) {
   return data;
 }
 
+export async function searchMoviesTmdb(query) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/movies/search?q=${encodeURIComponent(query)}`,
+  );
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "No se pudo buscar en TMDB");
+  }
+  return data;
+}
+
 export async function adminLogin(password) {
   const res = await adminFetch("/api/admin/login", {
     method: "POST",
