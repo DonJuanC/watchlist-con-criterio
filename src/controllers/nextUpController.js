@@ -9,11 +9,49 @@ const DEFAULT_LIMIT = 6;
 const MAX_LIMIT = 12;
 const ANCHORS_FOR_SCORE = 3; // 🟢 que promedian el score
 const REASONS_SHOWN = 2; // 🟢 que se muestran como razón
+const MAX_PROVIDER_KEYS = 30;
+
+/**
+ * Filtro de disponibilidad (watch_availability, ver src/services/availability.js).
+ *  - avail=mine + providers=netflix,hbo max → en alguna de esas plataformas en `country`.
+ *  - avail=any → en cualquier suscripción en `country`.
+ * Devuelve el fragmento SQL para la película `alias` y sus parámetros, numerados desde `start`.
+ * Con country también se devuelve `stream` por película (null = aún no consultada).
+ */
+function availabilityFilter(q, alias, start) {
+  const country = String(q.country || "").toUpperCase();
+  if (!/^[A-Z]{2}$/.test(country)) return { where: "", select: "", params: [] };
+  const params = [country];
+  const c = `$${start}`;
+  const select = `, CASE WHEN EXISTS (SELECT 1 FROM watch_fetched f WHERE f.tmdb_id = ${alias}.tmdb_id)
+         THEN COALESCE((SELECT w.stream FROM watch_availability w
+                        WHERE w.tmdb_id = ${alias}.tmdb_id AND w.country = ${c}), '[]'::jsonb)
+         END AS stream`;
+  let where = "";
+  if (q.avail === "any") {
+    where = `AND EXISTS (SELECT 1 FROM watch_availability w WHERE w.tmdb_id = ${alias}.tmdb_id
+                AND w.country = ${c} AND cardinality(w.stream_keys) > 0)`;
+  } else if (q.avail === "mine") {
+    const keys = String(q.providers || "")
+      .split(",")
+      .map((k) => k.trim().toLowerCase())
+      .filter((k) => k && k.length <= 60)
+      .slice(0, MAX_PROVIDER_KEYS);
+    if (keys.length) {
+      params.push(keys);
+      where = `AND EXISTS (SELECT 1 FROM watch_availability w WHERE w.tmdb_id = ${alias}.tmdb_id
+                  AND w.country = ${c} AND w.stream_keys && $${start + 1}::text[])`;
+    }
+  }
+  return { where, select, params };
+}
 
 /**
  * GET /api/recommend/next?limit=6&offset=0&mode=affinity|director
+ *     [&country=CO&avail=mine&providers=netflix,hbo max | &country=CO&avail=any]
  * Respuesta: { mode, results: [{ node, score, because: [{ id, title, rating? }] }], hasMore }
- * offset pagina el mismo ranking ("Otras opciones": 7–12, 13–18…).
+ * node.stream: plataformas de suscripción en `country` (null si aún no se consultó).
+ * offset pagina el mismo ranking ("Otras opciones": 7–12, 13–18…), ya filtrado.
  */
 async function getNextUp(req, res) {
   const limit = Math.min(
@@ -28,6 +66,7 @@ async function getNextUp(req, res) {
 
     if (mode === "director") {
       // Obras pendientes dirigidas por autores de los que ya has visto películas en tu archivo
+      const f = availabilityFilter(req.query, "p", 3);
       const result = await query(
         `WITH director_matches AS (
            SELECT p.id, p.tmdb_id, p.title, p.release_year, p.poster_path, p.director,
@@ -37,19 +76,21 @@ async function getNextUp(req, res) {
                            ORDER BY s.rating DESC NULLS LAST, s.release_year DESC) as because
            FROM movies p
            JOIN movies s ON s.director = p.director AND s.status = 'seen'
-           WHERE p.status = 'pending' AND p.director IS NOT NULL
+           WHERE p.status = 'pending' AND p.director IS NOT NULL ${f.where}
            GROUP BY p.id
          )
-         SELECT id, tmdb_id, title, release_year, poster_path, director, main_genre,
-                seen_count AS score, because
-         FROM director_matches
+         SELECT p.id, p.tmdb_id, p.title, p.release_year, p.poster_path, p.director, p.main_genre,
+                p.seen_count AS score, p.because ${f.select}
+         FROM director_matches p
          ORDER BY score DESC, release_year DESC
          LIMIT $1 OFFSET $2`,
-        [limit + 1, offset],
+        [limit + 1, offset, ...f.params],
       );
       rows = result.rows;
     } else {
       // Afinidad semántica: de mi lista de pendientes, las que mejor encajan con lo que marqué 🟢
+      const f = availabilityFilter(req.query, "p", 5);
+      const fm = availabilityFilter(req.query, "m", 5);
       const result = await query(
         `WITH anchors AS (
            SELECT id, title, embedding FROM movies
@@ -60,18 +101,19 @@ async function getNextUp(req, res) {
                   1 - (p.embedding <=> a.embedding) AS sim,
                   ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY p.embedding <=> a.embedding) AS rk
            FROM movies p CROSS JOIN anchors a
-           WHERE p.status = 'pending' AND p.embedding IS NOT NULL
+           WHERE p.status = 'pending' AND p.embedding IS NOT NULL ${f.where}
          )
          SELECT m.id, m.tmdb_id, m.title, m.release_year, m.poster_path, m.director,
                 m.genres[1] AS main_genre,
                 AVG(pr.sim) FILTER (WHERE pr.rk <= $1) AS score,
                 json_agg(json_build_object('id', pr.anchor_id, 'title', pr.anchor_title)
                          ORDER BY pr.rk) FILTER (WHERE pr.rk <= $2) AS because
+                ${fm.select}
          FROM pairs pr JOIN movies m ON m.id = pr.id
          GROUP BY m.id
          ORDER BY score DESC, m.id
          LIMIT $3 OFFSET $4`,
-        [ANCHORS_FOR_SCORE, REASONS_SHOWN, limit + 1, offset],
+        [ANCHORS_FOR_SCORE, REASONS_SHOWN, limit + 1, offset, ...f.params],
       );
       rows = result.rows;
     }

@@ -139,3 +139,13 @@ jobs:
 
           echo "🚀 Ejecutando sincronización de Notion hacia Neon..."
           node scripts/sync-notion.js $ARGS
+
+      - name: Refrescar dónde ver cada película
+        if: "${{ github.event.inputs.sync_target != 'render' }}"
+        # Solo consulta las que tienen datos de más de 7 días; si TMDB falla no tumba el sync.
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          DB_SSL_REJECT_UNAUTHORIZED: "false"
+        run: node scripts/fetch-availability.js

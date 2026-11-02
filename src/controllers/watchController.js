@@ -1,31 +1,14 @@
 // src/controllers/watchController.js
 // "Dónde verla": plataformas por país para cualquier película de TMDB (datos de JustWatch).
-// No se guarda en Neon porque la disponibilidad cambia seguido: caché en memoria por 6 h.
+// Las del catálogo se guardan en Neon (ver src/services/availability.js); las demás, en memoria.
 
-const { getWatchProviders, getRegionProviders } = require("../services/tmdb");
-const { dedupeByKey, regionPlatforms } = require("../services/platforms");
+const { getRegionProviders } = require("../services/tmdb");
+const { regionPlatforms } = require("../services/platforms");
+const { getAvailability } = require("../services/availability");
 
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
-const cache = new Map(); // tmdbId -> { at, results } (todos los países de una vez)
 const REGION_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_PLATFORMS = 30;
 const regionCache = new Map(); // country -> { at, platforms }
-
-// Plataformas limpias (sin canales ni variantes duplicadas) y con `key` para cruzar con
-// "mis plataformas" del visitante. Ver src/services/platforms.js.
-function cleanProviders(list = []) {
-  return dedupeByKey(
-    [...list].sort((a, b) => (a.display_priority ?? 999) - (b.display_priority ?? 999)),
-  );
-}
-
-async function getCachedProviders(tmdbId) {
-  const hit = cache.get(tmdbId);
-  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.results;
-  const results = await getWatchProviders(tmdbId);
-  cache.set(tmdbId, { at: Date.now(), results });
-  return results;
-}
 
 /**
  * GET /api/watch/:tmdbId?country=CO
@@ -44,16 +27,9 @@ async function getWatch(req, res) {
   }
 
   try {
-    const results = await getCachedProviders(tmdbId);
-    const c = results[country] || {};
+    const data = await getAvailability(tmdbId, country);
     res.setHeader("Cache-Control", "public, max-age=7200, stale-while-revalidate=86400");
-    return res.status(200).json({
-      country,
-      link: c.link || null,
-      stream: cleanProviders([...(c.flatrate || []), ...(c.free || []), ...(c.ads || [])]),
-      rent: cleanProviders(c.rent),
-      buy: cleanProviders(c.buy),
-    });
+    return res.status(200).json(data);
   } catch (err) {
     if (err.status === 404) {
       return res.status(404).json({ error: "Esa película no existe en TMDB." });
