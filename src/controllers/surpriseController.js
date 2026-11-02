@@ -3,48 +3,26 @@
 // - Sin ánimo: al azar entre mis 🟢, con más peso a las de mejor nota.
 // - Con ánimo (preset): las 8 vistas (sin 🔴) más cercanas a ese ánimo, 🟢 primero; al azar
 //   entre ellas, con más peso a las más cercanas.
-// Los ánimos son presets del servidor (no texto libre) para que cada uno cueste un solo
-// embedding de Gemini por vida del proceso.
+// Los ánimos viven en src/services/moods.js (los comparte "¿Qué veo hoy?").
 
 const { query } = require("../db");
-const { generateEmbedding } = require("../services/embeddings");
 const { parseExclude } = require("../services/neighborRanking");
 const { beyondFromSeeds } = require("../services/beyond");
+const {
+  MOODS,
+  MOOD_GENRES,
+  GENRE_BOOST,
+  GREEN_BOOST,
+  parseMood,
+  moodVector,
+} = require("../services/moods");
 
 const BEYOND_SEEDS = 6; // semillas de mi archivo para "fuera de mi archivo"
 const BEYOND_POOL = 8; // se sortea entre las 8 más cercanas al ánimo
-
-const MOODS = {
-  pensar: "película que te deja pensando, ideas, giros, filosofía, la mente, preguntas sin respuesta",
-  reir: "comedia divertida y ligera para reír, humor, absurdo, buen rato",
-  adrenalina: "acción intensa, tensión, persecuciones, adrenalina, ritmo frenético",
-  llorar: "drama emotivo y conmovedor, pérdida, amor, para llorar",
-  miedo: "terror y suspenso inquietante, miedo, atmósfera oscura",
-  culto: "película rara y de culto, extraña, original, independiente, inclasificable",
-};
-// Géneros que refuerzan cada ánimo (el vector solo confunde "reír" con dramas ingeniosos).
-const MOOD_GENRES = {
-  reir: ["Comedia"],
-  miedo: ["Terror"],
-  adrenalina: ["Acción"],
-  llorar: ["Drama", "Romance"],
-  pensar: ["Ciencia ficción", "Misterio"],
-  culto: [],
-};
-const GENRE_BOOST = 0.05;
 const MOOD_POOL = 8;
-const GREEN_BOOST = 0.04;
-const moodEmbeddings = new Map(); // key -> literal de vector
 
 const FIELDS = `id, tmdb_id, title, release_year, poster_path, director, genres[1] AS main_genre,
                 rating, recommend, review, overview, rt_score, imdb_rating`;
-
-async function moodVector(key) {
-  if (!moodEmbeddings.has(key)) {
-    moodEmbeddings.set(key, JSON.stringify(await generateEmbedding(MOODS[key])));
-  }
-  return moodEmbeddings.get(key);
-}
 
 /** Elige un índice al azar con pesos. */
 function weightedPick(items, weightOf) {
@@ -110,7 +88,7 @@ async function surpriseBeyond(mood, excludeTmdb) {
  * Respuesta: { mood, source, movie | null, moods: [keys] }
  */
 async function surprise(req, res) {
-  const mood = Object.hasOwn(MOODS, req.query.mood) ? req.query.mood : null;
+  const mood = parseMood(req.query.mood);
   const exclude = [...parseExclude(req.query.exclude)];
   const source = req.query.source === "beyond" ? "beyond" : "archive";
 
