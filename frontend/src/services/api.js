@@ -170,3 +170,11 @@ export function fetchWatchProviders(tmdbId, country) {
     { method: "GET" },
   );
 }
+
+/** GET /api/directors/:name/filmography — filmografía completa de un director en TMDB y catálogo. */
+export function fetchDirectorFilmography(name) {
+  return fetchWithColdStartHandling(
+    `/api/directors/${encodeURIComponent(name)}/filmography`,
+    { method: "GET" },
+  );
+}

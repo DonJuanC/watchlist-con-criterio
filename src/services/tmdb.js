@@ -300,6 +300,68 @@ async function getRecommendations(tmdbId) {
   return items;
 }
 
+const directorFilmographyCache = new Map(); // normalizedName -> { director, movies }
+
+/**
+ * Busca un director en TMDB por nombre y devuelve su perfil más sus películas dirigidas.
+ * @param {string} name
+ */
+async function getDirectorFilmographyFromTmdb(name) {
+  const cleanName = (name || "").trim();
+  if (!cleanName) return { director: null, movies: [] };
+
+  const cacheKey = cleanName.toLowerCase();
+  if (directorFilmographyCache.has(cacheKey)) {
+    return directorFilmographyCache.get(cacheKey);
+  }
+
+  const searchUrl = `${TMDB_BASE_URL}/search/person?api_key=${API_KEY}&query=${encodeURIComponent(cleanName)}&language=es-MX&include_adult=false`;
+  const searchRes = await fetch(searchUrl);
+  if (!searchRes.ok) throw new Error(`TMDB search person falló (${searchRes.status})`);
+  const searchData = await searchRes.json();
+  const results = searchData.results || [];
+  if (results.length === 0) return { director: null, movies: [] };
+
+  // Priorizar persona cuyo departamento conocido sea "Directing"
+  const person = results.find((p) => p.known_for_department === "Directing") || results[0];
+
+  const creditsUrl = `${TMDB_BASE_URL}/person/${person.id}/movie_credits?api_key=${API_KEY}&language=es-MX`;
+  const creditsRes = await fetch(creditsUrl);
+  if (!creditsRes.ok) throw new Error(`TMDB movie credits falló (${creditsRes.status})`);
+  const creditsData = await creditsRes.json();
+
+  const seenIds = new Set();
+  const movies = (creditsData.crew || [])
+    .filter((c) => c.job === "Director" && c.poster_path)
+    .filter((m) => {
+      if (seenIds.has(m.id)) return false;
+      seenIds.add(m.id);
+      return true;
+    })
+    .map((m) => ({
+      tmdb_id: m.id,
+      title: m.original_language === "es" ? m.original_title : (m.title || m.original_title),
+      release_year: m.release_date ? Number(m.release_date.slice(0, 4)) : null,
+      poster_path: m.poster_path,
+      overview: m.overview || "",
+      vote_average: m.vote_average ?? null,
+      vote_count: m.vote_count ?? 0,
+    }))
+    .sort((a, b) => (b.release_year || 0) - (a.release_year || 0));
+
+  const result = {
+    director: {
+      id: person.id,
+      name: person.name,
+      profile_path: person.profile_path,
+    },
+    movies,
+  };
+
+  directorFilmographyCache.set(cacheKey, result);
+  return result;
+}
+
 module.exports = {
   getRecommendations,
   searchMovie,
@@ -309,4 +371,5 @@ module.exports = {
   getWatchProviders,
   getRegionProviders,
   getOfficialTrailer,
+  getDirectorFilmographyFromTmdb,
 };

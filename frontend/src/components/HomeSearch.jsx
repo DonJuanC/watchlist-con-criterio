@@ -3,7 +3,7 @@
 // en mente, el ejemplo de conexiones, mi criterio, los directores y la entrada a
 // "¿Qué veo hoy?" con las plataformas del país del visitante.
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   Loader2,
@@ -13,16 +13,16 @@ import {
   Sparkles,
   RotateCcw,
   Lock,
+  User,
+  ArrowRight,
 } from "lucide-react";
-import { semanticSearch } from "../services/api";
+import { semanticSearch, fetchDirectorFilmography } from "../services/api";
 import useCineStore from "../store/useCineStore";
 import useTmdbSuggestions from "../hooks/useTmdbSuggestions";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 import SurprisePick from "./SurprisePick";
 import BeyondSection from "./BeyondSection";
 import LegalModal from "./LegalModal";
-import ConnectionDemo from "./landing/ConnectionDemo";
-import CriterioSection from "./landing/CriterioSection";
 import NextUpBanner from "./landing/NextUpBanner";
 import { SharedLink } from "./brand/BrandIcons";
 
@@ -42,17 +42,32 @@ function normalizeText(text) {
   return (text || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
+function findMatchingDirectors(nodes, rawQuery) {
+  const q = normalizeText(rawQuery);
+  if (q.length < SUGGESTIONS_MIN_CHARS) return [];
+  const map = new Map();
+  for (const node of nodes) {
+    if (!node.director) continue;
+    const norm = normalizeText(node.director);
+    if (norm.includes(q)) {
+      map.set(node.director, (map.get(node.director) || 0) + 1);
+    }
+  }
+  return Array.from(map.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 2);
+}
+
 function findCatalogSuggestions(nodes, rawQuery) {
   const q = normalizeText(rawQuery);
   if (q.length < SUGGESTIONS_MIN_CHARS) return [];
   const starts = [];
   const contains = [];
-  const directorMatches = [];
   const genreMatches = [];
 
   for (const node of nodes) {
     const title = normalizeText(node.title);
-    const director = normalizeText(node.director);
     const nodeGenres = Array.isArray(node.genres)
       ? node.genres.map(normalizeText)
       : [normalizeText(node.main_genre)].filter(Boolean);
@@ -61,14 +76,12 @@ function findCatalogSuggestions(nodes, rawQuery) {
       starts.push(node);
     } else if (title.includes(q)) {
       contains.push(node);
-    } else if (director && director.includes(q)) {
-      directorMatches.push(node);
     } else if (nodeGenres.some((g) => g && g.includes(q))) {
       genreMatches.push(node);
     }
   }
 
-  return [...starts, ...contains, ...directorMatches, ...genreMatches].slice(
+  return [...starts, ...contains, ...genreMatches].slice(
     0,
     SUGGESTIONS_LIMIT,
   );
@@ -83,49 +96,81 @@ function findCatalogSuggestions(nodes, rawQuery) {
  * }} props
  */
 export default function HomeSearch({
+  initialDirector,
   onPick,
   onPickExternal,
   onShowNextUp,
   onShowMap,
   onShowSelector,
+  onShowHowItWorks,
   onShowAdmin,
 }) {
   const catalog = useCineStore((s) => s.rawGraph.nodes);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(initialDirector || "");
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
   const [results, setResults] = useState([]);
   const [heading, setHeading] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [selectedDirector, setSelectedDirector] = useState(null);
+  const [selectedDirector, setSelectedDirector] = useState(initialDirector || null);
   const [showLegal, setShowLegal] = useState(false);
   // "Ver más" de la búsqueda por tema: misma consulta, siguiente página.
   const [more, setMore] = useState({ query: "", hasMore: false, loading: false });
   const requestIdRef = useRef(0);
 
-  // Directores clave con 4 o más películas en el catálogo
-  const keyDirectors = useMemo(() => {
-    if (!catalog || catalog.length === 0) return [];
-    const counts = {};
-    for (const m of catalog) {
-      if (m.director) {
-        counts[m.director] = (counts[m.director] || 0) + 1;
-      }
+  useEffect(() => {
+    if (initialDirector) {
+      setSelectedDirector(initialDirector);
+      setInputValue(initialDirector);
+      setStatus("idle");
     }
-    return Object.entries(counts)
-      .filter(([, count]) => count >= 4)
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, count]) => ({ name, count }));
-  }, [catalog]);
+  }, [initialDirector]);
 
-  // Películas del director seleccionado
+  // Películas del director seleccionado ordenadas cronológicamente
   const directorMovies = useMemo(() => {
     if (!selectedDirector || !catalog) return [];
-    return catalog.filter((m) => m.director === selectedDirector);
+    return catalog
+      .filter((m) => m.director === selectedDirector)
+      .sort((a, b) => (a.release_year || 0) - (b.release_year || 0));
   }, [catalog, selectedDirector]);
 
-  // Sugerencias de títulos, directores y géneros en vivo del catálogo
+  // Consulta extendida de filmografía en TMDB
+  const [directorTmdb, setDirectorTmdb] = useState({ loading: false, director: null, external: [] });
+  useEffect(() => {
+    if (!selectedDirector) {
+      setDirectorTmdb({ loading: false, director: null, external: [] });
+      return;
+    }
+    let cancelled = false;
+    setDirectorTmdb((prev) => ({ ...prev, loading: true }));
+    fetchDirectorFilmography(selectedDirector)
+      .then((data) => {
+        if (!cancelled) {
+          setDirectorTmdb({
+            loading: false,
+            director: data.director,
+            external: data.external || [],
+          });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDirectorTmdb({ loading: false, director: null, external: [] });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDirector]);
+
+  // Directores que coinciden con el texto escrito
+  const matchingDirectors = useMemo(
+    () => (suggestOpen ? findMatchingDirectors(catalog, inputValue) : []),
+    [catalog, inputValue, suggestOpen],
+  );
+
+  // Sugerencias de títulos y géneros en vivo del catálogo
   const suggestions = useMemo(
     () => (suggestOpen ? findCatalogSuggestions(catalog, inputValue) : []),
     [catalog, inputValue, suggestOpen],
@@ -144,7 +189,7 @@ export default function HomeSearch({
       .slice(0, EXTERNAL_LIMIT);
   }, [tmdbResults, suggestions]);
 
-  const semanticIndex = suggestions.length + externalSuggestions.length;
+  const semanticIndex = matchingDirectors.length + suggestions.length + externalSuggestions.length;
 
   const search = useCallback(async (query, label) => {
     const requestId = ++requestIdRef.current;
@@ -183,14 +228,41 @@ export default function HomeSearch({
     }
   }, [more, results]);
 
+  const handlePickDirector = useCallback((directorName) => {
+    setSuggestOpen(false);
+    setActiveIndex(-1);
+    setInputValue(directorName);
+    setSelectedDirector(directorName);
+    window.location.hash = `#/director/${encodeURIComponent(directorName)}`;
+    setStatus("idle");
+    setResults([]);
+  }, []);
+
+  const handleCloseDirector = useCallback(() => {
+    setSelectedDirector(null);
+    setInputValue("");
+    if (window.location.hash.startsWith("#/director/")) {
+      window.location.hash = "#/";
+    }
+  }, []);
+
   const handleSubmit = useCallback(
     (e) => {
       e.preventDefault();
       const trimmed = inputValue.trim();
       if (!trimmed) return;
+      const qNorm = normalizeText(trimmed);
+      const matchedDir = matchingDirectors.find(
+        (d) => normalizeText(d.name) === qNorm || normalizeText(d.name).includes(qNorm),
+      );
+      if (matchedDir) {
+        handlePickDirector(matchedDir.name);
+        return;
+      }
+      setSelectedDirector(null);
       search(trimmed, `“${trimmed}”`);
     },
-    [inputValue, search],
+    [inputValue, matchingDirectors, handlePickDirector, search],
   );
 
   const handlePickSuggestion = useCallback(
@@ -236,24 +308,34 @@ export default function HomeSearch({
         e.key === "Enter" &&
         showDropdown &&
         activeIndex >= 0 &&
-        activeIndex < semanticIndex
+        activeIndex <= semanticIndex
       ) {
         e.preventDefault();
-        if (activeIndex < suggestions.length) {
-          handlePickSuggestion(suggestions[activeIndex]);
-        } else {
-          handlePickExternal(externalSuggestions[activeIndex - suggestions.length]);
+        const dirLen = matchingDirectors.length;
+        const suggLen = suggestions.length;
+        if (activeIndex < dirLen) {
+          handlePickDirector(matchingDirectors[activeIndex].name);
+        } else if (activeIndex < dirLen + suggLen) {
+          handlePickSuggestion(suggestions[activeIndex - dirLen]);
+        } else if (activeIndex < semanticIndex) {
+          handlePickExternal(externalSuggestions[activeIndex - dirLen - suggLen]);
+        } else if (activeIndex === semanticIndex) {
+          search(inputValue.trim(), `“${inputValue.trim()}”`);
         }
       }
     },
     [
+      matchingDirectors,
       suggestions,
       externalSuggestions,
       semanticIndex,
       showDropdown,
       activeIndex,
+      inputValue,
+      handlePickDirector,
       handlePickSuggestion,
       handlePickExternal,
+      search,
     ],
   );
 
@@ -289,7 +371,11 @@ export default function HomeSearch({
     setResults([]);
     setErrorMsg("");
     setSuggestOpen(false);
+    setSelectedDirector(null);
     setStatus("idle");
+    if (window.location.hash.startsWith("#/director/")) {
+      window.location.hash = "#/";
+    }
   }, []);
 
   const isLoading = status === "loading";
@@ -384,45 +470,84 @@ export default function HomeSearch({
             onMouseDown={(e) => e.preventDefault()}
             className="absolute left-0 right-0 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-white/[0.08] bg-surface text-left shadow-2xl"
           >
+            {matchingDirectors.length > 0 && (
+              <li role="presentation" className="px-4 pb-1 pt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-accent-400">
+                Directores en la colección ({matchingDirectors.length})
+              </li>
+            )}
+            {matchingDirectors.map((dir, dIdx) => (
+              <li
+                key={`dir-${dir.name}`}
+                id={`suggestion-dir-${dir.name}`}
+                role="option"
+                aria-selected={activeIndex === dIdx}
+                onClick={() => handlePickDirector(dir.name)}
+                onMouseMove={() => setActiveIndex(dIdx)}
+                className={`group flex cursor-pointer items-center justify-between gap-3 px-4 py-2.5 transition-colors border-b border-white/[0.06] ${
+                  activeIndex === dIdx ? "bg-accent-950/40 text-accent-200" : "bg-accent-950/15 text-neutral-200"
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-accent-500/30 bg-accent-500/10 text-accent-300">
+                    <User size={13} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-white group-hover:text-accent-300">
+                      {dir.name}
+                    </span>
+                    <span className="block text-[11px] font-mono text-neutral-400">
+                      Filmografía · {dir.count} {dir.count === 1 ? "película" : "películas"} en el archivo
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[11px] font-mono text-accent-400 flex items-center gap-1 shrink-0">
+                  Ver todo <ArrowRight size={12} />
+                </span>
+              </li>
+            ))}
+
             {suggestions.length > 0 && (
               <li role="presentation" className="px-4 pb-1 pt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400">
                 En la colección ({suggestions.length})
               </li>
             )}
-            {suggestions.map((movie, i) => (
-              <li
-                key={movie.id}
-                id={`suggestion-${movie.id}`}
-                role="option"
-                aria-selected={activeIndex === i}
-                onClick={() => handlePickSuggestion(movie)}
-                onMouseMove={() => setActiveIndex(i)}
-                className={`group flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors ${
-                  activeIndex === i ? "bg-white/[0.06]" : ""
-                }`}
-              >
-                <MoviePosterCard movie={movie} size="xs" showBadge={false} />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-neutral-200 group-hover:text-white">
-                    {movie.title}
+            {suggestions.map((movie, sIdx) => {
+              const i = matchingDirectors.length + sIdx;
+              return (
+                <li
+                  key={movie.id}
+                  id={`suggestion-${movie.id}`}
+                  role="option"
+                  aria-selected={activeIndex === i}
+                  onClick={() => handlePickSuggestion(movie)}
+                  onMouseMove={() => setActiveIndex(i)}
+                  className={`group flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors ${
+                    activeIndex === i ? "bg-white/[0.06]" : ""
+                  }`}
+                >
+                  <MoviePosterCard movie={movie} size="xs" showBadge={false} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-neutral-200 group-hover:text-white">
+                      {movie.title}
+                    </span>
+                    <span className="block truncate text-xs text-neutral-400 font-mono text-[11px]">
+                      {[movie.release_year, movie.director].filter(Boolean).join(" · ")}
+                    </span>
                   </span>
-                  <span className="block truncate text-xs text-neutral-400 font-mono text-[11px]">
-                    {[movie.release_year, movie.director].filter(Boolean).join(" · ")}
-                  </span>
-                </span>
-                {movie.rating && (
-                  <span className="text-[11px] text-accent-400/90 font-mono">
-                    ★ {movie.rating}
-                  </span>
-                )}
-              </li>
-            ))}
+                  {movie.rating && (
+                    <span className="text-[11px] text-accent-400/90 font-mono">
+                      ★ {movie.rating}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
 
             {(externalSuggestions.length > 0 || tmdbLoading) && (
               <li
                 role="presentation"
                 className={`flex items-center gap-2 px-4 pb-1 pt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400 ${
-                  suggestions.length > 0 ? "mt-1 border-t border-white/[0.06]" : ""
+                  suggestions.length > 0 || matchingDirectors.length > 0 ? "mt-1 border-t border-white/[0.06]" : ""
                 }`}
               >
                 Explorar en todo el cine (TMDB)
@@ -430,7 +555,7 @@ export default function HomeSearch({
               </li>
             )}
             {externalSuggestions.map((movie, j) => {
-              const i = suggestions.length + j;
+              const i = matchingDirectors.length + suggestions.length + j;
               return (
                 <li
                   key={`tmdb-${movie.tmdb_id}`}
@@ -496,95 +621,113 @@ export default function HomeSearch({
         </p>
       )}
 
-      {/* 3b. Sin película en mente: una sola, al azar o por ánimo */}
-      {status === "idle" && <SurprisePick onPick={onPick} onPickExternal={onPickExternal} onMore={onShowNextUp} />}
-
-      {/* 4. Así funciona (ejemplo real) y Mi criterio (reseñas) */}
-      {status === "idle" && <ConnectionDemo onPick={onPick} />}
-      {status === "idle" && <CriterioSection onPick={onPick} />}
-
-      {/* 5. SECCIÓN EDITORIAL: CICLOS DE DIRECTORES CLAVE */}
-      {status === "idle" && keyDirectors.length > 0 && (
-        <section className="mt-14 w-full text-left" aria-label="Ciclos de directores clave">
-          <div className="mb-4 flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/[0.06] pb-3">
-            <div>
-              <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
-                Filmografías
-              </span>
-              <h3 className="font-serif text-xl sm:text-2xl font-normal text-white mt-0.5">
-                Directores de Cabecera
-              </h3>
+      {/* 3b. Si hay un director seleccionado: mostramos su Filmografía completa */}
+      {status === "idle" && selectedDirector && (
+        <section className="mt-8 w-full text-left animate-view-enter" aria-label={`Filmografía de ${selectedDirector}`}>
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+            <div className="flex items-center gap-4">
+              {directorTmdb.director?.profile_path ? (
+                <img
+                  src={`https://image.tmdb.org/t/p/w185${directorTmdb.director.profile_path}`}
+                  alt={selectedDirector}
+                  className="h-16 w-16 rounded-full object-cover border border-white/15 shadow-poster shrink-0"
+                />
+              ) : (
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-accent-500/30 bg-accent-950/40 text-accent-300 font-serif text-2xl">
+                  {selectedDirector.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-accent-400">
+                  Filmografía del autor
+                </span>
+                <h2 className="font-serif text-2xl sm:text-3xl font-normal text-white">
+                  {selectedDirector}
+                </h2>
+                <p className="text-xs text-neutral-400 font-mono mt-0.5">
+                  {directorMovies.length} {directorMovies.length === 1 ? "película" : "películas"} en la colección personal
+                  {directorTmdb.external.length > 0 && ` · ${directorTmdb.external.length} adicionales en TMDB`}
+                </p>
+              </div>
             </div>
-            {selectedDirector && (
+            <button
+              type="button"
+              onClick={handleCloseDirector}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs text-neutral-300 hover:border-white/30 hover:text-white transition-colors self-start sm:self-auto"
+            >
+              <RotateCcw size={12} />
+              Volver al inicio
+            </button>
+          </div>
+
+          {/* Obras en la colección */}
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-medium text-neutral-200">
+              Películas en la colección ({directorMovies.length})
+            </h3>
+            <span className="text-[11px] text-neutral-400 font-mono">
+              Orden cronológico
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+            {directorMovies.map((movie) => (
               <button
+                key={movie.id}
                 type="button"
-                onClick={() => setSelectedDirector(null)}
-                className="text-[11px] font-mono text-neutral-400 hover:text-white transition-colors mt-1 sm:mt-0"
+                onClick={() => onPick(movie.id)}
+                aria-label={`Abrir constelación de ${movie.title}`}
+                className="group flex flex-col items-center text-center focus-ring-cinematic rounded-xl p-1.5 hover:bg-white/[0.03] transition-colors"
               >
-                Cerrar ciclo de {selectedDirector}
+                <MoviePosterCard movie={movie} size="sm" showBadge={false} />
+                <span className="mt-2 line-clamp-1 max-w-[120px] text-xs font-medium text-neutral-200 group-hover:text-white transition-colors">
+                  {movie.title}
+                </span>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[11px] font-mono text-neutral-400">
+                  <span>{movie.release_year}</span>
+                  {movie.rating && <span className="text-accent-400">★ {movie.rating}</span>}
+                </div>
               </button>
-            )}
+            ))}
           </div>
 
-          {/* Directores: tarjetas con sus pósters apilados */}
-          <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {keyDirectors.slice(0, 6).map(({ name, count }) => {
-              const isSelected = selectedDirector === name;
-              const posters = catalog.filter((m) => m.director === name && m.poster_path).slice(0, 3);
-              return (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => setSelectedDirector(isSelected ? null : name)}
-                  aria-pressed={isSelected}
-                  className={`group flex items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors focus-ring-cinematic ${
-                    isSelected
-                      ? "border-accent-400/60 bg-accent-950/30"
-                      : "border-white/[0.08] bg-surface/50 hover:border-white/20"
-                  }`}
-                >
-                  <span className="relative h-12 w-14 shrink-0" aria-hidden="true">
-                    {posters.map((m, i) => (
-                      <img
-                        key={m.id}
-                        src={`https://image.tmdb.org/t/p/w92${m.poster_path}`}
-                        alt=""
-                        loading="lazy"
-                        className="absolute top-0 h-12 w-8 rounded-[3px] object-cover shadow-poster"
-                        style={{ left: `${i * 10}px`, zIndex: 3 - i }}
-                      />
-                    ))}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-white">{name}</span>
-                    <span className="block text-xs text-neutral-400">{count} películas</span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Más obras en TMDB */}
+          {directorTmdb.loading && (
+            <div className="mt-10 flex items-center justify-center gap-2 text-xs text-neutral-400 py-6">
+              <Loader2 size={14} className="animate-spin text-accent-400" />
+              <span>Buscando el resto de su filmografía en TMDB…</span>
+            </div>
+          )}
 
-          {/* Shelf de Películas del Director Seleccionado */}
-          {selectedDirector && directorMovies.length > 0 && (
-            <div className="rounded-xl border border-white/[0.06] bg-surface/60 p-4 mb-6">
-              <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-neutral-400 mb-3">
-                Películas de {selectedDirector} en la colección:
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                {directorMovies.map((movie) => (
+          {!directorTmdb.loading && directorTmdb.external.length > 0 && (
+            <div className="mt-12 border-t border-dashed border-white/15 pt-8">
+              <div className="mb-4">
+                <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
+                  Fuera de la colección
+                </span>
+                <h3 className="font-serif text-xl font-normal text-white mt-0.5">
+                  Resto de su filmografía en TMDB ({directorTmdb.external.length})
+                </h3>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Títulos dirigidos por {selectedDirector} que no están en el archivo personal.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+                {directorTmdb.external.map((movie) => (
                   <button
-                    key={movie.id}
+                    key={`ext-${movie.tmdb_id}`}
                     type="button"
-                    onClick={() => onPick(movie.id)}
-                    aria-label={`Abrir constelación de ${movie.title}`}
-                    className="group flex flex-col items-center text-center focus-ring-cinematic rounded-lg p-1"
+                    onClick={() => onPickExternal(movie)}
+                    aria-label={`Ver ficha de ${movie.title}`}
+                    className="group flex flex-col items-center text-center focus-ring-cinematic rounded-xl p-1.5 hover:bg-white/[0.03] transition-colors opacity-85 hover:opacity-100"
                   >
                     <MoviePosterCard movie={movie} size="sm" showBadge={false} />
-                    <span className="mt-1.5 line-clamp-1 max-w-[100px] text-xs font-medium text-neutral-200 group-hover:text-white transition-colors">
+                    <span className="mt-2 line-clamp-1 max-w-[120px] text-xs font-medium text-neutral-200 group-hover:text-white transition-colors">
                       {movie.title}
                     </span>
-                    <span className="text-[10px] font-mono text-neutral-400">
-                      {movie.release_year}
+                    <span className="mt-0.5 text-[11px] font-mono text-neutral-400">
+                      {movie.release_year || "Sin año"}
                     </span>
                   </button>
                 ))}
@@ -594,8 +737,13 @@ export default function HomeSearch({
         </section>
       )}
 
-      {/* 5b. Salida alternativa: qué ver hoy con las plataformas del visitante */}
-      {status === "idle" && <NextUpBanner onOpen={() => onShowNextUp()} />}
+      {/* 4. Si no hay director seleccionado: Sorpréndeme y ¿Qué veo hoy? */}
+      {status === "idle" && !selectedDirector && (
+        <>
+          <SurprisePick onPick={onPick} onPickExternal={onPickExternal} onMore={onShowNextUp} />
+          <NextUpBanner onOpen={() => onShowNextUp()} />
+        </>
+      )}
 
       {/* 6. ESTADO DE RESULTADOS DE BÚSQUEDA */}
       {isLoading && (
@@ -754,6 +902,10 @@ export default function HomeSearch({
             <SharedLink size={13} className="text-accent-400" />
             <span>Música con Criterio</span>
           </a>
+          <span className="text-neutral-700 hidden sm:inline">·</span>
+          <button type="button" onClick={onShowHowItWorks} className="uppercase tracking-[0.14em] hover:text-white transition-colors focus-ring-cinematic">
+            Cómo funciona
+          </button>
           <span className="text-neutral-700 hidden sm:inline">·</span>
           <button type="button" onClick={onShowSelector} className="uppercase tracking-[0.14em] hover:text-white transition-colors focus-ring-cinematic">
             Quién elige

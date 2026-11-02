@@ -103,11 +103,22 @@ export default function EgoView({ centerId, onSelect, onPickExternal, openInfoFo
         <h2 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight text-white drop-shadow-md">
           {center.title}
         </h2>
-        <p className="mt-1 text-xs sm:text-sm text-neutral-300">
-          {[center.release_year, center.director ? `Dir. ${center.director}` : null]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs sm:text-sm text-neutral-300">
+          {center.release_year && <span>{center.release_year}</span>}
+          {center.release_year && center.director && <span className="text-neutral-600">·</span>}
+          {center.director && (
+            <button
+              type="button"
+              onClick={() => {
+                window.location.hash = `#/director/${encodeURIComponent(center.director)}`;
+              }}
+              className="hover:text-accent-300 underline decoration-white/20 hover:decoration-accent-400 underline-offset-2 transition-colors focus-ring-cinematic rounded"
+              title={`Ver filmografía completa de ${center.director}`}
+            >
+              Dir. {center.director}
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Lienzo orbital con conexiones SVG */}

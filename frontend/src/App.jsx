@@ -17,6 +17,7 @@ import EgoView from "./components/EgoView";
 import ExternalView from "./components/ExternalView";
 import NextUpView from "./components/NextUpView";
 import SelectorView from "./components/SelectorView";
+import HowItWorksView from "./components/HowItWorksView";
 import AmbientBackdrop from "./components/AmbientBackdrop";
 import useCineStore from "./store/useCineStore";
 import { fetchGraph } from "./services/api";
@@ -69,22 +70,31 @@ function parseRouteFromHash() {
   if (hash.startsWith("#/movie/")) {
     const id = Number.parseInt(hash.slice(8), 10);
     if (Number.isInteger(id) && id > 0) {
-      return { view: "ego", centerId: id };
+      return { view: "ego", centerId: id, directorName: null };
+    }
+  }
+  if (hash === "#/como-funciona") {
+    return { view: "how", centerId: null, directorName: null };
+  }
+  if (hash.startsWith("#/director/")) {
+    const name = decodeURIComponent(hash.slice(11).trim());
+    if (name) {
+      return { view: "home", centerId: null, directorName: name };
     }
   }
   if (hash === "#/que-veo-hoy" || hash.startsWith("#/que-veo-hoy?")) {
-    return { view: "next", centerId: null };
+    return { view: "next", centerId: null, directorName: null };
   }
   if (hash === "#/mapa") {
-    return { view: "map", centerId: null };
+    return { view: "map", centerId: null, directorName: null };
   }
   if (hash === "#/selector") {
-    return { view: "selector", centerId: null };
+    return { view: "selector", centerId: null, directorName: null };
   }
   if (hash === "#/admin" || hash.startsWith("#/admin")) {
-    return { view: "admin", centerId: null };
+    return { view: "admin", centerId: null, directorName: null };
   }
-  return { view: "home", centerId: null };
+  return { view: "home", centerId: null, directorName: null };
 }
 
 export default function App() {
@@ -93,6 +103,7 @@ export default function App() {
   const initialRoute = useRef(parseRouteFromHash());
   const [view, setView] = useState(initialRoute.current.view);
   const [centerId, setCenterId] = useState(initialRoute.current.centerId);
+  const [directorFilter, setDirectorFilter] = useState(initialRoute.current.directorName);
   const [externalMovie, setExternalMovie] = useState(null);
   const [homeKey, setHomeKey] = useState(0);
 
@@ -133,6 +144,7 @@ export default function App() {
       if (route.centerId != null) {
         setCenterId(route.centerId);
       }
+      setDirectorFilter(route.directorName || null);
     };
 
     window.addEventListener("hashchange", handleHashChange);
@@ -149,6 +161,8 @@ export default function App() {
       document.title = "Mapa de Conexiones — Cine con Criterio";
     } else if (view === "selector") {
       document.title = "Quién elige — Cine con Criterio";
+    } else if (view === "how") {
+      document.title = "Cómo funciona — Cine con Criterio";
     } else {
       document.title = "Cine con Criterio — Archivo y conexiones de cine";
     }
@@ -175,6 +189,9 @@ export default function App() {
     } else if (targetView === "selector") {
       window.location.hash = "#/selector";
       setView("selector");
+    } else if (targetView === "how") {
+      window.location.hash = "#/como-funciona";
+      setView("how");
     } else if (targetView === "admin") {
       window.location.hash = "#/admin";
       setView("admin");
@@ -234,11 +251,13 @@ export default function App() {
         <div className={view === "home" ? "h-full overflow-y-auto animate-view-enter" : "hidden"}>
           <HomeSearch
             key={homeKey}
+            initialDirector={directorFilter}
             onPick={handlePick}
             onPickExternal={handlePickExternal}
             onShowNextUp={(query) => navigate("next", typeof query === "string" ? query : null)}
             onShowMap={() => navigate("map")}
             onShowSelector={() => navigate("selector")}
+            onShowHowItWorks={() => navigate("how")}
             onShowAdmin={() => navigate("admin")}
           />
         </div>
@@ -268,6 +287,15 @@ export default function App() {
         {view === "selector" && (
           <div className="h-full overflow-y-auto animate-view-enter">
             <SelectorView onStart={() => navigate("home")} />
+          </div>
+        )}
+
+        {view === "how" && (
+          <div className="h-full overflow-y-auto animate-view-enter">
+            <HowItWorksView
+              onStart={() => navigate("home")}
+              onPick={handlePick}
+            />
           </div>
         )}
 

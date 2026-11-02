@@ -18,11 +18,13 @@ const { surprise } = require("../controllers/surpriseController");
 const { beyond } = require("../controllers/beyondController");
 const { getNextUp } = require("../controllers/nextUpController");
 const { getWatch, getPlatforms } = require("../controllers/watchController");
+const { getDirectorFilmography } = require("../controllers/directorsController");
 const { triggerSync } = require("../controllers/syncController");
 const adminRouter = require("./admin");
 
 router.use("/admin", adminRouter);
 
+router.get("/directors/:name/filmography", getDirectorFilmography);
 router.get("/movies/search", searchExternal);
 router.get("/movies/external/:tmdbId", getExternalMovie);
 router.get("/movies/:id/neighbors", getNeighbors);

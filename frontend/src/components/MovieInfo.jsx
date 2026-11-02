@@ -301,14 +301,22 @@ export default function MovieInfo({ movieId, tmdbId }) {
               {subtitle}
             </p>
           )}
-          <p className="mt-1.5 text-xs sm:text-sm font-medium text-neutral-300">
-            {[
-              movie.release_year,
-              movie.director && `Dir. ${movie.director}`,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm font-medium text-neutral-300">
+            {movie.release_year && <span>{movie.release_year}</span>}
+            {movie.release_year && movie.director && <span className="text-neutral-600">·</span>}
+            {movie.director && (
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.hash = `#/director/${encodeURIComponent(movie.director)}`;
+                }}
+                className="hover:text-accent-300 underline decoration-white/20 hover:decoration-accent-400 underline-offset-2 transition-colors focus-ring-cinematic rounded"
+                title={`Ver filmografía completa de ${movie.director}`}
+              >
+                Dir. {movie.director}
+              </button>
+            )}
+          </div>
           {movie.cinematographer && (
             <p className="mt-0.5 text-xs text-neutral-400">
               Fotografía: {movie.cinematographer}
