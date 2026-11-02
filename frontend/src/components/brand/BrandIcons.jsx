@@ -36,7 +36,7 @@ export function BrandIsotype({ size = 24, className = "" }) {
  * 2. Logotipo Tipográfico Oficial: [Cine] / [con Criterio]
  * Respeta el eje matemático axial de 15 grados en el slash y la retícula suiza.
  */
-export function BrandLockup({ size = "md", stacked = false, className = "" }) {
+export function BrandLockup({ size = "md", stacked = false, responsive = false, className = "" }) {
   if (stacked) {
     return (
       <div className={`flex flex-col font-sans select-none tracking-tight leading-none ${className}`}>
@@ -58,16 +58,18 @@ export function BrandLockup({ size = "md", stacked = false, className = "" }) {
       ? "text-[20px]"
       : "text-[16px]";
 
+  const hideTagline = responsive ? "hidden sm:inline" : "inline";
+
   return (
     <div className={`inline-flex items-baseline gap-2 font-sans select-none tracking-tight ${textClasses} ${className}`}>
       <span className="font-bold text-accent-500">Cine</span>
       <span
-        className="font-mono text-neutral-500 font-light select-none -rotate-[15deg] inline-block origin-center text-[0.9em]"
+        className={`${hideTagline} font-mono text-neutral-500 font-light select-none -rotate-[15deg] origin-center text-[0.9em]`}
         aria-hidden="true"
       >
         /
       </span>
-      <span className="font-medium text-neutral-100 tracking-normal">
+      <span className={`${hideTagline} font-medium text-neutral-100 tracking-normal`}>
         con Criterio
       </span>
     </div>

@@ -44,7 +44,7 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           <span className="flex h-7 w-7 items-center justify-center border border-white/[0.08] bg-white/[0.03] text-accent-500 transition-colors group-hover:border-accent-500/40 group-hover:text-accent-400">
             <BrandIsotype size={16} />
           </span>
-          <BrandLockup size="sm" />
+          <BrandLockup size="sm" responsive={true} />
         </button>
 
         <div className="flex items-center gap-1">

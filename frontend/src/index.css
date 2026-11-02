@@ -62,6 +62,20 @@
   --color-red-400: #f87171;
   --color-red-500: #ef4444;
   --color-red-950: #450a0a;
+
+  /* Rose (Admin y alertas) */
+  --color-rose-200: #fecdd3;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #e11d48;
+  --color-rose-950: #4c0519;
+
+  /* Sky (Metadatos externos y TMDB) */
+  --color-sky-200: #bae6fd;
+  --color-sky-300: #7dd3fc;
+  --color-sky-400: #38bdf8;
+  --color-sky-500: #0ea5e9;
 }
 
 /* Tokens fuera de la paleta de Tailwind (canvas del grafo, ambiente, sombras) */
@@ -103,10 +117,10 @@
   --color-neutral-950: #f8fafc;
 
   --color-accent-200: #1e3a8a;
-  --color-accent-300: #1d4ed8;
-  --color-accent-400: #2563eb;
-  --color-accent-500: #3b82f6;
-  --color-accent-600: #60a5fa;
+  --color-accent-300: #1e40af;
+  --color-accent-400: #1d4ed8;
+  --color-accent-500: #2563eb;
+  --color-accent-600: #1d4ed8;
   --color-accent-950: #eff6ff;
 
   --color-emerald-200: #14532d;
@@ -119,6 +133,18 @@
   --color-red-400: #b91c1c;
   --color-red-500: #dc2626;
   --color-red-950: #fef2f2;
+
+  --color-rose-200: #881337;
+  --color-rose-300: #9f1239;
+  --color-rose-400: #be123c;
+  --color-rose-500: #e11d48;
+  --color-rose-600: #be123c;
+  --color-rose-950: #fff1f2;
+
+  --color-sky-200: #0369a1;
+  --color-sky-300: #0284c7;
+  --color-sky-400: #0369a1;
+  --color-sky-500: #0284c7;
 
   --graph-bg: #f8fafc;
   --graph-node: #64748b;
@@ -159,6 +185,11 @@ body::before {
   opacity: 0.035;
   mix-blend-mode: screen;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="light"] body::before {
+  opacity: 0.02;
+  mix-blend-mode: multiply;
 }
 
 /* Scrollbar sutil y moderno */

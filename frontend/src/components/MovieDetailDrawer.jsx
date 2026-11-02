@@ -61,8 +61,8 @@ export default function MovieDetailDrawer() {
   const { title, poster_path } = selectedMovie;
 
   return (
-    <aside className="fixed right-0 top-0 z-30 h-full w-96 overflow-y-auto border-l border-white/[0.06] bg-canvas/95 shadow-2xl backdrop-blur-md">
-      <div className="flex items-center justify-between border-b border-white/[0.06] p-4">
+    <aside className="fixed right-0 top-14 z-30 h-[calc(100dvh-3.5rem)] w-full max-w-full sm:w-96 overflow-y-auto border-l border-white/[0.06] bg-canvas/95 shadow-2xl backdrop-blur-md">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/[0.06] bg-canvas/90 p-4 backdrop-blur-sm">
         <h2 className="text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
           Ficha de Obra
         </h2>
