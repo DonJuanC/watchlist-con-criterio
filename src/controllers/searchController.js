@@ -5,10 +5,14 @@ const { query } = require("../db");
 const { generateMovieEmbedding } = require("../services/embeddings");
 
 const DEFAULT_LIMIT = 10;
-const MIN_SIMILARITY = 0.6;
-// En pendientes el pool es chico (~100): con el piso de 0.6 casi no queda nada, y lo útil
-// es el orden relativo (verificado: "algo oscuro" → Lost Highway 0.62, Dark City 0.59…).
-const MIN_SIMILARITY_PENDING = 0.5;
+// Umbral de similitud coseno calibrado para gemini-embedding-001 (768 dimensiones).
+// Con textos semánticos enriquecidos (título, director, géneros, sinopsis y reseñas personales),
+// consultas breves ("amor", "comedia", "acción") o frases conversacionales
+// ("me quiero sentir alegre") generan similitudes naturales en el rango 0.46–0.58.
+// El umbral anterior de 0.60 filtraba el 100% de estas búsquedas legítimas.
+const MIN_SIMILARITY = 0.45;
+const MIN_SIMILARITY_PENDING = 0.45;
+const FALLBACK_MIN_SIMILARITY = 0.40;
 
 /**
  * POST /api/search/semantic
@@ -53,13 +57,26 @@ async function semanticSearch(req, res) {
             ORDER BY embedding <=> $1::vector ASC, id
             LIMIT $2 OFFSET $5;
         `;
-    const { rows } = await query(sql, [
+    let { rows } = await query(sql, [
       vectorLiteral,
       resultLimit + 1, // la fila extra solo dice si hay más páginas
       scope === "pending" ? MIN_SIMILARITY_PENDING : MIN_SIMILARITY,
       scope,
       resultOffset,
     ]);
+
+    // Fallback: si una búsqueda abstracta o de una sola palabra no supera el umbral base en offset 0,
+    // relajamos levemente a 0.40 para evitar pantallas vacías frustrantes para el usuario
+    if (rows.length === 0 && resultOffset === 0) {
+      const fallback = await query(sql, [
+        vectorLiteral,
+        resultLimit + 1,
+        FALLBACK_MIN_SIMILARITY,
+        scope,
+        0,
+      ]);
+      rows = fallback.rows;
+    }
 
     return res
       .status(200)

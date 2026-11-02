@@ -92,17 +92,36 @@ function normalizeText(text) {
   return (text || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
-function findTitleSuggestions(nodes, rawQuery) {
+function findCatalogSuggestions(nodes, rawQuery) {
   const q = normalizeText(rawQuery);
   if (q.length < SUGGESTIONS_MIN_CHARS) return [];
   const starts = [];
   const contains = [];
+  const directorMatches = [];
+  const genreMatches = [];
+
   for (const node of nodes) {
     const title = normalizeText(node.title);
-    if (title.startsWith(q)) starts.push(node);
-    else if (title.includes(q)) contains.push(node);
+    const director = normalizeText(node.director);
+    const nodeGenres = Array.isArray(node.genres)
+      ? node.genres.map(normalizeText)
+      : [normalizeText(node.main_genre)].filter(Boolean);
+
+    if (title.startsWith(q)) {
+      starts.push(node);
+    } else if (title.includes(q)) {
+      contains.push(node);
+    } else if (director && director.includes(q)) {
+      directorMatches.push(node);
+    } else if (nodeGenres.some((g) => g && g.includes(q))) {
+      genreMatches.push(node);
+    }
   }
-  return [...starts, ...contains].slice(0, SUGGESTIONS_LIMIT);
+
+  return [...starts, ...contains, ...directorMatches, ...genreMatches].slice(
+    0,
+    SUGGESTIONS_LIMIT,
+  );
 }
 
 /**
@@ -282,9 +301,9 @@ export default function HomeSearch({
     return catalog.filter((m) => m.director === selectedDirector);
   }, [catalog, selectedDirector]);
 
-  // Sugerencias de títulos en vivo del catálogo
+  // Sugerencias de títulos, directores y géneros en vivo del catálogo
   const suggestions = useMemo(
-    () => (suggestOpen ? findTitleSuggestions(catalog, inputValue) : []),
+    () => (suggestOpen ? findCatalogSuggestions(catalog, inputValue) : []),
     [catalog, inputValue, suggestOpen],
   );
   const showDropdown = suggestOpen && inputValue.trim().length >= 1;
@@ -1058,7 +1077,7 @@ export default function HomeSearch({
             </span>
             <h2 className="font-serif text-2xl font-normal text-white mt-1">{heading}</h2>
             <p className="mt-1 text-xs text-neutral-400">
-              6 obras conectadas por atmósfera y temática. Selecciona una para abrir su constelación completa.
+              {results.length} {results.length === 1 ? "obra conectada" : "obras conectadas"} por atmósfera y temática. Selecciona una para abrir su constelación completa.
             </p>
           </div>
 
@@ -1108,16 +1127,29 @@ export default function HomeSearch({
             onClick={handleReset}
             className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs text-neutral-300 transition-colors hover:border-white/20 hover:text-white focus-ring-cinematic"
           >
-            Volver
+            <RotateCcw size={13} />
+            <span>Volver</span>
           </button>
         </div>
       )}
 
       {status === "error" && (
-        <p className="mt-6 max-w-sm text-sm text-red-400">
-          No pudimos buscar en este momento. Intenta de nuevo en unos segundos.
-          <span className="mt-1 block text-xs text-neutral-400">{errorMsg}</span>
-        </p>
+        <div className="mt-8 max-w-sm text-center">
+          <p className="text-sm text-red-400 font-medium">
+            No pudimos buscar en este momento. Intenta de nuevo en unos segundos.
+          </p>
+          {errorMsg && (
+            <p className="mt-1 text-xs text-neutral-400 font-mono">{errorMsg}</p>
+          )}
+          <button
+            type="button"
+            onClick={handleReset}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs text-neutral-300 transition-colors hover:border-white/20 hover:text-white focus-ring-cinematic"
+          >
+            <RotateCcw size={13} />
+            <span>Volver al inicio</span>
+          </button>
+        </div>
       )}
 
       {/* 7. Mapa global y Sello de Sala del Archivo */}
