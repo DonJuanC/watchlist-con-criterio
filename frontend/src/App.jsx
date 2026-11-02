@@ -18,6 +18,7 @@ import ExternalView from "./components/ExternalView";
 import NextUpView from "./components/NextUpView";
 import SelectorView from "./components/SelectorView";
 import HowItWorksView from "./components/HowItWorksView";
+import GraphTourModal from "./components/GraphTourModal";
 import AmbientBackdrop from "./components/AmbientBackdrop";
 import useCineStore from "./store/useCineStore";
 import { fetchGraph } from "./services/api";
@@ -106,6 +107,19 @@ export default function App() {
   const [directorFilter, setDirectorFilter] = useState(initialRoute.current.directorName);
   const [externalMovie, setExternalMovie] = useState(null);
   const [homeKey, setHomeKey] = useState(0);
+  const [tourState, setTourState] = useState({ open: false, mode: "tour" });
+
+  const handleStartTour = useCallback(() => {
+    setTourState({ open: true, mode: "tour" });
+  }, []);
+
+  const handleOpenGuide = useCallback(() => {
+    setTourState({ open: true, mode: "guide" });
+  }, []);
+
+  const handleCloseTour = useCallback(() => {
+    setTourState((s) => ({ ...s, open: false }));
+  }, []);
 
   const isLoading = useCineStore((s) => s.isLoading);
   const graphError = useCineStore((s) => s.graphError);
@@ -369,8 +383,21 @@ export default function App() {
                   >
                     <GraphCanvas ref={graphCanvasRef} />
                   </Suspense>
-                  {graphReady && <GraphControls />}
-                  {graphReady && <OnboardingHint />}
+                  {graphReady && <GraphControls onOpenGuide={handleOpenGuide} />}
+                  {graphReady && (
+                    <OnboardingHint
+                      onStartTour={handleStartTour}
+                      onOpenGuide={handleOpenGuide}
+                    />
+                  )}
+                  {graphReady && (
+                    <GraphTourModal
+                      isOpen={tourState.open}
+                      onClose={handleCloseTour}
+                      fgRef={graphCanvasRef}
+                      initialMode={tourState.mode}
+                    />
+                  )}
                 </>
               )}
             </div>

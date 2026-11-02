@@ -5,7 +5,7 @@
 // subconjunto de enlaces que ve GraphCanvas.
 
 import { useState } from 'react';
-import { SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import { SlidersHorizontal, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import useCineStore, { useFilteredLinks, MIN_SIMILARITY_RANGE } from '../store/useCineStore';
 
 function LinkTypeChip({ active, onClick, colorClass, label }) {
@@ -26,7 +26,7 @@ function LinkTypeChip({ active, onClick, colorClass, label }) {
     );
 }
 
-export default function GraphControls() {
+export default function GraphControls({ onOpenGuide }) {
     // En mobile arranca cerrado: abierto tapa media pantalla del mapa.
     const [collapsed, setCollapsed] = useState(() => {
         try {
@@ -108,6 +108,19 @@ export default function GraphControls() {
                         {visibleLinksCount}{' '}
                         {visibleLinksCount === 1 ? 'conexión activa' : 'conexiones activas'}
                     </p>
+
+                    {onOpenGuide && (
+                        <div className="pt-1 border-t border-white/[0.06]">
+                            <button
+                                type="button"
+                                onClick={onOpenGuide}
+                                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 py-1.5 text-[11px] font-mono text-accent-300 hover:border-accent-500/40 hover:bg-accent-950/30 hover:text-white transition-colors"
+                            >
+                                <Sparkles size={12} className="text-accent-400" />
+                                <span>¿Cómo funciona el mapa?</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
