@@ -5,7 +5,7 @@
 
 const { query } = require("../db");
 
-const DEFAULT_FRONTEND = "https://watchlistconcriterio.vercel.app";
+const DEFAULT_FRONTEND = "https://pelisconcriterio.vercel.app";
 
 function escapeHtml(str) {
   if (!str) return "";

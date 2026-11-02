@@ -8,7 +8,7 @@ por qué se conectan y qué opino de ella. El grafo completo queda como vista se
 El catálogo no es una lista genérica: es mi registro personal en Notion (vistas, pendientes,
 calificación, recomendación y reseña), sincronizado a la base de datos con un script propio.
 
-**Demo en producción:** https://watchlistconcriterio.vercel.app
+**Demo en producción:** https://pelisconcriterio.vercel.app
 **API:** https://watchlist-api-jy0u.onrender.com
 
 > La API corre en el free tier de Render: si nadie la usó en los últimos minutos, la primera

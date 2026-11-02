@@ -29,16 +29,17 @@ app.use(
 // Orígenes exactos siempre permitidos.
 const DEFAULT_ALLOWED_ORIGINS = [
   "https://frontend-inky-two-2rypkrcnmd.vercel.app", // preview deploy inicial
-  "https://watchlistconcriterio.vercel.app", // dominio de producción público
+  "https://pelisconcriterio.vercel.app", // dominio de producción público
+  "https://watchlistconcriterio.vercel.app", // dominio anterior (hoy redirige al nuevo)
   "http://localhost:5173",
 ];
 
 // Cada deploy/preview en Vercel genera una URL con hash distinto
 // (<proyecto>-<hash>-juan-selector.vercel.app o <proyecto>-git-<rama>-juan-selector.vercel.app).
-// El proyecto se llamó "frontend" y hoy se llama "watchlist-con-criterio": se aceptan ambos
-// prefijos, solo bajo el team juan-selector. Las URLs sin sufijo de team van en el listado exacto.
+// El proyecto se llamó "frontend", luego "watchlist-con-criterio" y hoy "pelisconcriterio": se
+// aceptan los tres prefijos, solo bajo el team juan-selector. Las URLs sin sufijo de team van en el listado exacto.
 const VERCEL_PREVIEW_PATTERN =
-  /^https:\/\/(frontend|watchlist-con-criterio)-[a-z0-9-]+-juan-selector\.vercel\.app$/;
+  /^https:\/\/(frontend|watchlist-con-criterio|pelisconcriterio)-[a-z0-9-]+-juan-selector\.vercel\.app$/;
 const LOCALHOST_PATTERN = /^http:\/\/localhost(:\d+)?$/;
 const allowedOrigins = process.env.FRONTEND_URL
   ? [...DEFAULT_ALLOWED_ORIGINS, process.env.FRONTEND_URL]
