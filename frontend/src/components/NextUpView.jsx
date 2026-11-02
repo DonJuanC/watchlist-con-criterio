@@ -27,15 +27,15 @@ const LIMIT = 12;
 const FILTERS = { ALL: "all", MINE: "mine", ANY: "any" };
 
 const INTRO = {
-  archive: "Las vi y las recomiendo. Cambian cada día.",
-  radar: "Las que tengo en la mira y aún no veo, ordenadas por parecido con las que sí recomiendo.",
+  archive: "Películas destacadas y recomendadas. Rotan cada día.",
+  radar: "Títulos pendientes en lista de espera, ordenados por cercanía con las películas recomendadas.",
   beyond:
-    "No las he visto: TMDB las sugiere a partir de las mías y dejo solo las que de verdad se parecen. Con 50% o más en Rotten Tomatoes.",
+    "Sugerencias por afinidad temática con la colección. Solo entran títulos con 50% o más en Rotten Tomatoes.",
 };
 // Con ánimo, catálogo: qué son y el orden (por cercanía al ánimo).
 const WITH_MOOD = {
-  archive: "las que vi y recomiendo",
-  radar: "las que tengo en la mira y aún no veo",
+  archive: "las películas recomendadas de la colección",
+  radar: "las que están en la mira para ver próximamente",
 };
 
 function readHash() {
@@ -59,13 +59,13 @@ function Reason({ node, because, source }) {
             <Star size={9} className="shrink-0 fill-current" /> {node.rating}/5 ·{" "}
           </>
         ) : null}
-        {node.recommend === 1 ? "La recomiendo" : "Con reservas"}
+        {node.recommend === 1 ? "Recomendada" : "Con reservas"}
       </span>
     );
   }
   if (!because?.length) return null;
   const text =
-    source === "beyond" ? `No la he visto · por ${because[0].title}` : `Porque me gustó ${because[0].title}`;
+    source === "beyond" ? `Por afinidad con ${because[0].title}` : `Conectada con ${because[0].title}`;
   return (
     <span
       title={text}
@@ -431,7 +431,7 @@ export default function NextUpView({ onPickExternal }) {
         <p className="mt-6 inline-flex items-center gap-1.5 text-xs text-neutral-400">
           <Popcorn size={12} /> ¿Ya las viste todas?{" "}
           <button type="button" onClick={() => setSource("beyond")} className="text-accent-400 hover:underline">
-            Busca más allá de mi archivo
+            Explora más allá de la colección
           </button>
         </p>
       )}

@@ -89,7 +89,7 @@ export default function ExternalView({ movie, onPick, onPickExternal, openInfo =
         Si te gustó <span className="italic">{movie.title}</span>
       </h2>
       <p className="text-xs sm:text-sm text-neutral-400 mt-1">
-        {[movie.release_year, isPending && "En mi lista de pendientes"]
+        {[movie.release_year, isPending && "En la mira"]
           .filter(Boolean)
           .join(" · ")}
       </p>
@@ -117,7 +117,7 @@ export default function ExternalView({ movie, onPick, onPickExternal, openInfo =
       {state.status === "loading" && (
         <div className="mt-8 w-full">
           <p className="font-serif text-sm text-neutral-300 mb-5">
-            Comparando atmósferas y temáticas con lo que he visto...
+            Buscando atmósferas y temáticas parecidas en la colección...
           </p>
           <div className="grid w-full grid-cols-3 gap-x-3 gap-y-6 sm:gap-x-4">
             {Array.from({ length: 6 }).map((_, idx) => (
@@ -141,7 +141,7 @@ export default function ExternalView({ movie, onPick, onPickExternal, openInfo =
       {isDone && recommendations.length > 0 && (
         <div className="mt-8 w-full">
           <p className="font-serif text-base text-neutral-200 mb-6">
-            De mi catálogo personal, te recomiendo:
+            Películas de la colección que van por la misma línea:
           </p>
           <div className="grid w-full grid-cols-3 gap-x-3 gap-y-7 sm:gap-x-4">
             {recommendations.map((r) => {
@@ -217,7 +217,7 @@ export default function ExternalView({ movie, onPick, onPickExternal, openInfo =
       {exhausted && (
         <div className="mt-8 max-w-sm">
           <p className="font-serif text-base text-neutral-200">
-            Ya recorriste todo lo que tengo parecido a{" "}
+            Ya recorriste todas las recomendaciones parecidas a{" "}
             <span className="italic">{movie.title}</span>.
           </p>
           <p className="mt-1 text-xs text-neutral-400">
@@ -260,7 +260,7 @@ export default function ExternalView({ movie, onPick, onPickExternal, openInfo =
 
       {state.status === "done" && recommendations.length === 0 && exclude.length === 0 && (
         <p className="mt-8 max-w-sm text-sm text-neutral-400">
-          No encontré películas parecidas entre lo que he visto en el catálogo.
+          No se encontraron películas parecidas dentro de la colección.
         </p>
       )}
     </section>

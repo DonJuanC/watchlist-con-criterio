@@ -24,16 +24,16 @@ export const SELECTOR = {
   // ajústalo a tu criterio real.
   scale: {
     stars: [
-      { value: 5, text: "Obra maestra. La volvería a ver." },
-      { value: 4, text: "Muy buena. La recomiendo sin pensarlo." },
+      { value: 5, text: "Obra maestra. Para volver a ver." },
+      { value: 4, text: "Muy buena. Recomendada sin pensarlo." },
       { value: 3, text: "Cumple. Tiene momentos que valen la pena." },
-      { value: 2, text: "Floja. Rescato poco." },
-      { value: 1, text: "No me funcionó." },
+      { value: 2, text: "Floja. Rescata poco." },
+      { value: 1, text: "No funcionó." },
     ],
     verdicts: [
-      { value: 1, label: "Imprescindible", text: "La recomiendo sin dudarlo." },
-      { value: 0, label: "Interesante", text: "La recomiendo con reservas: depende de a quién." },
-      { value: -1, label: "Prescindible", text: "No la recomendaría." },
+      { value: 1, label: "Imprescindible", text: "Muy recomendada." },
+      { value: 0, label: "Interesante", text: "Recomendada con reservas: depende de a quién." },
+      { value: -1, label: "Prescindible", text: "Poco recomendable." },
     ],
   },
 

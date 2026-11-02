@@ -14,9 +14,9 @@ import useVisitorSeen, {
 import MoviePosterCard from "./MoviePosterCard";
 import { MOODS, MOOD_LABEL, nextUpQuery } from "../lib/moods";
 
-// Sorpréndeme solo ofrece dos fuentes; "En mi radar" vive en "¿Qué veo hoy?".
+// Sorpréndeme ofrece dos fuentes: la colección curada o exploración más allá.
 const SOURCES = [
-  { key: "archive", label: "Mi archivo" },
+  { key: "archive", label: "En la colección" },
   { key: "beyond", label: "Más allá" },
 ];
 
@@ -174,7 +174,7 @@ export default function SurprisePick({ onPick, onPickExternal, onMore }) {
         </div>
         {source === "beyond" && (
           <p className="-mt-1 text-[11px] text-neutral-400">
-            Películas que no he visto, sugeridas por TMDB a partir de las mías. Solo con 50% o más en Rotten Tomatoes.
+            Películas conectadas por estilo y temática con la colección. Con 50% o más en Rotten Tomatoes.
           </p>
         )}
       </div>
@@ -201,7 +201,7 @@ export default function SurprisePick({ onPick, onPickExternal, onMore }) {
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-accent-300">
                 {state.mood ? MOOD_LABEL[state.mood] : "Elegida al azar"} ·{" "}
-                {isExternal ? "fuera de mi archivo" : "de mi archivo"}
+                {isExternal ? "más allá de la colección" : "en la colección"}
               </p>
               <h3 className="mt-1 font-serif text-xl font-semibold leading-tight text-white sm:text-2xl">
                 {movie.title}
@@ -214,7 +214,7 @@ export default function SurprisePick({ onPick, onPickExternal, onMore }) {
               <CriticLine movie={movie} />
               {isExternal && movie.because?.length > 0 && (
                 <p className="mt-2 text-xs text-neutral-300">
-                  No la he visto. Sale porque recomiendo{" "}
+                  Aún sin reseña propia. Sugerida por su afinidad con{" "}
                   {movie.because.map((b) => b.title).join(" y ")}.
                 </p>
               )}
@@ -225,7 +225,7 @@ export default function SurprisePick({ onPick, onPickExternal, onMore }) {
                       <Star size={12} className="fill-current" /> {movie.rating}/5
                     </span>
                   )}
-                  {movie.recommend === 1 && <span>· La recomiendo</span>}
+                  {movie.recommend === 1 && <span>· Recomendada</span>}
                 </p>
               )}
               <p className={`mt-2 text-sm leading-relaxed text-neutral-300 ${movie.review ? "italic" : ""}`}>
@@ -292,8 +292,8 @@ export default function SurprisePick({ onPick, onPickExternal, onMore }) {
           <div className="mt-6 text-center">
             <p className="text-sm text-neutral-300">
               {source === "beyond"
-                ? "No encontré más sugerencias fuera de mi archivo para ese ánimo."
-                : "Ya viste todo lo que tengo para ese ánimo."}
+                ? "No se encontraron más sugerencias para este ánimo."
+                : "Ya viste todas las recomendaciones de la colección para este ánimo."}
             </p>
             {source === "archive" && (
               <button
@@ -304,7 +304,7 @@ export default function SurprisePick({ onPick, onPickExternal, onMore }) {
                 }}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-dashed border-white/25 px-4 py-2 text-xs font-medium text-neutral-200 hover:border-white/40 hover:text-white focus-ring-cinematic"
               >
-                <Compass size={14} /> Buscar fuera de mi archivo
+                <Compass size={14} /> Explorar más allá
               </button>
             )}
           </div>

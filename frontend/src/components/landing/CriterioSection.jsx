@@ -79,11 +79,11 @@ export default function CriterioSection({ onPick }) {
   const visible = expanded ? reviewed : reviewed.slice(0, INITIAL_VISIBLE);
 
   return (
-    <section className="mt-16 w-full text-left" aria-label="Mi criterio">
+    <section className="mt-16 w-full text-left" aria-label="Veredictos y reseñas">
       <div className="mb-6 flex flex-col justify-between gap-1 border-b border-white/[0.08] pb-3 sm:flex-row sm:items-end">
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-400">Mi criterio</span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-normal text-white">Lo que tengo para decir</h2>
+          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-400">Veredictos</span>
+          <h2 className="font-serif text-2xl sm:text-3xl font-normal text-white">Notas y recomendaciones</h2>
         </div>
         {reviewed.length > 0 && (
           <span className="text-xs text-neutral-400">{reviewed.length} reseñas, con nota y veredicto</span>

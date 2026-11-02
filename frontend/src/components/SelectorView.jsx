@@ -107,12 +107,12 @@ export default function SelectorView({ onStart }) {
       )}
 
       {showOrigin && (
-        <Section eyebrow="El origen" title="Por qué existe este archivo">
+        <Section eyebrow="El origen" title="Por qué existe esta selección">
           <Prose paragraphs={SELECTOR.origin} pendingHint="cuenta por qué surge la idea en el arreglo origin" />
         </Section>
       )}
 
-      <Section eyebrow="Mi criterio" title="Cómo califico">
+      <Section eyebrow="Criterio" title="Cómo se califica">
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="flex flex-col gap-3">
             <h3 className="text-sm font-medium text-neutral-200">La nota, de 1 a 5</h3>
@@ -148,12 +148,12 @@ export default function SelectorView({ onStart }) {
           </div>
         </div>
         <p className="max-w-[65ch] text-sm text-neutral-400">
-          No todas las películas tienen nota o reseña. Las escribo cuando tengo algo que decir, y las que
-          recomiendo pesan más cuando el archivo elige vecinas.
+          No todas las películas tienen nota o reseña. Se van sumando apuntes y veredictos, y las obras
+          recomendadas tienen mayor peso al conectar títulos similares.
         </p>
       </Section>
 
-      <Section eyebrow="El archivo" title="En cifras">
+      <Section eyebrow="La colección" title="En cifras">
         {stats ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat value={stats.seen} label="películas vistas" />

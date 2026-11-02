@@ -15,8 +15,8 @@ export const isMood = (k) => Object.hasOwn(MOOD_LABEL, k);
 
 // De dónde salen las películas. `slug` es lo que va en la URL (#/que-veo-hoy?fuente=…).
 export const SOURCES = [
-  { key: "archive", slug: "archivo", label: "Las recomiendo" },
-  { key: "radar", slug: "radar", label: "En mi radar" },
+  { key: "archive", slug: "archivo", label: "Recomendadas" },
+  { key: "radar", slug: "radar", label: "En la mira" },
   { key: "beyond", slug: "mas-alla", label: "Más allá" },
 ];
 export const sourceFromSlug = (slug) => SOURCES.find((s) => s.slug === slug)?.key ?? null;

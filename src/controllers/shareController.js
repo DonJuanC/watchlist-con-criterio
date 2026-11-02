@@ -42,12 +42,12 @@ async function renderMoviePreview(req, res) {
     const movieTitle = movie.display_title || movie.title;
     const yearStr = movie.release_year ? ` (${movie.release_year})` : "";
     const directorStr = movie.director ? ` · Dir. ${movie.director}` : "";
-    const pageTitle = `${movieTitle}${yearStr}${directorStr} · Watchlist con Criterio`;
+    const pageTitle = `${movieTitle}${yearStr}${directorStr} · Cine con Criterio`;
 
     const ratingPrefix = movie.rating ? `⭐ ${movie.rating}/5 — ` : "";
     const rawDescription = movie.review
       ? `${ratingPrefix}“${movie.review}”`
-      : movie.overview || `Explora las 6 conexiones directas de ${movieTitle} en el archivo cinematográfico de Juan Camilo.`;
+      : movie.overview || `Explora las conexiones de ${movieTitle} por atmósfera y autoría en Cine con Criterio.`;
 
     // Truncar para descripciones de WhatsApp / Twitter
     const description = rawDescription.length > 280

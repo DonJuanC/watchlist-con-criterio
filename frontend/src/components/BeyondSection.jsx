@@ -67,9 +67,9 @@ export default function BeyondSection({
           onClick={() => setOpenFor(seedKey)}
           className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-white/25 px-4 py-2 text-xs font-medium text-neutral-300 transition-all hover:border-white/40 hover:text-white focus-ring-cinematic"
         >
-          <Compass size={14} /> Ver fuera de mi archivo
+          <Compass size={14} /> Explorar más allá
         </button>
-        <span className="text-[11px] text-neutral-400">Sugerencias que no he visto, a partir de las mías</span>
+        <span className="text-[11px] text-neutral-400">Sugerencias por afinidad temática</span>
       </div>
     );
   }
@@ -79,13 +79,13 @@ export default function BeyondSection({
   const refreshing = state.status === "refreshing";
 
   return (
-    <section className="mt-12 w-full border-t border-dashed border-white/15 pt-8 text-center" aria-label="Fuera de mi archivo">
+    <section className="mt-12 w-full border-t border-dashed border-white/15 pt-8 text-center" aria-label="Exploración extendida">
       <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
-        <Compass size={12} /> Fuera de mi archivo
+        <Compass size={12} /> Exploración extendida
       </span>
-      <h3 className="mt-1 font-serif text-xl text-white">Más allá de lo que he visto</h3>
+      <h3 className="mt-1 font-serif text-xl text-white">Más opciones con este mismo estilo</h3>
       <p className="mx-auto mt-1 max-w-sm text-xs text-neutral-400">
-        No las he visto: las sugiere TMDB a partir de {label} y de mis películas parecidas. Solo entran las que tienen 50% o más en Rotten Tomatoes.
+        Sugerencias de TMDB conectadas por afinidad con {label}. Con 50% o más en Rotten Tomatoes.
       </p>
 
       {loading && (
@@ -106,7 +106,7 @@ export default function BeyondSection({
               <button
                 type="button"
                 onClick={() => onPickExternal(movie)}
-                aria-label={`Ver qué de mi archivo se parece a ${movie.title}`}
+                aria-label={`Ver qué títulos de la colección se parecen a ${movie.title}`}
                 className="group flex flex-col items-center rounded-xl p-1 focus-ring-cinematic"
               >
                 <div className="transition-transform duration-300 group-hover:-translate-y-1">
@@ -161,7 +161,7 @@ export default function BeyondSection({
       )}
 
       {state.status === "error" && (
-        <p className="mt-6 text-xs text-red-400">No pude buscar fuera del archivo ahora. Intenta en unos segundos.</p>
+        <p className="mt-6 text-xs text-red-400">No pude buscar más títulos ahora. Intenta en unos segundos.</p>
       )}
     </section>
   );

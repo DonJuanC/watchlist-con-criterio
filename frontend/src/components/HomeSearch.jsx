@@ -317,8 +317,8 @@ export default function HomeSearch({
           </h1>
 
           <p className="mx-auto max-w-xl text-sm sm:text-base text-neutral-400 leading-relaxed">
-            Cada película está conectada con otras por su director o por cómo se siente.
-            Y cuando tengo algo que decir, va mi nota y mi reseña.
+            Cada película está conectada con otras por su atmósfera o su autoría.
+            Con notas, veredictos y pistas para elegir bien.
           </p>
         </header>
       )}
@@ -384,7 +384,7 @@ export default function HomeSearch({
           >
             {suggestions.length > 0 && (
               <li role="presentation" className="px-4 pb-1 pt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-neutral-400">
-                En el archivo ({suggestions.length})
+                En la colección ({suggestions.length})
               </li>
             )}
             {suggestions.map((movie, i) => (
@@ -423,7 +423,7 @@ export default function HomeSearch({
                   suggestions.length > 0 ? "mt-1 border-t border-white/[0.06]" : ""
                 }`}
               >
-                Fuera del archivo (TMDB)
+                Explorar en todo el cine (TMDB)
                 {tmdbLoading && <Loader2 size={11} className="animate-spin text-neutral-400" />}
               </li>
             )}
@@ -566,7 +566,7 @@ export default function HomeSearch({
           {selectedDirector && directorMovies.length > 0 && (
             <div className="rounded-xl border border-white/[0.06] bg-surface/60 p-4 mb-6">
               <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-neutral-400 mb-3">
-                Películas de {selectedDirector} en el archivo:
+                Películas de {selectedDirector} en la colección:
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 {directorMovies.map((movie) => (
@@ -598,7 +598,7 @@ export default function HomeSearch({
       {/* 6. ESTADO DE RESULTADOS DE BÚSQUEDA */}
       {isLoading && (
         <section className="mt-10 w-full" aria-label="Buscando conexiones">
-          <p className="font-serif text-lg font-medium text-neutral-200">{heading || "Buscando en el archivo..."}</p>
+          <p className="font-serif text-lg font-medium text-neutral-200">{heading || "Buscando conexiones..."}</p>
           <p className="mb-6 text-xs text-neutral-400">
             Calculando afinidad por temática, atmósfera y autoría...
           </p>
@@ -618,7 +618,7 @@ export default function HomeSearch({
         <section className="mt-8 w-full" aria-label="Resultados de búsqueda">
           <div className="mb-6 text-center border-b border-white/[0.06] pb-4">
             <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
-              Conexiones del archivo
+              Conexiones temáticas
             </span>
             <h2 className="font-serif text-2xl font-normal text-white mt-1">{heading}</h2>
             <p className="mt-1 text-xs text-neutral-400">
@@ -665,12 +665,12 @@ export default function HomeSearch({
           ) : (
             results.length > RESULTS_LIMIT && (
               <p className="mt-8 text-center text-xs text-neutral-400">
-                Es todo lo que tengo que encaja con {heading}.
+                Son todas las obras de la colección que encajan con {heading}.
               </p>
             )
           )}
 
-          {/* Se acabó lo que encaja en mi archivo: el puente hacia afuera */}
+          {/* Se acabó lo que encaja en la colección: el puente hacia afuera */}
           {!more.hasMore && (
             <BeyondSection
               seeds={results.slice(0, 4).map((r) => r.tmdb_id).filter(Boolean)}
@@ -687,7 +687,7 @@ export default function HomeSearch({
             className="mt-10 inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs text-neutral-300 transition-colors hover:border-white/20 hover:text-white focus-ring-cinematic"
           >
             <RotateCcw size={13} />
-            <span>Volver al inicio del archivo</span>
+            <span>Volver al inicio</span>
           </button>
         </section>
       )}
@@ -698,7 +698,7 @@ export default function HomeSearch({
             No encontré conexiones directas para esa búsqueda.
           </p>
           <p className="text-xs text-neutral-400 mt-1">
-            Prueba con otra sensación o selecciona una obra del archivo.
+            Prueba con otra sensación o selecciona una obra de la colección.
           </p>
           <button
             type="button"

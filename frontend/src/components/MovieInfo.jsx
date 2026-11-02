@@ -107,7 +107,7 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId, tmdbVote }) {
   );
 }
 
-// Bloque "Mi Criterio": el sello personal de curaduría
+// Bloque "Criterio y Veredicto": el sello de curaduría
 function MyCriteria({ rating, recommend, review }) {
   const hasCriteria = rating != null || recommend != null || review;
   if (!hasCriteria) return null;
@@ -119,7 +119,7 @@ function MyCriteria({ rating, recommend, review }) {
       <div className="mb-2.5 flex items-center justify-between">
         <h4 className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
           <PenAndLens size={13} className="text-accent-400" />
-          Mi Criterio Personal
+          Criterio & Veredicto
         </h4>
 
         {rating != null && (
@@ -355,8 +355,7 @@ export default function MovieInfo({ movieId, tmdbId }) {
 
       {isExternal && (
         <p className="rounded-xl border border-dashed border-white/15 px-4 py-3 text-xs text-neutral-400">
-          No está en mi archivo: no la he visto, así que no tiene mi criterio. Abajo te digo
-          qué de lo que sí vi se le parece.
+          Esta película aún no cuenta con reseña en la colección. Abajo encuentras obras recomendadas que comparten su tono y estilo.
         </p>
       )}
 

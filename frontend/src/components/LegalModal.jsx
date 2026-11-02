@@ -122,7 +122,7 @@ export default function LegalModal({ isOpen, onClose }) {
               <section>
                 <h3 className="font-semibold text-white text-sm mb-1">1. Naturaleza del Servicio</h3>
                 <p>
-                  <strong>Cine con Criterio</strong> es un catálogo exploratorio y archivo cinematográfico personal creado por El Selector con fines culturales, educativos y de divulgación cinéfila.
+                  <strong>Cine con Criterio</strong> es un catálogo exploratorio y selección cinematográfica independiente con fines culturales, educativos y de divulgación cinéfila.
                 </p>
               </section>
 
@@ -136,7 +136,7 @@ export default function LegalModal({ isOpen, onClose }) {
               <section>
                 <h3 className="font-semibold text-white text-sm mb-1">3. Criterio y Reseñas</h3>
                 <p>
-                  Las calificaciones (⭐ 1 a 5), recomendaciones (🔴, 🟡, 🟢) y notas críticas expresadas corresponden exclusivamente al criterio personal del autor sincronizado desde su registro en Notion.
+                  Las calificaciones (⭐ 1 a 5), veredictos (🔴, 🟡, 🟢) y notas críticas expresadas corresponden a criterios de curaduría compartidos en la plataforma.
                 </p>
               </section>
 
@@ -166,7 +166,7 @@ export default function LegalModal({ isOpen, onClose }) {
                 <ul className="list-disc list-inside mt-1.5 space-y-1 text-neutral-400">
                   <li><code className="text-accent-300/90 font-mono">watchlist.country</code>: Recuerda su selección de país para consultar plataformas de streaming.</li>
                   <li><code className="text-accent-300/90 font-mono">watchlist_selected_providers</code>: Guarda sus plataformas preferidas en la vista <em>«¿Qué veo hoy?»</em>.</li>
-                  <li><code className="text-accent-300/90 font-mono">cc_visitor_seen</code> y <code className="text-accent-300/90 font-mono">cc_visitor_seen_ext</code>: Recuerdan las películas que marcó como «Ya la vi» (de mi archivo y de fuera de él) para no volver a recomendárselas. No salen de su navegador.</li>
+                  <li><code className="text-accent-300/90 font-mono">cc_visitor_seen</code> y <code className="text-accent-300/90 font-mono">cc_visitor_seen_ext</code>: Recuerdan las películas que marcó como «Ya la vi» (de la colección o de la exploración extendida) para no volver a recomendárselas. No salen de su navegador.</li>
                 </ul>
               </section>
 
