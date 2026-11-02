@@ -48,6 +48,9 @@ export default function NextUpView() {
 
   const requestIdRef = useRef(0);
   const infoRef = useRef(null);
+  // Disponibilidad vigente para la próxima carga: el servidor filtra sobre toda la lista.
+  const availRef = useRef({ country, filter, mine });
+  availRef.current = { country, filter, mine };
 
   const load = useCallback(async (moodText, offset = 0, overrideMode = null) => {
     const requestId = ++requestIdRef.current;
@@ -58,15 +61,20 @@ export default function NextUpView() {
     try {
       let items;
       let data;
+      // La búsqueda por sensación aún no filtra en el servidor: ahí se filtra el lote cargado.
+      let serverFiltered = false;
       if (moodText) {
         data = await semanticSearch(moodText, LIMIT, "pending", offset);
         items = (data.results ?? []).map((node) => ({ node }));
       } else {
-        data = await fetchNextUp(LIMIT, offset, targetMode);
+        const { country: c, filter: f, mine: m } = availRef.current;
+        const avail = f === FILTERS.MINE && m.length ? "mine" : f === FILTERS.ANY ? "any" : undefined;
+        data = await fetchNextUp(LIMIT, offset, targetMode, { country: c, avail, providers: m });
         items = data.results ?? [];
+        serverFiltered = true;
       }
       if (requestId !== requestIdRef.current) return;
-      setState({ status: "done", items, error: "", offset, hasMore: Boolean(data.hasMore) });
+      setState({ status: "done", items, error: "", offset, hasMore: Boolean(data.hasMore), serverFiltered });
     } catch (err) {
       if (requestId !== requestIdRef.current) return;
       setState({ status: "error", items: [], error: err.message, offset, hasMore: false });
@@ -77,17 +85,36 @@ export default function NextUpView() {
     load("");
   }, [load]);
 
+  // Cambió el filtro, el país o mis plataformas: se pide de nuevo la lista (ya filtrada).
+  const activeMoodRef = useRef(activeMood);
+  activeMoodRef.current = activeMood;
+  const availKey = `${country}|${filter}|${filter === FILTERS.MINE ? mine.join(",") : ""}`;
+  const firstAvailKey = useRef(availKey);
+  useEffect(() => {
+    if (availKey === firstAvailKey.current) return;
+    firstAvailKey.current = null; // desde aquí, cada cambio recarga
+    load(activeMoodRef.current, 0);
+  }, [availKey, load]);
+
   useEffect(() => {
     if (selectedId != null) {
       infoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [selectedId]);
 
-  // Consultar disponibilidad de streaming en paralelo para las películas cargadas
+  // Disponibilidad de cada película: la trae la respuesta (node.stream); solo se consulta
+  // aparte la que no la tiene (búsqueda por sensación o aún no guardada en el servidor).
   useEffect(() => {
-    const tmdbIds = state.items.map((it) => it.node.tmdb_id).filter(Boolean);
+    const known = {};
+    for (const it of state.items) {
+      if (Array.isArray(it.node.stream)) known[it.node.tmdb_id] = { stream: it.node.stream };
+    }
+    const tmdbIds = state.items
+      .map((it) => it.node.tmdb_id)
+      .filter((id) => id && !known[id]);
     if (!tmdbIds.length) {
-      setProvidersMap({});
+      setProvidersMap(known);
+      setProvidersLoading(false);
       return;
     }
 
@@ -100,7 +127,7 @@ export default function NextUpView() {
       )
     ).then((results) => {
       if (cancelled) return;
-      const map = {};
+      const map = { ...known };
       for (const res of results) {
         if (res.status === "fulfilled" && res.value) {
           map[res.value.id] = res.value.data;
@@ -149,13 +176,13 @@ export default function NextUpView() {
   }, [mine.length]);
 
   const filteredItems = useMemo(() => {
-    if (filter === FILTERS.ALL) return items;
+    if (filter === FILTERS.ALL || state.serverFiltered) return items;
     return items.filter((it) => {
       const streamList = providersMap[it.node.tmdb_id]?.stream;
       if (!Array.isArray(streamList) || streamList.length === 0) return false;
       return filter === FILTERS.ANY || streamList.some((p) => isMine(p, mine));
     });
-  }, [items, providersMap, filter, mine]);
+  }, [items, providersMap, filter, mine, state.serverFiltered]);
 
   const filterChip = (active) =>
     `inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
@@ -255,10 +282,10 @@ export default function NextUpView() {
           <CountrySelect />
         </div>
 
-        {status === "done" && items.length > 0 && (
+        {status === "done" && (items.length > 0 || filter !== FILTERS.ALL) && (
           <div className="flex flex-wrap items-center gap-1.5 px-1">
             <button type="button" onClick={() => setFilter(FILTERS.ALL)} className={filterChip(filter === FILTERS.ALL)}>
-              Todas ({items.length})
+              Todas
             </button>
             {mine.length > 0 && (
               <button type="button" onClick={() => setFilter(FILTERS.MINE)} className={filterChip(filter === FILTERS.MINE)}>
@@ -310,19 +337,26 @@ export default function NextUpView() {
         </p>
       )}
 
-      {status === "done" && items.length === 0 && (
+      {status === "done" && items.length === 0 && (filter === FILTERS.ALL || !state.serverFiltered) && (
         <p className="mt-8 max-w-sm text-sm text-neutral-400">
           No encontré películas en tu lista con esa atmósfera. Prueba con otras palabras.
         </p>
       )}
 
-      {status === "done" && items.length > 0 && filteredItems.length === 0 && (
+      {status === "done" &&
+        filteredItems.length === 0 &&
+        filter !== FILTERS.ALL &&
+        (items.length > 0 || state.serverFiltered) && (
         <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center max-w-md">
           <Tv size={24} className="mx-auto text-neutral-400 mb-2" />
           <p className="text-sm font-medium text-neutral-300">
-            {filter === FILTERS.MINE
-              ? `Ninguna de estas está en ${mineNames.join(", ")} en ${countryName(country)}.`
-              : `Ninguna de estas está en suscripción en ${countryName(country)}.`}
+            {state.serverFiltered
+              ? filter === FILTERS.MINE
+                ? `Ninguna de mis pendientes está en ${mineNames.join(", ")} en ${countryName(country)}.`
+                : `Ninguna de mis pendientes está en suscripción en ${countryName(country)}.`
+              : filter === FILTERS.MINE
+                ? `Ninguna de estas está en ${mineNames.join(", ")} en ${countryName(country)}.`
+                : `Ninguna de estas está en suscripción en ${countryName(country)}.`}
           </p>
           <div className="mt-4 flex justify-center gap-2">
             <button
@@ -330,9 +364,9 @@ export default function NextUpView() {
               onClick={() => setFilter(FILTERS.ALL)}
               className="rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs text-white hover:bg-white/20 transition-all focus-ring-cinematic"
             >
-              Ver todas ({items.length})
+              Ver todas
             </button>
-            {hasMore && (
+            {hasMore && !state.serverFiltered && (
               <button
                 type="button"
                 onClick={handleMore}

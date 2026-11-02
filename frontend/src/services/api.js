@@ -105,13 +105,16 @@ export function fetchRecommend(tmdbId, exclude = []) {
 }
 
 /** GET /api/recommend/next — "¿Qué veo hoy?": pendientes por afinidad de 🟢 o directores compartidos. */
-export function fetchNextUp(limit = 6, offset = 0, mode = "affinity") {
-  return fetchWithColdStartHandling(
-    `/api/recommend/next?limit=${limit}&offset=${offset}&mode=${mode}`,
-    {
-      method: "GET",
-    },
-  );
+/**
+ * GET /api/recommend/next — "¿Qué veo hoy?". Con `country`, cada película trae `stream`
+ * (sus plataformas ahí) y `avail` filtra en el servidor: "mine" (con `providers`) o "any".
+ */
+export function fetchNextUp(limit = 6, offset = 0, mode = "affinity", { country, avail, providers } = {}) {
+  const qs = new URLSearchParams({ limit, offset, mode });
+  if (country) qs.set("country", country);
+  if (avail) qs.set("avail", avail);
+  if (providers?.length) qs.set("providers", providers.join(","));
+  return fetchWithColdStartHandling(`/api/recommend/next?${qs}`, { method: "GET" });
 }
 
 /** GET /api/recommend/surprise — "Sorpréndeme": una película de mi archivo, al azar o por ánimo. */
