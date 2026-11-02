@@ -12,7 +12,7 @@ export const SELECTOR = {
 
   // Foto o ilustración: pon el archivo en frontend/public/ y escribe la ruta,
   // por ejemplo "/selector.jpg". Con null se muestra el monograma ("ES").
-  portrait: null,
+  portrait: "/selector.jpg",
 
   // Quién eres. Tu bio, en tus palabras.
   bio: [
