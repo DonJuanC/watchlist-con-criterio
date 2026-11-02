@@ -14,6 +14,7 @@ const {
 const { getNeighbors } = require("../controllers/neighborsController");
 const { recommend } = require("../controllers/recommendController");
 const { surprise } = require("../controllers/surpriseController");
+const { beyond } = require("../controllers/beyondController");
 const { getNextUp } = require("../controllers/nextUpController");
 const { getWatch } = require("../controllers/watchController");
 const { triggerSync } = require("../controllers/syncController");
@@ -29,6 +30,7 @@ router.get("/movies/:id", getMovieById);
 router.post("/recommend", recommend);
 router.get("/recommend/next", getNextUp);
 router.get("/recommend/surprise", surprise);
+router.post("/beyond", beyond);
 router.get("/watch/:tmdbId", getWatch);
 router.all("/sync", triggerSync);
 

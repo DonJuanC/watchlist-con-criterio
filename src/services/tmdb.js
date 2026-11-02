@@ -237,7 +237,45 @@ async function getOfficialTrailer(tmdbId) {
   }
 }
 
+const recsCache = new Map(); // tmdbId -> { at, items }
+const RECS_TTL_MS = 12 * 60 * 60 * 1000;
+
+/**
+ * "Fuera de mi archivo": recomendaciones de TMDB para una película (página 1, ~20).
+ * Título con la misma regla que searchMovies (inglés salvo originales en español) y
+ * sinopsis en es-MX. Caché en memoria 12 h por película.
+ * @param {number} tmdbId
+ * @returns {Promise<Array<{tmdb_id, title, release_year, poster_path, overview, vote_average, vote_count}>>}
+ */
+async function getRecommendations(tmdbId) {
+  const hit = recsCache.get(tmdbId);
+  if (hit && Date.now() - hit.at < RECS_TTL_MS) return hit.items;
+
+  const get = async (lang) => {
+    const url = `${TMDB_BASE_URL}/movie/${tmdbId}/recommendations?api_key=${API_KEY}&language=${lang}&page=1`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`TMDB recommendations falló (${res.status}) para ${tmdbId}`);
+    return (await res.json()).results || [];
+  };
+  const [en, es] = await Promise.all([get("en-US"), get("es-MX")]);
+  const esById = new Map(es.map((r) => [r.id, r]));
+  const items = en
+    .filter((r) => r.poster_path && !r.adult)
+    .map((r) => ({
+      tmdb_id: r.id,
+      title: r.original_language === "es" ? r.original_title : r.title,
+      release_year: r.release_date ? Number(r.release_date.slice(0, 4)) : null,
+      poster_path: r.poster_path,
+      overview: esById.get(r.id)?.overview || r.overview || "",
+      vote_average: r.vote_average ?? null,
+      vote_count: r.vote_count ?? 0,
+    }));
+  recsCache.set(tmdbId, { at: Date.now(), items });
+  return items;
+}
+
 module.exports = {
+  getRecommendations,
   searchMovie,
   getMovieDetails,
   searchMovies,

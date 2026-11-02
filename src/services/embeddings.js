@@ -44,6 +44,54 @@ async function generateEmbedding(text) {
     return values;
 }
 
+// Presupuesto para embeddings "de relleno" (re-ranking de fuera de mi archivo).
+// En el tier gratis de Gemini cada texto de un lote cuenta como una petición: 100 por minuto
+// y ~1000 por día para todo el proyecto, compartidas con la búsqueda y los ánimos. Este
+// presupuesto deja margen a esas dos, que son las que no pueden fallar.
+// Con facturación activa se sube por env sin tocar código.
+const BACKGROUND_PER_MIN = Number(process.env.EMBED_BACKGROUND_PER_MIN) || 40;
+const BACKGROUND_PER_DAY = Number(process.env.EMBED_BACKGROUND_PER_DAY) || 400;
+const usage = { minute: 0, minuteStart: 0, day: 0, dayStart: 0, blockedUntil: 0 };
+
+/**
+ * Reserva hasta `n` embeddings del presupuesto de relleno. Devuelve cuántos se pueden hacer.
+ * @param {number} n
+ */
+function reserveBackgroundEmbeddings(n) {
+    const now = Date.now();
+    if (now < usage.blockedUntil) return 0; // Gemini respondió 429 hace poco
+    if (now - usage.minuteStart >= 60_000) Object.assign(usage, { minute: 0, minuteStart: now });
+    if (now - usage.dayStart >= 86_400_000) Object.assign(usage, { day: 0, dayStart: now });
+    const allowed = Math.max(0, Math.min(n, BACKGROUND_PER_MIN - usage.minute, BACKGROUND_PER_DAY - usage.day));
+    usage.minute += allowed;
+    usage.day += allowed;
+    return allowed;
+}
+
+/** Tras un 429, el relleno se pausa un minuto para no quitarle cupo a la búsqueda. */
+function pauseBackgroundEmbeddings(ms = 60_000) {
+    usage.blockedUntil = Date.now() + ms;
+}
+
+/**
+ * Embeddings de varios textos en UNA llamada a Gemini (mismo modelo y dimensión).
+ * @param {string[]} texts
+ * @returns {Promise<number[][]>}
+ */
+async function generateEmbeddings(texts) {
+    if (!texts.length) return [];
+    const response = await ai.models.embedContent({
+        model: EMBEDDING_MODEL,
+        contents: texts,
+        config: { outputDimensionality: OUTPUT_DIMENSIONALITY },
+    });
+    const list = response?.embeddings || [];
+    if (list.length !== texts.length || list.some((e) => e?.values?.length !== OUTPUT_DIMENSIONALITY)) {
+        throw new Error('Gemini no devolvió todos los embeddings del lote.');
+    }
+    return list.map((e) => e.values);
+}
+
 /**
  * Construye el texto semántico enriquecido para calcular el embedding de una película.
  * Combina título, director, géneros, sinopsis y el criterio/reseña personal de Notion.
@@ -86,6 +134,9 @@ function buildMovieSemanticText({ title, director, genres = [], overview = "", r
 // los imports existentes de scripts/seed.js (que usa `generateEmbedding`).
 module.exports = {
     generateEmbedding,
+    generateEmbeddings,
+    reserveBackgroundEmbeddings,
+    pauseBackgroundEmbeddings,
     generateMovieEmbedding: generateEmbedding,
     buildMovieSemanticText,
 };

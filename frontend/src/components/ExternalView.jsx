@@ -2,11 +2,12 @@
 // "Si te gustó X…" para cualquier película externa de TMDB comparada con el catálogo:
 // Formato vertical 2:3, fondo ambiental cinemático y tarjetas con afinidad.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, User, Check, RefreshCw, RotateCcw } from "lucide-react";
 import { fetchRecommend } from "../services/api";
 import useVisitorSeen, { markSeen, clearSeen } from "../hooks/useVisitorSeen";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
+import BeyondSection from "./BeyondSection";
 
 const REASON_LABEL = {
   same_director: "Mismo director",
@@ -19,8 +20,13 @@ const REASON_LABEL = {
  */
 const NONE = [];
 
-export default function ExternalView({ movie, onPick }) {
+export default function ExternalView({ movie, onPick, onPickExternal }) {
   const [state, setState] = useState({ status: "loading", data: null, error: "" });
+  const sectionRef = useRef(null);
+  // Al llegar desde "Fuera de mi archivo" se reutiliza el mismo contenedor con scroll.
+  useEffect(() => {
+    sectionRef.current?.closest(".overflow-y-auto")?.scrollTo({ top: 0 });
+  }, []);
 
   // "Otras opciones" (ids ya mostrados para ESTA película) + "Ya la vi" del visitante.
   const [pager, setPager] = useState({ tmdbId: movie.tmdb_id, shown: [] });
@@ -69,6 +75,7 @@ export default function ExternalView({ movie, onPick }) {
 
   return (
     <section
+      ref={sectionRef}
       className="relative mx-auto flex w-full max-w-xl flex-col items-center px-4 pb-16 pt-4 text-center"
       aria-label={`Recomendaciones si te gustó ${movie.title}`}
     >
@@ -218,6 +225,15 @@ export default function ExternalView({ movie, onPick }) {
             )}
           </div>
         </div>
+      )}
+
+      {(isDone || exhausted) && onPickExternal && (
+        <BeyondSection
+          seeds={[movie.tmdb_id]}
+          label={movie.title}
+          onPickExternal={onPickExternal}
+          defaultOpen={exhausted}
+        />
       )}
 
       {state.status === "done" && recommendations.length === 0 && exclude.length === 0 && (

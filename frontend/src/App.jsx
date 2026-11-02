@@ -246,7 +246,12 @@ export default function App() {
                 Volver
               </button>
             </nav>
-            <ExternalView movie={externalMovie} onPick={handlePick} />
+            <ExternalView
+              key={externalMovie.tmdb_id}
+              movie={externalMovie}
+              onPick={handlePick}
+              onPickExternal={handlePickExternal}
+            />
           </div>
         )}
 
@@ -275,7 +280,9 @@ export default function App() {
 
         {view === "ego" && (
           <div className="h-full overflow-y-auto pt-2 animate-view-enter">
-            {graphReady && <EgoView centerId={centerId} onSelect={handlePick} />}
+            {graphReady && (
+              <EgoView centerId={centerId} onSelect={handlePick} onPickExternal={handlePickExternal} />
+            )}
             {!graphReady && graphError && !isLoading && (
               <GraphError message={graphError} />
             )}

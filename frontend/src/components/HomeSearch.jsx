@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   Loader2,
+  ChevronDown,
   Dices,
   Film,
   X,
@@ -24,6 +25,7 @@ import useCineStore from "../store/useCineStore";
 import useTmdbSuggestions from "../hooks/useTmdbSuggestions";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 import SurprisePick from "./SurprisePick";
+import BeyondSection from "./BeyondSection";
 import LegalModal from "./LegalModal";
 import ConnectionDemo from "./landing/ConnectionDemo";
 import CriterioSection from "./landing/CriterioSection";
@@ -159,6 +161,8 @@ export default function HomeSearch({
   const [selectedDirector, setSelectedDirector] = useState(null);
   const [showLegal, setShowLegal] = useState(false);
   const [pendingGems, setPendingGems] = useState([]);
+  // "Ver más" de la búsqueda por tema: misma consulta, siguiente página.
+  const [more, setMore] = useState({ query: "", hasMore: false, loading: false });
   const requestIdRef = useRef(0);
 
   // Consultar recomendaciones de películas pendientes afines al gusto marcado con 🟢
@@ -337,6 +341,7 @@ export default function HomeSearch({
       if (requestId !== requestIdRef.current) return null;
       const rows = data.results ?? [];
       setResults(rows);
+      setMore({ query, hasMore: Boolean(data.hasMore), loading: false });
       setStatus("done");
       return rows;
     } catch (err) {
@@ -346,6 +351,21 @@ export default function HomeSearch({
       return null;
     }
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (!more.hasMore || more.loading) return;
+    const requestId = requestIdRef.current; // una búsqueda nueva invalida esta página
+    setMore((m) => ({ ...m, loading: true }));
+    try {
+      const data = await semanticSearch(more.query, RESULTS_LIMIT, "seen", results.length);
+      if (requestId !== requestIdRef.current) return;
+      const seenIds = new Set(results.map((r) => r.id));
+      setResults((prev) => [...prev, ...(data.results ?? []).filter((r) => !seenIds.has(r.id))]);
+      setMore((m) => ({ ...m, hasMore: Boolean(data.hasMore), loading: false }));
+    } catch {
+      if (requestId === requestIdRef.current) setMore((m) => ({ ...m, loading: false }));
+    }
+  }, [more, results]);
 
   const handleSubmit = useCallback(
     (e) => {
@@ -940,7 +960,7 @@ export default function HomeSearch({
       )}
 
       {/* 3b. Sin película en mente: una sola, al azar o por ánimo */}
-      {status === "idle" && <SurprisePick onPick={onPick} />}
+      {status === "idle" && <SurprisePick onPick={onPick} onPickExternal={onPickExternal} />}
 
       {/* 4. Así funciona (ejemplo real) y Mi criterio (reseñas) */}
       {status === "idle" && <ConnectionDemo onPick={onPick} />}
@@ -1084,7 +1104,9 @@ export default function HomeSearch({
             </span>
             <h2 className="font-serif text-2xl font-normal text-white mt-1">{heading}</h2>
             <p className="mt-1 text-xs text-neutral-400">
-              {results.length} {results.length === 1 ? "obra conectada" : "obras conectadas"} por atmósfera y temática. Selecciona una para abrir su constelación completa.
+              {results.length}
+              {more.hasMore ? "+" : ""}{" "}
+              {results.length === 1 ? "obra conectada" : "obras conectadas"} por atmósfera y temática. Selecciona una para abrir su constelación completa.
             </p>
           </div>
 
@@ -1109,6 +1131,37 @@ export default function HomeSearch({
               </button>
             ))}
           </div>
+
+          {more.hasMore ? (
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={loadMore}
+                disabled={more.loading}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-xs font-medium text-neutral-200 transition-all hover:border-white/30 hover:bg-white/10 focus-ring-cinematic disabled:opacity-50"
+              >
+                {more.loading ? <Loader2 size={14} className="animate-spin" /> : <ChevronDown size={14} />}
+                Ver más
+              </button>
+            </div>
+          ) : (
+            results.length > RESULTS_LIMIT && (
+              <p className="mt-8 text-center text-xs text-neutral-400">
+                Es todo lo que tengo que encaja con {heading}.
+              </p>
+            )
+          )}
+
+          {/* Se acabó lo que encaja en mi archivo: el puente hacia afuera */}
+          {!more.hasMore && (
+            <BeyondSection
+              seeds={results.slice(0, 4).map((r) => r.tmdb_id).filter(Boolean)}
+              label={heading}
+              query={more.query}
+              onPickExternal={onPickExternal}
+              defaultOpen
+            />
+          )}
 
           <button
             type="button"

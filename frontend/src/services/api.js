@@ -110,13 +110,25 @@ export function fetchNextUp(limit = 6, offset = 0, mode = "affinity") {
 }
 
 /** GET /api/recommend/surprise — "Sorpréndeme": una película de mi archivo, al azar o por ánimo. */
-export function fetchSurprise(mood = null, exclude = []) {
+export function fetchSurprise(mood = null, exclude = [], { source = "archive", excludeExt = [] } = {}) {
   const params = new URLSearchParams();
   if (mood) params.set("mood", mood);
   if (exclude.length) params.set("exclude", exclude.join(","));
+  if (source === "beyond") params.set("source", "beyond");
+  if (excludeExt.length) params.set("exclude_ext", excludeExt.join(","));
   const qs = params.toString();
   return fetchWithColdStartHandling(`/api/recommend/surprise${qs ? `?${qs}` : ""}`, {
     method: "GET",
+  });
+}
+
+/** POST /api/beyond — "Fuera de mi archivo": TMDB a partir de películas de mi archivo.
+ *  seeds: tmdb_id; seedIds: ids del catálogo; exclude: tmdb_id ya vistos o mostrados. */
+export function fetchBeyond({ seeds = [], seedIds = [], exclude = [], limit = 6, offset = 0, query }) {
+  return fetchWithColdStartHandling("/api/beyond", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ seeds, seed_ids: seedIds, exclude, limit, offset, query }),
   });
 }
 

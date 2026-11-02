@@ -9,6 +9,10 @@
 const { query } = require("../db");
 const { generateEmbedding } = require("../services/embeddings");
 const { parseExclude } = require("../services/neighborRanking");
+const { beyondFromSeeds } = require("../services/beyond");
+
+const BEYOND_SEEDS = 6; // semillas de mi archivo para "fuera de mi archivo"
+const BEYOND_POOL = 8; // se sortea entre las 8 más cercanas al ánimo
 
 const MOODS = {
   pensar: "película que te deja pensando, ideas, giros, filosofía, la mente, preguntas sin respuesta",
@@ -18,6 +22,16 @@ const MOODS = {
   miedo: "terror y suspenso inquietante, miedo, atmósfera oscura",
   culto: "película rara y de culto, extraña, original, independiente, inclasificable",
 };
+// Géneros que refuerzan cada ánimo (el vector solo confunde "reír" con dramas ingeniosos).
+const MOOD_GENRES = {
+  reir: ["Comedia"],
+  miedo: ["Terror"],
+  adrenalina: ["Acción"],
+  llorar: ["Drama", "Romance"],
+  pensar: ["Ciencia ficción", "Misterio"],
+  culto: [],
+};
+const GENRE_BOOST = 0.05;
 const MOOD_POOL = 8;
 const GREEN_BOOST = 0.04;
 const moodEmbeddings = new Map(); // key -> literal de vector
@@ -43,36 +57,66 @@ function weightedPick(items, weightOf) {
   return items[items.length - 1];
 }
 
+/** Candidatas de mi archivo para un ánimo (o mis 🟢 si no hay ánimo), sin las excluidas. */
+async function archivePool(mood, exclude) {
+  let rows;
+  if (!mood) {
+    ({ rows } = await query(
+      `SELECT ${FIELDS} FROM movies
+       WHERE status = 'seen' AND recommend = 1 AND NOT (id = ANY($1::int[]))`,
+      [exclude],
+    ));
+  } else {
+    const vec = await moodVector(mood);
+    ({ rows } = await query(
+      `SELECT ${FIELDS},
+              1 - (embedding <=> $1::vector) + CASE WHEN recommend = 1 THEN $3::float8 ELSE 0 END
+                + CASE WHEN genres && $5::text[] THEN $6::float8 ELSE 0 END AS score
+       FROM movies
+       WHERE status = 'seen' AND embedding IS NOT NULL AND COALESCE(recommend, 0) <> -1
+         AND NOT (id = ANY($2::int[]))
+       ORDER BY score DESC
+       LIMIT $4`,
+      [vec, exclude, GREEN_BOOST, MOOD_POOL, MOOD_GENRES[mood], GENRE_BOOST],
+    ));
+  }
+  return rows;
+}
+
+/** Sorteo "fuera de mi archivo": semillas = candidatas de mi archivo para ese ánimo. */
+async function surpriseBeyond(mood, excludeTmdb) {
+  const pool = await archivePool(mood, []);
+  const seeds = (mood ? pool : [...pool].sort(() => Math.random() - 0.5))
+    .slice(0, BEYOND_SEEDS)
+    .map((r) => r.tmdb_id)
+    .filter(Boolean);
+  // Con ánimo, la referencia semántica es el ánimo mismo (no el promedio de las semillas).
+  const refVector = mood ? JSON.parse(await moodVector(mood).catch(() => "null")) : null;
+  const ranked = (await beyondFromSeeds(seeds, excludeTmdb, { refVector })).slice(0, BEYOND_POOL);
+  if (!ranked.length) return null;
+  const pick = weightedPick(ranked, (r) => BEYOND_POOL + 1 - ranked.indexOf(r));
+  return { ...pick.movie, external: true, because: pick.because };
+}
+
 /**
- * GET /api/recommend/surprise?mood=pensar&exclude=1,2
- * Respuesta: { mood, movie | null, moods: [keys] }
+ * GET /api/recommend/surprise?mood=pensar&exclude=1,2&source=archive|beyond&exclude_ext=603,550
+ *  - source=archive (por defecto): de mi archivo; `exclude` son ids del catálogo.
+ *  - source=beyond: fuera de mi archivo (TMDB a partir de mis películas); `exclude_ext` son tmdb_id.
+ * Respuesta: { mood, source, movie | null, moods: [keys] }
  */
 async function surprise(req, res) {
   const mood = Object.hasOwn(MOODS, req.query.mood) ? req.query.mood : null;
   const exclude = [...parseExclude(req.query.exclude)];
+  const source = req.query.source === "beyond" ? "beyond" : "archive";
 
   try {
-    let rows;
-    if (!mood) {
-      ({ rows } = await query(
-        `SELECT ${FIELDS} FROM movies
-         WHERE status = 'seen' AND recommend = 1 AND NOT (id = ANY($1::int[]))`,
-        [exclude],
-      ));
-    } else {
-      const vec = await moodVector(mood);
-      ({ rows } = await query(
-        `SELECT ${FIELDS},
-                1 - (embedding <=> $1::vector) + CASE WHEN recommend = 1 THEN $3::float8 ELSE 0 END AS score
-         FROM movies
-         WHERE status = 'seen' AND embedding IS NOT NULL AND COALESCE(recommend, 0) <> -1
-           AND NOT (id = ANY($2::int[]))
-         ORDER BY score DESC
-         LIMIT $4`,
-        [vec, exclude, GREEN_BOOST, MOOD_POOL],
-      ));
+    if (source === "beyond") {
+      const movie = await surpriseBeyond(mood, parseExclude(req.query.exclude_ext));
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(200).json({ mood, source, movie, moods: Object.keys(MOODS) });
     }
 
+    const rows = await archivePool(mood, exclude);
     const pick = rows.length
       ? mood
         ? weightedPick(rows, (r) => MOOD_POOL - rows.indexOf(r)) // más cercana, más peso
@@ -81,7 +125,7 @@ async function surprise(req, res) {
 
     if (pick) delete pick.score;
     res.setHeader("Cache-Control", "no-store"); // cada clic es otra tirada
-    return res.status(200).json({ mood, movie: pick, moods: Object.keys(MOODS) });
+    return res.status(200).json({ mood, source, movie: pick, moods: Object.keys(MOODS) });
   } catch (err) {
     console.error("❌ Error en surprise:", err.message);
     return res.status(500).json({ error: "No pude elegir una película ahora." });

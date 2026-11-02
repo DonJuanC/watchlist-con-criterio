@@ -11,6 +11,7 @@ import useNeighbors from "../hooks/useNeighbors";
 import useVisitorSeen, { markSeen, clearSeen } from "../hooks/useVisitorSeen";
 import MoviePosterCard from "./MoviePosterCard";
 import ShareMovieButton from "./ShareMovieButton";
+import BeyondSection from "./BeyondSection";
 
 // Órbita elíptica: más radio vertical que horizontal porque los pósters son 2:3.
 // Con radio igual, la vecina de arriba tapaba el título y el borde del póster central.
@@ -24,9 +25,10 @@ const REASON_LABEL = {
 };
 
 /**
- * @param {{ centerId: number|null, onSelect: (id: number) => void }} props
+ * @param {{ centerId: number|null, onSelect: (id: number) => void,
+ *           onPickExternal: (movie: object) => void }} props
  */
-export default function EgoView({ centerId, onSelect }) {
+export default function EgoView({ centerId, onSelect, onPickExternal }) {
   const { center, neighbors: localNeighbors } = useEgoGraph(centerId);
 
   // "Otras opciones": ids ya mostrados en páginas anteriores de ESTA película.
@@ -297,6 +299,16 @@ export default function EgoView({ centerId, onSelect }) {
             </button>
           )}
         </div>
+      )}
+
+      {/* Fuera de mi archivo: abierta sola cuando el visitante ya agotó lo mío */}
+      {!loading && (
+        <BeyondSection
+          seedIds={[center.id]}
+          label={center.title}
+          onPickExternal={onPickExternal}
+          defaultOpen={exhausted}
+        />
       )}
 
       {/* Botones de acción central */}
