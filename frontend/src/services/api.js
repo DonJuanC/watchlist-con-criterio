@@ -70,10 +70,12 @@ export function fetchMovie(id) {
   return fetchWithColdStartHandling(`/api/movies/${id}`, { method: "GET" });
 }
 
-/** GET /api/movies/:id/neighbors — vecinas con criterio (🔴 fuera, 🟢 sube, tope de director). */
-export function fetchNeighbors(id, limit = 6) {
+/** GET /api/movies/:id/neighbors — vecinas con criterio (🔴 fuera, 🟢 sube, tope de director).
+ *  `exclude`: ids vistos por el visitante o ya mostrados ("Otras opciones"). */
+export function fetchNeighbors(id, limit = 6, exclude = []) {
+  const ex = exclude.length ? `&exclude=${exclude.join(",")}` : "";
   return fetchWithColdStartHandling(
-    `/api/movies/${id}/neighbors?limit=${limit}`,
+    `/api/movies/${id}/neighbors?limit=${limit}${ex}`,
     {
       method: "GET",
     },
@@ -89,11 +91,11 @@ export function searchTmdb(q) {
 }
 
 /** POST /api/recommend — "si te gustó X…" para cualquier película de TMDB. */
-export function fetchRecommend(tmdbId) {
+export function fetchRecommend(tmdbId, exclude = []) {
   return fetchWithColdStartHandling("/api/recommend", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tmdbId }),
+    body: JSON.stringify({ tmdbId, exclude }),
   });
 }
 
@@ -105,6 +107,17 @@ export function fetchNextUp(limit = 6, offset = 0, mode = "affinity") {
       method: "GET",
     },
   );
+}
+
+/** GET /api/recommend/surprise — "Sorpréndeme": una película de mi archivo, al azar o por ánimo. */
+export function fetchSurprise(mood = null, exclude = []) {
+  const params = new URLSearchParams();
+  if (mood) params.set("mood", mood);
+  if (exclude.length) params.set("exclude", exclude.join(","));
+  const qs = params.toString();
+  return fetchWithColdStartHandling(`/api/recommend/surprise${qs ? `?${qs}` : ""}`, {
+    method: "GET",
+  });
 }
 
 /** GET /api/watch/:tmdbId — dónde ver una película en un país (datos de JustWatch vía TMDB). */

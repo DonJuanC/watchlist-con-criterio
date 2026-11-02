@@ -23,6 +23,7 @@ import { semanticSearch, fetchNextUp } from "../services/api";
 import useCineStore from "../store/useCineStore";
 import useTmdbSuggestions from "../hooks/useTmdbSuggestions";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
+import SurprisePick from "./SurprisePick";
 import LegalModal from "./LegalModal";
 import ConnectionDemo from "./landing/ConnectionDemo";
 import CriterioSection from "./landing/CriterioSection";
@@ -45,6 +46,9 @@ function shuffleArray(arr) {
 // El carrusel de spotlight sale de la landing v2: competía con el H1 y empujaba la
 // búsqueda bajo el fold. Se conserva el código detrás de esta bandera.
 const SHOW_SPOTLIGHT = false;
+// Las atmósferas como chips bajo el buscador quedan apagadas: "Sorpréndeme" con ánimos
+// cubre al que no sabe qué ver, y la búsqueda por sensación sigue funcionando al escribir.
+const SHOW_ATMOSPHERE_CHIPS = false;
 
 // Ejemplos clicables bajo el buscador: dos títulos del archivo y una sensación.
 const SEARCH_EXAMPLES = [
@@ -893,7 +897,7 @@ export default function HomeSearch({
       </div>
 
       {/* Chips de Atmósferas Cinéfilas Reales */}
-      {status === "idle" && (
+      {SHOW_ATMOSPHERE_CHIPS && status === "idle" && (
         <div className="mt-4 -mx-4 flex w-[calc(100%+2rem)] flex-nowrap items-center gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:w-auto sm:max-w-3xl sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0">
           {CINEMATIC_MOODS.map((mood) => (
             <button
@@ -934,6 +938,9 @@ export default function HomeSearch({
           ))}
         </p>
       )}
+
+      {/* 3b. Sin película en mente: una sola, al azar o por ánimo */}
+      {status === "idle" && <SurprisePick onPick={onPick} />}
 
       {/* 4. Así funciona (ejemplo real) y Mi criterio (reseñas) */}
       {status === "idle" && <ConnectionDemo onPick={onPick} />}
