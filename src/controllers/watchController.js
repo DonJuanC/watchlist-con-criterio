@@ -2,26 +2,21 @@
 // "Dónde verla": plataformas por país para cualquier película de TMDB (datos de JustWatch).
 // No se guarda en Neon porque la disponibilidad cambia seguido: caché en memoria por 6 h.
 
-const { getWatchProviders } = require("../services/tmdb");
+const { getWatchProviders, getRegionProviders } = require("../services/tmdb");
+const { dedupeByKey, regionPlatforms } = require("../services/platforms");
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const cache = new Map(); // tmdbId -> { at, results } (todos los países de una vez)
+const REGION_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_PLATFORMS = 30;
+const regionCache = new Map(); // country -> { at, platforms }
 
-// TMDB lista a veces la misma plataforma dos veces ("HBO Max" y "HBO Max Amazon Channel"):
-// si está la directa, se oculta la del canal de Amazon.
+// Plataformas limpias (sin canales ni variantes duplicadas) y con `key` para cruzar con
+// "mis plataformas" del visitante. Ver src/services/platforms.js.
 function cleanProviders(list = []) {
-  const names = new Set(list.map((p) => p.provider_name));
-  const seen = new Set();
-  return [...list]
-    .sort((a, b) => (a.display_priority ?? 999) - (b.display_priority ?? 999))
-    .filter((p) => {
-      const base = p.provider_name.replace(/ Amazon Channel$/, "");
-      if (base !== p.provider_name && names.has(base)) return false;
-      if (seen.has(p.provider_name)) return false;
-      seen.add(p.provider_name);
-      return true;
-    })
-    .map((p) => ({ id: p.provider_id, name: p.provider_name, logo_path: p.logo_path }));
+  return dedupeByKey(
+    [...list].sort((a, b) => (a.display_priority ?? 999) - (b.display_priority ?? 999)),
+  );
 }
 
 async function getCachedProviders(tmdbId) {
@@ -68,4 +63,30 @@ async function getWatch(req, res) {
   }
 }
 
-module.exports = { getWatch };
+/**
+ * GET /api/watch/platforms?country=CO
+ * Plataformas de suscripción de un país, la más popular primero (prioridad de JustWatch).
+ * Respuesta: { country, platforms: [{ id, key, name, logo_path }] }
+ */
+async function getPlatforms(req, res) {
+  const country = String(req.query.country || "").toUpperCase();
+  if (!/^[A-Z]{2}$/.test(country)) {
+    return res.status(400).json({ error: "country debe ser un código de 2 letras (ej. CO)." });
+  }
+  try {
+    const hit = regionCache.get(country);
+    let platforms = hit && Date.now() - hit.at < REGION_TTL_MS ? hit.platforms : null;
+    if (!platforms) {
+      platforms = regionPlatforms(await getRegionProviders(country), country).slice(0, MAX_PLATFORMS);
+      // Un país sin datos no se guarda: puede ser una falla pasajera de TMDB.
+      if (platforms.length) regionCache.set(country, { at: Date.now(), platforms });
+    }
+    res.setHeader("Cache-Control", "public, max-age=21600, stale-while-revalidate=86400");
+    return res.status(200).json({ country, platforms });
+  } catch (err) {
+    console.error("❌ Error en getPlatforms:", err.message);
+    return res.status(502).json({ error: "No se pudo consultar las plataformas del país." });
+  }
+}
+
+module.exports = { getWatch, getPlatforms };

@@ -17,7 +17,7 @@ const { recommend } = require("../controllers/recommendController");
 const { surprise } = require("../controllers/surpriseController");
 const { beyond } = require("../controllers/beyondController");
 const { getNextUp } = require("../controllers/nextUpController");
-const { getWatch } = require("../controllers/watchController");
+const { getWatch, getPlatforms } = require("../controllers/watchController");
 const { triggerSync } = require("../controllers/syncController");
 const adminRouter = require("./admin");
 
@@ -33,6 +33,8 @@ router.post("/recommend", recommend);
 router.get("/recommend/next", getNextUp);
 router.get("/recommend/surprise", surprise);
 router.post("/beyond", beyond);
+// /watch/platforms va antes que /watch/:tmdbId para que "platforms" no se lea como id.
+router.get("/watch/platforms", getPlatforms);
 router.get("/watch/:tmdbId", getWatch);
 router.all("/sync", triggerSync);
 

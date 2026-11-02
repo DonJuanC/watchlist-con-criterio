@@ -190,6 +190,29 @@ async function getWatchProviders(tmdbId) {
 }
 
 /**
+ * Catálogo de plataformas de un país, con su prioridad de despliegue (más popular primero).
+ * @param {string} country código ISO de 2 letras
+ * @returns {Promise<Array<{provider_id, provider_name, logo_path, display_priority, display_priorities}>>}
+ */
+async function getRegionProviders(country) {
+  const fetchList = async (qs) => {
+    const res = await fetch(`${TMDB_BASE_URL}/watch/providers/movie?api_key=${API_KEY}${qs}`);
+    if (!res.ok) {
+      const err = new Error(`TMDB watch/providers/movie falló (${res.status}) para ${country}`);
+      err.status = res.status;
+      throw err;
+    }
+    return (await res.json()).results || [];
+  };
+  const regional = await fetchList(`&watch_region=${encodeURIComponent(country)}`);
+  if (regional.length) return regional;
+  // TMDB a veces devuelve vacío para un país con datos (pasa con MX). El catálogo global
+  // trae la prioridad de cada país en display_priorities: se usa como respaldo.
+  const global = await fetchList("");
+  return global.filter((p) => p.display_priorities && country in p.display_priorities);
+}
+
+/**
  * Tráiler oficial en YouTube desde TMDB.
  * Filtra ESTRICTAMENTE por official === true, site === "YouTube" y type === "Trailer".
  * @param {number} tmdbId
@@ -284,5 +307,6 @@ module.exports = {
   searchMovies,
   getMovieForEmbedding,
   getWatchProviders,
+  getRegionProviders,
   getOfficialTrailer,
 };
