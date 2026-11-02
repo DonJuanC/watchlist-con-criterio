@@ -189,11 +189,17 @@ export default function App() {
     setView("home");
   }, []);
 
-  const handlePick = useCallback((id) => {
+  // `openInfo`: la ficha llega abierta (desde Sorpréndeme, donde se elige UNA película).
+  const [openInfoFor, setOpenInfoFor] = useState(null);
+  const [externalOpenInfo, setExternalOpenInfo] = useState(false);
+
+  const handlePick = useCallback((id, opts) => {
+    setOpenInfoFor(opts?.openInfo ? id : null);
     navigate("ego", id);
   }, [navigate]);
 
-  const handlePickExternal = useCallback((movie) => {
+  const handlePickExternal = useCallback((movie, opts) => {
+    setExternalOpenInfo(Boolean(opts?.openInfo));
     setExternalMovie(movie);
     setView("external");
   }, []);
@@ -251,6 +257,7 @@ export default function App() {
               movie={externalMovie}
               onPick={handlePick}
               onPickExternal={handlePickExternal}
+              openInfo={externalOpenInfo}
             />
           </div>
         )}
@@ -281,7 +288,12 @@ export default function App() {
         {view === "ego" && (
           <div className="h-full overflow-y-auto pt-2 animate-view-enter">
             {graphReady && (
-              <EgoView centerId={centerId} onSelect={handlePick} onPickExternal={handlePickExternal} />
+              <EgoView
+                centerId={centerId}
+                onSelect={handlePick}
+                onPickExternal={handlePickExternal}
+                openInfoFor={openInfoFor}
+              />
             )}
             {!graphReady && graphError && !isLoading && (
               <GraphError message={graphError} />

@@ -239,8 +239,15 @@ function TmdbAttribution() {
 /**
  * @param {{ movieId: number }} props
  */
-export default function MovieInfo({ movieId }) {
-  const { data: movie, loading, error } = useMovieDetail(movieId);
+/**
+ * @param {{ movieId?: number, tmdbId?: number }} props
+ *   movieId: película del catálogo. tmdbId: película de fuera del catálogo (sin mi criterio).
+ */
+export default function MovieInfo({ movieId, tmdbId }) {
+  const isExternal = movieId == null && tmdbId != null;
+  const { data: movie, loading, error } = useMovieDetail(isExternal ? tmdbId : movieId, {
+    external: isExternal,
+  });
   const [showTrailer, setShowTrailer] = useState(false);
 
   if (loading) {
@@ -252,6 +259,9 @@ export default function MovieInfo({ movieId }) {
       </div>
     );
   }
+
+  // Resultó estar en mi catálogo (p. ej. una pendiente): ficha normal.
+  if (isExternal && movie?.in_catalog) return <MovieInfo movieId={movie.in_catalog} />;
 
   if (error || !movie) {
     return (
@@ -309,7 +319,7 @@ export default function MovieInfo({ movieId }) {
               <span className="sm:hidden">Tráiler</span>
             </button>
           )}
-          <ShareMovieButton movie={movie} />
+          {!isExternal && <ShareMovieButton movie={movie} />}
         </div>
       </div>
 
@@ -329,6 +339,13 @@ export default function MovieInfo({ movieId }) {
       {movie.overview && (
         <p className="text-sm leading-relaxed text-neutral-300 font-normal">
           {movie.overview}
+        </p>
+      )}
+
+      {isExternal && (
+        <p className="rounded-xl border border-dashed border-white/15 px-4 py-3 text-xs text-neutral-400">
+          No está en mi archivo: no la he visto, así que no tiene mi criterio. Abajo te digo
+          qué de lo que sí vi se le parece.
         </p>
       )}
 

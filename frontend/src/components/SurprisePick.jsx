@@ -176,7 +176,9 @@ export default function SurprisePick({ onPick, onPickExternal }) {
           >
             <button
               type="button"
-              onClick={() => (isExternal ? onPickExternal(movie) : onPick(movie.id))}
+              onClick={() =>
+                isExternal ? onPickExternal(movie, { openInfo: true }) : onPick(movie.id, { openInfo: true })
+              }
               aria-label={`Abrir ${movie.title}`}
               className="shrink-0 self-start rounded-xl focus-ring-cinematic"
             >
@@ -243,10 +245,14 @@ export default function SurprisePick({ onPick, onPickExternal }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => (isExternal ? onPickExternal(movie) : onPick(movie.id))}
+                  onClick={() =>
+                    isExternal
+                      ? onPickExternal(movie, { openInfo: true })
+                      : onPick(movie.id, { openInfo: true })
+                  }
                   className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs font-medium text-accent-300 hover:text-accent-200 focus-ring-cinematic"
                 >
-                  {isExternal ? "Parecidas de mi archivo" : "Dónde verla y parecidas"}{" "}
+                  Ver ficha y parecidas{" "}
                   <ArrowRight size={13} />
                 </button>
               </div>

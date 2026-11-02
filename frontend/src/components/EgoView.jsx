@@ -3,7 +3,7 @@
 // Pósters en proporción real vertical 2:3, líneas con brillo y filamentos de neón,
 // microinteracción de resplandor en hover y fondo ambiental inmersivo.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, Sparkles, User, Info, Check, RefreshCw, Eye, RotateCcw } from "lucide-react";
 import { useEgoGraph } from "../store/useCineStore";
 import MovieInfo from "./MovieInfo";
@@ -26,9 +26,11 @@ const REASON_LABEL = {
 
 /**
  * @param {{ centerId: number|null, onSelect: (id: number) => void,
- *           onPickExternal: (movie: object) => void }} props
+ *           onPickExternal: (movie: object) => void,
+ *           openInfoFor?: number|null }} props
+ *   openInfoFor: si coincide con el centro, la ficha llega abierta (p. ej. desde Sorpréndeme).
  */
-export default function EgoView({ centerId, onSelect, onPickExternal }) {
+export default function EgoView({ centerId, onSelect, onPickExternal, openInfoFor = null }) {
   const { center, neighbors: localNeighbors } = useEgoGraph(centerId);
 
   // "Otras opciones": ids ya mostrados en páginas anteriores de ESTA película.
@@ -59,7 +61,20 @@ export default function EgoView({ centerId, onSelect, onPickExternal }) {
     setPager({ center: centerId, shown: [] });
   };
 
-  const [showInfo, setShowInfo] = useState(false);
+  // La ficha se cierra al cambiar de película, salvo que se llegue pidiéndola abierta.
+  const [info, setInfo] = useState({ center: centerId, open: openInfoFor === centerId });
+  const showInfo = info.center === centerId ? info.open : openInfoFor === centerId;
+  const setShowInfo = (v) =>
+    setInfo({ center: centerId, open: typeof v === "function" ? v(showInfo) : v });
+  // Al llegar con la ficha pedida, se lleva la vista hasta ella (en móvil queda bajo la órbita).
+  useEffect(() => {
+    if (openInfoFor == null || openInfoFor !== centerId) return;
+    const t = setTimeout(
+      () => document.getElementById("ego-movie-info")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      350,
+    );
+    return () => clearTimeout(t);
+  }, [openInfoFor, centerId]);
   const [hoveredNeighborId, setHoveredNeighborId] = useState(null);
 
   // Posiciones orbitales en círculo

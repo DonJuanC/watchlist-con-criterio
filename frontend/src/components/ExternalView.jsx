@@ -3,11 +3,12 @@
 // Formato vertical 2:3, fondo ambiental cinemático y tarjetas con afinidad.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, User, Check, RefreshCw, RotateCcw } from "lucide-react";
+import { Sparkles, User, Check, RefreshCw, RotateCcw, Info, ChevronDown } from "lucide-react";
 import { fetchRecommend } from "../services/api";
 import useVisitorSeen, { markSeen, clearSeen } from "../hooks/useVisitorSeen";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 import BeyondSection from "./BeyondSection";
+import MovieInfo from "./MovieInfo";
 
 const REASON_LABEL = {
   same_director: "Mismo director",
@@ -20,7 +21,8 @@ const REASON_LABEL = {
  */
 const NONE = [];
 
-export default function ExternalView({ movie, onPick, onPickExternal }) {
+export default function ExternalView({ movie, onPick, onPickExternal, openInfo = false }) {
+  const [showInfo, setShowInfo] = useState(openInfo);
   const [state, setState] = useState({ status: "loading", data: null, error: "" });
   const sectionRef = useRef(null);
   // Al llegar desde "Fuera de mi archivo" se reutiliza el mismo contenedor con scroll.
@@ -91,6 +93,26 @@ export default function ExternalView({ movie, onPick, onPickExternal }) {
           .filter(Boolean)
           .join(" · ")}
       </p>
+
+      <button
+        type="button"
+        onClick={() => setShowInfo((v) => !v)}
+        aria-expanded={showInfo}
+        aria-controls="external-movie-info"
+        className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-neutral-200 backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 hover:text-white focus-ring-cinematic"
+      >
+        <Info size={14} className="text-neutral-400" />
+        Sobre esta película
+        <ChevronDown size={14} className={`transition-transform duration-300 ${showInfo ? "rotate-180" : ""}`} />
+      </button>
+      {showInfo && (
+        <div
+          id="external-movie-info"
+          className="mt-4 w-full rounded-2xl border border-white/10 bg-neutral-900/80 p-5 text-left backdrop-blur-xl shadow-2xl"
+        >
+          <MovieInfo tmdbId={movie.tmdb_id} />
+        </div>
+      )}
 
       {state.status === "loading" && (
         <div className="mt-8 w-full">

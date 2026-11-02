@@ -10,6 +10,7 @@ const { getGraph } = require("../controllers/graphController");
 const {
   getMovieById,
   searchExternal,
+  getExternalMovie,
 } = require("../controllers/moviesController");
 const { getNeighbors } = require("../controllers/neighborsController");
 const { recommend } = require("../controllers/recommendController");
@@ -23,6 +24,7 @@ const adminRouter = require("./admin");
 router.use("/admin", adminRouter);
 
 router.get("/movies/search", searchExternal);
+router.get("/movies/external/:tmdbId", getExternalMovie);
 router.get("/movies/:id/neighbors", getNeighbors);
 router.post("/search/semantic", semanticSearch);
 router.get("/graph", getGraph);

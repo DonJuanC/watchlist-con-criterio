@@ -3,7 +3,7 @@
 // sigue liviano (no carga 295 sinopsis de golpe).
 
 const { query } = require("../db");
-const { searchMovies, getOfficialTrailer } = require("../services/tmdb");
+const { searchMovies, getOfficialTrailer, getMovieForEmbedding } = require("../services/tmdb");
 
 const trailerCache = new Map(); // tmdb_id -> trailer | null
 
@@ -60,6 +60,54 @@ async function getMovieById(req, res) {
   }
 }
 
+const externalCache = new Map(); // tmdb_id -> ficha externa
+const EXTERNAL_CACHE_MAX = 500;
+
+/**
+ * GET /api/movies/external/:tmdbId
+ * Ficha de una película FUERA del catálogo (las de "Fuera de mi archivo" o la búsqueda
+ * abierta): sinopsis, géneros, director y tráiler. Sin criterio personal: no la he visto.
+ * Si resulta estar en el catálogo, devuelve { in_catalog: id } para abrir la ficha normal.
+ */
+async function getExternalMovie(req, res) {
+  const tmdbId = Number(req.params.tmdbId);
+  if (!Number.isInteger(tmdbId) || tmdbId <= 0) {
+    return res.status(400).json({ error: "El tmdbId debe ser un entero positivo." });
+  }
+  try {
+    const { rows } = await query(`SELECT id FROM movies WHERE tmdb_id = $1`, [tmdbId]);
+    if (rows.length) return res.status(200).json({ in_catalog: rows[0].id });
+
+    if (!externalCache.has(tmdbId)) {
+      const [d, trailer] = await Promise.all([
+        getMovieForEmbedding(tmdbId),
+        getOfficialTrailer(tmdbId),
+      ]);
+      externalCache.set(tmdbId, {
+        tmdb_id: d.tmdb_id,
+        title: d.display_title,
+        title_es: d.title_es,
+        release_year: d.release_year,
+        poster_path: d.poster_path,
+        director: d.director,
+        genres: d.genres,
+        overview: d.overview,
+        trailer,
+        external: true,
+      });
+      if (externalCache.size > EXTERNAL_CACHE_MAX) {
+        externalCache.delete(externalCache.keys().next().value);
+      }
+    }
+    res.setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+    return res.status(200).json(externalCache.get(tmdbId));
+  } catch (err) {
+    if (err.status === 404) return res.status(404).json({ error: "Esa película no existe en TMDB." });
+    console.error("❌ Error en getExternalMovie:", err.message);
+    return res.status(500).json({ error: "Error al obtener la película." });
+  }
+}
+
 /**
  * GET /api/movies/search?q=texto
  * Resultados de TMDB, marcando cuáles ya están en el catálogo.
@@ -95,4 +143,4 @@ async function searchExternal(req, res) {
   }
 }
 
-module.exports = { getMovieById, searchExternal };
+module.exports = { getMovieById, searchExternal, getExternalMovie };

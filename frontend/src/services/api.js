@@ -70,6 +70,11 @@ export function fetchMovie(id) {
   return fetchWithColdStartHandling(`/api/movies/${id}`, { method: "GET" });
 }
 
+/** GET /api/movies/external/:tmdbId — ficha de una película fuera del catálogo. */
+export function fetchExternalMovie(tmdbId) {
+  return fetchWithColdStartHandling(`/api/movies/external/${tmdbId}`, { method: "GET" });
+}
+
 /** GET /api/movies/:id/neighbors — vecinas con criterio (🔴 fuera, 🟢 sube, tope de director).
  *  `exclude`: ids vistos por el visitante o ya mostrados ("Otras opciones"). */
 export function fetchNeighbors(id, limit = 6, exclude = []) {
