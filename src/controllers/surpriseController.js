@@ -10,7 +10,6 @@ const { query } = require("../db");
 const { generateEmbedding } = require("../services/embeddings");
 const { parseExclude } = require("../services/neighborRanking");
 const { beyondFromSeeds } = require("../services/beyond");
-const { getCriticRatings } = require("../services/omdb");
 
 const BEYOND_SEEDS = 6; // semillas de mi archivo para "fuera de mi archivo"
 const BEYOND_POOL = 8; // se sortea entre las 8 más cercanas al ánimo
@@ -96,11 +95,9 @@ async function surpriseBeyond(mood, excludeTmdb) {
   const ranked = (await beyondFromSeeds(seeds, excludeTmdb, { refVector })).slice(0, BEYOND_POOL);
   if (!ranked.length) return null;
   const pick = weightedPick(ranked, (r) => BEYOND_POOL + 1 - ranked.indexOf(r));
-  const critics = await getCriticRatings(pick.movie.tmdb_id); // una sola consulta por sorteo
+  // Las notas ya vienen del piso de crítica de beyond.js.
   return {
     ...pick.movie,
-    rt_score: critics.rt_score,
-    imdb_rating: critics.imdb_rating,
     external: true,
     because: pick.because,
   };

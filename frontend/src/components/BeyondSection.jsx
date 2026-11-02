@@ -85,7 +85,7 @@ export default function BeyondSection({
       </span>
       <h3 className="mt-1 font-serif text-xl text-white">Más allá de lo que he visto</h3>
       <p className="mx-auto mt-1 max-w-sm text-xs text-neutral-400">
-        No las he visto: las sugiere TMDB a partir de {label} y de mis películas parecidas.
+        No las he visto: las sugiere TMDB a partir de {label} y de mis películas parecidas. Solo entran las que tienen 50% o más en Rotten Tomatoes.
       </p>
 
       {loading && (

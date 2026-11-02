@@ -179,7 +179,7 @@ export default function SurprisePick({ onPick, onPickExternal }) {
         </div>
         {source === "beyond" && (
           <p className="-mt-1 text-[11px] text-neutral-400">
-            Películas que no he visto, sugeridas por TMDB a partir de las mías.
+            Películas que no he visto, sugeridas por TMDB a partir de las mías. Solo con 50% o más en Rotten Tomatoes.
           </p>
         )}
       </div>

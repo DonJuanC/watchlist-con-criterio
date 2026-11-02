@@ -13,6 +13,7 @@
 
 const { query } = require("../db");
 const { getRecommendations, getMovieForEmbedding } = require("./tmdb");
+const { ratingsFor, passesCriticFloor } = require("./externalRatings");
 const {
   generateEmbeddings,
   buildMovieSemanticText,
@@ -112,6 +113,26 @@ async function embedMissing(tmdbIds) {
  * @returns {Promise<Array<{ movie, because: Array<{ tmdb_id, title, id }>, score, sim }>>} ordenadas
  */
 async function beyondFromSeeds(seedTmdbIds, excludeTmdb = new Set(), opts = {}) {
+  return applyCriticFloor(await rankCandidates(seedTmdbIds, excludeTmdb, opts));
+}
+
+/**
+ * Piso de crítica (ver externalRatings.js). Lo que hoy no se pudo verificar (cuota de OMDb)
+ * no sale: precisión primero; queda para cuando su nota esté en la base.
+ * Las notas viajan en `movie` para que el frontend no tenga que volver a pedirlas.
+ */
+async function applyCriticFloor(ranked) {
+  if (!ranked.length) return ranked;
+  const ratings = await ratingsFor(ranked.map((c) => c.movie.tmdb_id));
+  return ranked
+    .filter((c) => passesCriticFloor(ratings.get(c.movie.tmdb_id)))
+    .map((c) => {
+      const r = ratings.get(c.movie.tmdb_id);
+      return { ...c, movie: { ...c.movie, rt_score: r.rt_score, imdb_rating: r.imdb_rating } };
+    });
+}
+
+async function rankCandidates(seedTmdbIds, excludeTmdb, opts) {
   const { primaryCount = Infinity, refVector = null } = opts;
   const seeds = [...new Set(seedTmdbIds)].filter((n) => Number.isInteger(n) && n > 0).slice(0, MAX_SEEDS);
   if (!seeds.length) return [];
