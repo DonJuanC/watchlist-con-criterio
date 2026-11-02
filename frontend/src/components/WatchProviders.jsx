@@ -1,32 +1,28 @@
 // src/components/WatchProviders.jsx
 // "Dónde verla" dentro de la ficha: plataformas en el país elegido (datos de JustWatch vía
-// TMDB, con su atribución). Caché en memoria por película + país.
+// TMDB, con su atribución). Caché en memoria por película + país. Las plataformas del
+// visitante van primero; si aún no las eligió, se le ofrece hacerlo aquí mismo.
 
-import { useEffect, useMemo, useState } from "react";
-import { Loader2, Tv } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ChevronDown, Loader2, Tv } from "lucide-react";
 import { fetchWatchProviders } from "../services/api";
-import useCountry from "../hooks/useCountry";
+import useCountry, { useMyPlatforms } from "../hooks/useCountry";
+import { countryName } from "../lib/countries";
+import { isMine, LOGO_BASE } from "../lib/platforms";
+import CountrySelect from "./CountrySelect";
+import PlatformPicker from "./PlatformPicker";
 
-const LOGO_BASE = "https://image.tmdb.org/t/p/w45";
-// Países ofrecidos en el selector (el detectado se agrega si no está).
-const COUNTRIES = ["CO", "MX", "AR", "CL", "PE", "EC", "VE", "UY", "ES", "US", "CA", "GB", "BR"];
 const cache = new Map(); // `${tmdbId}:${country}` -> respuesta
 
-let regionNames = null;
-function countryName(code) {
-  try {
-    regionNames ??= new Intl.DisplayNames(["es"], { type: "region" });
-    return regionNames.of(code) || code;
-  } catch {
-    return code;
-  }
-}
-
-function ProviderRow({ label, providers }) {
+function ProviderRow({ label, providers, highlight = false }) {
   if (!providers?.length) return null;
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-      <span className="w-20 shrink-0 text-xs text-neutral-400">{label}</span>
+      <span
+        className={`w-20 shrink-0 text-xs ${highlight ? "font-medium text-emerald-300" : "text-neutral-400"}`}
+      >
+        {label}
+      </span>
       {providers.map((p) => (
         <span key={p.id} className="inline-flex items-center gap-1.5 text-xs text-neutral-200">
           {p.logo_path && (
@@ -47,7 +43,8 @@ function ProviderRow({ label, providers }) {
 /** @param {{ tmdbId: number }} props */
 export default function WatchProviders({ tmdbId }) {
   const country = useCountry((s) => s.country);
-  const setCountry = useCountry((s) => s.setCountry);
+  const mine = useMyPlatforms();
+  const [pickerOpen, setPickerOpen] = useState(false);
   const key = `${tmdbId}:${country}`;
   const [state, setState] = useState({ forKey: null, data: null, error: "" });
 
@@ -71,16 +68,13 @@ export default function WatchProviders({ tmdbId }) {
     };
   }, [tmdbId, country, key]);
 
-  const options = useMemo(
-    () => (COUNTRIES.includes(country) ? COUNTRIES : [country, ...COUNTRIES]),
-    [country],
-  );
-
   if (!tmdbId) return null;
   const current = state.forKey === key ? state : { data: cache.get(key) ?? null, error: "" };
   const loading = !current.data && !current.error;
   const data = current.data;
   const empty = data && !data.stream.length && !data.rent.length && !data.buy.length;
+  const inMine = data ? data.stream.filter((p) => isMine(p, mine)) : [];
+  const otherStream = data ? data.stream.filter((p) => !isMine(p, mine)) : [];
 
   return (
     <section className="rounded-lg border border-white/10 p-3">
@@ -88,20 +82,7 @@ export default function WatchProviders({ tmdbId }) {
         <h4 className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-300">
           <Tv size={14} /> Dónde verla
         </h4>
-        <label className="inline-flex items-center gap-1 text-xs text-neutral-400">
-          <span className="sr-only">País</span>
-          <select
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            className="rounded-md border border-white/10 bg-neutral-900 px-1.5 py-0.5 text-xs text-neutral-200 outline-none focus-ring-cinematic"
-          >
-            {options.map((c) => (
-              <option key={c} value={c}>
-                {countryName(c)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <CountrySelect />
       </div>
 
       {loading && (
@@ -119,9 +100,41 @@ export default function WatchProviders({ tmdbId }) {
       )}
       {data && !empty && (
         <div className="space-y-1.5">
-          <ProviderRow label="Incluida en" providers={data.stream} />
+          <ProviderRow label="En las tuyas" providers={inMine} highlight />
+          <ProviderRow label={inMine.length ? "También en" : "Incluida en"} providers={otherStream} />
           <ProviderRow label="Alquiler" providers={data.rent} />
           <ProviderRow label="Compra" providers={data.buy} />
+        </div>
+      )}
+
+      {data && (
+        <div className="mt-2.5 border-t border-white/[0.06] pt-2">
+          <button
+            type="button"
+            onClick={() => setPickerOpen((v) => !v)}
+            aria-expanded={pickerOpen}
+            className="inline-flex items-center gap-1 rounded text-[11px] text-neutral-400 hover:text-white focus-ring-cinematic"
+          >
+            {mine.length ? (
+              <>
+                <Check size={11} className="text-emerald-400" aria-hidden="true" />
+                {mine.length === 1 ? "1 plataforma tuya" : `${mine.length} plataformas tuyas`} en{" "}
+                {countryName(country)} · Editar
+              </>
+            ) : (
+              "¿Cuáles tienes? Elige tus plataformas"
+            )}
+            <ChevronDown
+              size={11}
+              className={`transition-transform ${pickerOpen ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
+          </button>
+          {pickerOpen && (
+            <div className="mt-2">
+              <PlatformPicker top={6} />
+            </div>
+          )}
         </div>
       )}
 

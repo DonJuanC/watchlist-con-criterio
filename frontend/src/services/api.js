@@ -138,6 +138,14 @@ export function fetchBeyond({ seeds = [], seedIds = [], exclude = [], limit = 6,
 }
 
 /** GET /api/watch/:tmdbId — dónde ver una película en un país (datos de JustWatch vía TMDB). */
+/** GET /api/watch/platforms — plataformas de suscripción de un país, la más popular primero. */
+export function fetchRegionPlatforms(country) {
+  return fetchWithColdStartHandling(
+    `/api/watch/platforms?country=${encodeURIComponent(country)}`,
+    { method: "GET" },
+  );
+}
+
 export function fetchWatchProviders(tmdbId, country) {
   return fetchWithColdStartHandling(
     `/api/watch/${tmdbId}?country=${encodeURIComponent(country)}`,

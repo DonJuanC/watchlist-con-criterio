@@ -1,28 +1,24 @@
 // src/components/NextUpView.jsx
 // Fase 2: "¿Qué veo hoy?" — recomendador cinéfilo sobre la lista de pendientes:
 // Formato vertical 2:3, razones de afinidad destacadas como sellos de recomendación,
-// esqueletos de carga animados y filtros en vivo por plataforma de streaming (JustWatch vía TMDB).
+// esqueletos de carga animados y filtro por las plataformas del visitante (JustWatch vía TMDB).
+// País y plataformas son los de "Cómo ves cine" (useCountry): los mismos de la ficha.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RefreshCw, Search, X, Popcorn, Tv, Globe, Filter, Sparkles, User, Check } from "lucide-react";
+import { RefreshCw, Search, X, Popcorn, Tv, Filter, Sparkles, User } from "lucide-react";
 import { fetchNextUp, semanticSearch, fetchWatchProviders } from "../services/api";
-import useCountry from "../hooks/useCountry";
+import useCountry, { useMyPlatforms } from "../hooks/useCountry";
+import useRegionPlatforms from "../hooks/useRegionPlatforms";
+import { countryName } from "../lib/countries";
+import { isMine, LOGO_BASE, normalizePlatformName } from "../lib/platforms";
+import CountrySelect from "./CountrySelect";
+import PlatformPicker from "./PlatformPicker";
 import MovieInfo from "./MovieInfo";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 
 const LIMIT = 12; // 12 opciones para dar suficiente variedad al filtrar por plataforma
-const LOGO_BASE = "https://image.tmdb.org/t/p/w45";
-const COUNTRIES = ["CO", "MX", "AR", "CL", "PE", "EC", "VE", "UY", "ES", "US", "CA", "GB", "BR"];
-
-let regionNames = null;
-function countryName(code) {
-  try {
-    regionNames ??= new Intl.DisplayNames(["es"], { type: "region" });
-    return regionNames.of(code) || code;
-  } catch {
-    return code;
-  }
-}
+// Filtro de disponibilidad: todo, solo en mis plataformas, o en cualquier suscripción.
+const FILTERS = { ALL: "all", MINE: "mine", ANY: "any" };
 
 export default function NextUpView() {
   const [state, setState] = useState({
@@ -36,20 +32,19 @@ export default function NextUpView() {
   const [activeMood, setActiveMood] = useState("");
   const [recommendMode, setRecommendMode] = useState("affinity"); // "affinity" | "director"
   const [selectedId, setSelectedId] = useState(null);
-  const [selectedProviders, setSelectedProviders] = useState(() => {
-    try {
-      const saved = localStorage.getItem("watchlist_selected_providers");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [streamOnly, setStreamOnly] = useState(false);
+  const mine = useMyPlatforms();
+  // Con plataformas elegidas, la vista arranca filtrando por ellas.
+  const [filter, setFilter] = useState(() => (mine.length ? FILTERS.MINE : FILTERS.ALL));
+  const [pickerOpen, setPickerOpen] = useState(() => mine.length === 0);
   const [providersMap, setProvidersMap] = useState({});
   const [providersLoading, setProvidersLoading] = useState(false);
 
   const country = useCountry((s) => s.country);
-  const setCountry = useCountry((s) => s.setCountry);
+  const { platforms: regionPlatforms } = useRegionPlatforms(country);
+  const mineNames = useMemo(
+    () => mine.map((k) => regionPlatforms.find((p) => p.key === k)?.name ?? k),
+    [mine, regionPlatforms],
+  );
 
   const requestIdRef = useRef(0);
   const infoRef = useRef(null);
@@ -141,86 +136,33 @@ export default function NextUpView() {
 
   const handleMore = () => load(activeMood, hasMore ? offset + LIMIT : 0);
 
-  // Obtener plataformas de streaming disponibles en el lote actual
-  const availablePlatforms = useMemo(() => {
-    const map = new Map();
-    for (const it of items) {
-      const provs = providersMap[it.node.tmdb_id]?.stream;
-      if (Array.isArray(provs)) {
-        for (const p of provs) {
-          const cleanName = p.name.replace(/ Amazon Channel$/, "").replace(/ with Ads$/, "");
-          if (!map.has(cleanName)) {
-            map.set(cleanName, {
-              id: p.id,
-              name: cleanName,
-              logo_path: p.logo_path,
-            });
-          }
-        }
-      }
-    }
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [items, providersMap]);
+  // Si quita todas sus plataformas, el filtro "las mías" deja de tener sentido.
+  useEffect(() => {
+    if (!mine.length && filter === FILTERS.MINE) setFilter(FILTERS.ALL);
+  }, [mine.length, filter]);
 
-  // Alternar selección de una plataforma (selección múltiple / OR lógico)
-  const handleToggleProvider = useCallback((name) => {
-    setStreamOnly(false);
-    setSelectedProviders((prev) => {
-      const exists = prev.some((p) => p.toLowerCase() === name.toLowerCase());
-      const next = exists
-        ? prev.filter((p) => p.toLowerCase() !== name.toLowerCase())
-        : [...prev, name];
-      try {
-        localStorage.setItem("watchlist_selected_providers", JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, []);
+  // Elegir la primera plataforma activa el filtro: es lo que el visitante vino a hacer.
+  const prevMineCount = useRef(mine.length);
+  useEffect(() => {
+    if (prevMineCount.current === 0 && mine.length > 0) setFilter(FILTERS.MINE);
+    prevMineCount.current = mine.length;
+  }, [mine.length]);
 
-  // Seleccionar todas (sin filtro por plataforma específica)
-  const handleSelectAll = useCallback(() => {
-    setSelectedProviders([]);
-    setStreamOnly(false);
-    try {
-      localStorage.removeItem("watchlist_selected_providers");
-    } catch {}
-  }, []);
-
-  // Filtrar por cualquier servicio de suscripción
-  const handleSelectStreamOnly = useCallback(() => {
-    setSelectedProviders([]);
-    setStreamOnly(true);
-    try {
-      localStorage.removeItem("watchlist_selected_providers");
-    } catch {}
-  }, []);
-
-  // Filtrado de las películas según una o varias plataformas seleccionadas
   const filteredItems = useMemo(() => {
-    // Si no hay plataformas seleccionadas ni filtro global, mostrar todas
-    if (!streamOnly && selectedProviders.length === 0) return items;
-
-    // Si se activa "Cualquier suscripción" sin plataformas específicas
-    if (streamOnly && selectedProviders.length === 0) {
-      return items.filter((it) => {
-        const streamList = providersMap[it.node.tmdb_id]?.stream;
-        return Array.isArray(streamList) && streamList.length > 0;
-      });
-    }
-
-    // Filtrar por una o varias plataformas (disponible en CUALQUIERA de las elegidas)
+    if (filter === FILTERS.ALL) return items;
     return items.filter((it) => {
       const streamList = providersMap[it.node.tmdb_id]?.stream;
       if (!Array.isArray(streamList) || streamList.length === 0) return false;
-
-      return streamList.some((p) => {
-        const clean = p.name.replace(/ Amazon Channel$/, "").replace(/ with Ads$/, "").toLowerCase();
-        return selectedProviders.some(
-          (sp) => clean.includes(sp.toLowerCase()) || sp.toLowerCase().includes(clean)
-        );
-      });
+      return filter === FILTERS.ANY || streamList.some((p) => isMine(p, mine));
     });
-  }, [items, providersMap, selectedProviders, streamOnly]);
+  }, [items, providersMap, filter, mine]);
+
+  const filterChip = (active) =>
+    `inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
+      active
+        ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/60 ring-1 ring-emerald-500/20"
+        : "bg-white/5 text-neutral-400 hover:text-white border border-white/5 hover:bg-white/10"
+    }`;
 
   return (
     <section
@@ -300,111 +242,54 @@ export default function NextUpView() {
         )}
       </form>
 
-      {/* Barra de Filtros de Streaming y Selector de País */}
-      {status === "done" && items.length > 0 && (
-        <div className="mt-5 w-full max-w-xl flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-white/[0.02] p-3 backdrop-blur-md">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2 mb-1 text-xs text-neutral-400 px-1">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 font-medium">
-                <Filter size={12} className="text-emerald-400" />
-                Filtrar por streaming:
-                {providersLoading && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" title="Cargando plataformas..." />
-                )}
-              </span>
+      {/* Disponibilidad: país, mis plataformas y filtro */}
+      <div className="mt-5 w-full max-w-xl flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-white/[0.02] p-3 text-left backdrop-blur-md">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-neutral-400">
+          <span className="flex items-center gap-1.5 font-medium">
+            <Filter size={12} className="text-emerald-400" />
+            Dónde verlas
+            {providersLoading && (
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" title="Cargando plataformas..." />
+            )}
+          </span>
+          <CountrySelect />
+        </div>
 
-              {selectedProviders.length > 0 && (
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-mono text-emerald-300">
-                  <span>
-                    {selectedProviders.length} seleccionada{selectedProviders.length > 1 ? "s" : ""}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleSelectAll}
-                    title="Quitar filtros"
-                    className="hover:text-white transition-colors"
-                  >
-                    <X size={10} />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Selector de País */}
-            <div className="flex items-center gap-1">
-              <Globe size={11} className="text-neutral-400" />
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                aria-label="Cambiar país para disponibilidad de streaming"
-                className="bg-transparent text-[11px] font-medium text-emerald-300 outline-none cursor-pointer hover:text-emerald-200"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c} value={c} className="bg-neutral-900 text-white">
-                    {countryName(c)} ({c})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Chips de plataformas con selección múltiple */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-            <button
-              type="button"
-              onClick={handleSelectAll}
-              className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
-                !streamOnly && selectedProviders.length === 0
-                  ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/60 ring-1 ring-emerald-500/20"
-                  : "bg-white/5 text-neutral-400 hover:text-white border border-white/5 hover:bg-white/10"
-              }`}
-            >
+        {status === "done" && items.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 px-1">
+            <button type="button" onClick={() => setFilter(FILTERS.ALL)} className={filterChip(filter === FILTERS.ALL)}>
               Todas ({items.length})
             </button>
-
-            <button
-              type="button"
-              onClick={handleSelectStreamOnly}
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
-                streamOnly
-                  ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/60 ring-1 ring-emerald-500/20"
-                  : "bg-white/5 text-neutral-400 hover:text-white border border-white/5 hover:bg-white/10"
-              }`}
-            >
+            {mine.length > 0 && (
+              <button type="button" onClick={() => setFilter(FILTERS.MINE)} className={filterChip(filter === FILTERS.MINE)}>
+                En mis plataformas
+              </button>
+            )}
+            <button type="button" onClick={() => setFilter(FILTERS.ANY)} className={filterChip(filter === FILTERS.ANY)}>
               <Tv size={11} />
               Cualquier suscripción
             </button>
-
-            {availablePlatforms.map((p) => {
-              const isSelected = selectedProviders.some(
-                (sp) => sp.toLowerCase() === p.name.toLowerCase()
-              );
-              return (
-                <button
-                  key={p.name}
-                  type="button"
-                  onClick={() => handleToggleProvider(p.name)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
-                    isSelected
-                      ? "bg-emerald-950/90 text-emerald-300 border border-emerald-500/70 ring-1 ring-emerald-500/30 shadow-sm font-semibold"
-                      : "bg-white/5 text-neutral-300 hover:text-white border border-white/10 hover:bg-white/10"
-                  }`}
-                >
-                  {p.logo_path && (
-                    <img
-                      src={`${LOGO_BASE}${p.logo_path}`}
-                      alt=""
-                      className="h-3.5 w-3.5 rounded object-cover"
-                    />
-                  )}
-                  <span>{p.name}</span>
-                  {isSelected && <Check size={11} className="text-emerald-400 shrink-0 font-bold" />}
-                </button>
-              );
-            })}
           </div>
+        )}
+
+        <div className="border-t border-white/10 px-1 pt-2">
+          <button
+            type="button"
+            onClick={() => setPickerOpen((v) => !v)}
+            aria-expanded={pickerOpen}
+            className="text-[11px] text-neutral-400 hover:text-white focus-ring-cinematic rounded"
+          >
+            {mine.length
+              ? `Mis plataformas en ${countryName(country)}: ${mineNames.join(", ")} · ${pickerOpen ? "Listo" : "Editar"}`
+              : `¿Qué plataformas tienes en ${countryName(country)}?`}
+          </button>
+          {pickerOpen && (
+            <div className="mt-2">
+              <PlatformPicker />
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {status === "loading" && (
         <div className="mt-8 grid w-full grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 sm:gap-x-4" aria-label="Cargando recomendaciones">
@@ -435,14 +320,14 @@ export default function NextUpView() {
         <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center max-w-md">
           <Tv size={24} className="mx-auto text-neutral-400 mb-2" />
           <p className="text-sm font-medium text-neutral-300">
-            {selectedProviders.length > 0
-              ? `Ninguna de estas recomendaciones está disponible en ${selectedProviders.join(", ")} en ${countryName(country)}.`
-              : `Ninguna de estas recomendaciones está disponible en suscripción en ${countryName(country)}.`}
+            {filter === FILTERS.MINE
+              ? `Ninguna de estas está en ${mineNames.join(", ")} en ${countryName(country)}.`
+              : `Ninguna de estas está en suscripción en ${countryName(country)}.`}
           </p>
           <div className="mt-4 flex justify-center gap-2">
             <button
               type="button"
-              onClick={handleSelectAll}
+              onClick={() => setFilter(FILTERS.ALL)}
               className="rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs text-white hover:bg-white/20 transition-all focus-ring-cinematic"
             >
               Ver todas ({items.length})
@@ -465,7 +350,10 @@ export default function NextUpView() {
           {filteredItems.map(({ node, because }) => {
             const isSelected = selectedId === node.id;
             const watchInfo = providersMap[node.tmdb_id];
-            const streamList = watchInfo?.stream || [];
+            // Las plataformas del visitante primero.
+            const streamList = [...(watchInfo?.stream || [])].sort(
+              (a, b) => isMine(b, mine) - isMine(a, mine),
+            );
 
             return (
               <button
@@ -498,7 +386,11 @@ export default function NextUpView() {
                       <span
                         key={p.id}
                         title={`En suscripción: ${p.name}`}
-                        className="inline-flex items-center gap-1 rounded bg-neutral-900/90 border border-white/10 px-1.5 py-0.5 text-[9px] font-medium text-neutral-300"
+                        className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-medium ${
+                          isMine(p, mine)
+                            ? "border-emerald-500/40 bg-emerald-950/70 text-emerald-200"
+                            : "border-white/10 bg-neutral-900/90 text-neutral-300"
+                        }`}
                       >
                         {p.logo_path && (
                           <img
@@ -507,7 +399,7 @@ export default function NextUpView() {
                             className="h-2.5 w-2.5 rounded-xs object-cover"
                           />
                         )}
-                        <span className="truncate max-w-[50px]">{p.name.replace(/ Amazon Channel$/, "")}</span>
+                        <span className="truncate max-w-[50px]">{normalizePlatformName(p.name)}</span>
                       </span>
                     ))}
                     {streamList.length > 2 && (
