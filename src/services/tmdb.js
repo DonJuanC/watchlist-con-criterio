@@ -166,6 +166,9 @@ async function getMovieForEmbedding(tmdbId) {
     poster_path: d.poster_path,
     genres: (d.genres || []).map((g) => g.name),
     director: crew.find((c) => c.job === "Director")?.name ?? null,
+    imdb_id: d.imdb_id || null,
+    vote_average: d.vote_average ?? null,
+    vote_count: d.vote_count ?? 0,
   };
 }
 

@@ -4,6 +4,7 @@
 
 const { query } = require("../db");
 const { searchMovies, getOfficialTrailer, getMovieForEmbedding } = require("../services/tmdb");
+const { getCriticRatings } = require("../services/omdb");
 
 const trailerCache = new Map(); // tmdb_id -> trailer | null
 
@@ -25,7 +26,7 @@ async function getMovieById(req, res) {
       `SELECT id, tmdb_id, display_title AS title, original_title, title_es,
                     release_year, poster_path, director, cinematographer, genres, overview,
                     status, recommend, rating, review,
-                    imdb_id, rt_score, imdb_rating, metascore
+                    imdb_id, rt_score, imdb_rating, metascore, ratings_fetched_at
              FROM movies
              WHERE id = $1`,
       [id],
@@ -34,7 +35,29 @@ async function getMovieById(req, res) {
       return res.status(404).json({ error: "Película no encontrada." });
     }
 
-    const movie = rows[0];
+    const { ratings_fetched_at: fetchedAt, ...movie } = rows[0];
+
+    // Huecos de crítica (película nueva aún sin `npm run ratings`, o una que falló):
+    // se consulta en vivo y se guarda. Se reintenta como mucho una vez por semana.
+    const noCritics = movie.rt_score == null && movie.imdb_rating == null && movie.metascore == null;
+    const stale = !fetchedAt || Date.now() - new Date(fetchedAt).getTime() > 7 * 86_400_000;
+    if (movie.tmdb_id && noCritics && stale) {
+      const r = await getCriticRatings(movie.tmdb_id, movie.imdb_id);
+      if (r.fetched) {
+        Object.assign(movie, {
+          imdb_id: r.imdb_id,
+          rt_score: r.rt_score,
+          imdb_rating: r.imdb_rating,
+          metascore: r.metascore,
+        });
+        query(
+          `UPDATE movies SET imdb_id = $2, rt_score = $3, imdb_rating = $4, metascore = $5,
+                  ratings_fetched_at = NOW()
+           WHERE id = $1`,
+          [movie.id, r.imdb_id, r.rt_score, r.imdb_rating, r.metascore],
+        ).catch((err) => console.error("⚠️ No se guardaron las notas:", err.message));
+      }
+    }
 
     // Adjuntar tráiler oficial verificado de YouTube (con caché en memoria)
     if (movie.tmdb_id) {
@@ -78,12 +101,14 @@ async function getExternalMovie(req, res) {
     const { rows } = await query(`SELECT id FROM movies WHERE tmdb_id = $1`, [tmdbId]);
     if (rows.length) return res.status(200).json({ in_catalog: rows[0].id });
 
-    if (!externalCache.has(tmdbId)) {
-      const [d, trailer] = await Promise.all([
+    let ficha = externalCache.get(tmdbId);
+    if (!ficha) {
+      const [d, trailer, critics] = await Promise.all([
         getMovieForEmbedding(tmdbId),
         getOfficialTrailer(tmdbId),
+        getCriticRatings(tmdbId),
       ]);
-      externalCache.set(tmdbId, {
+      ficha = {
         tmdb_id: d.tmdb_id,
         title: d.display_title,
         title_es: d.title_es,
@@ -93,14 +118,21 @@ async function getExternalMovie(req, res) {
         genres: d.genres,
         overview: d.overview,
         trailer,
+        imdb_id: critics.imdb_id || d.imdb_id,
+        rt_score: critics.rt_score,
+        imdb_rating: critics.imdb_rating,
+        metascore: critics.metascore,
+        tmdb_vote: d.vote_count >= 50 ? d.vote_average : null, // respaldo si OMDb no la tiene
         external: true,
-      });
+      };
+      // Sin notas por cuota o error de OMDb: se responde igual, pero no se cachea.
+      if (critics.fetched) externalCache.set(tmdbId, ficha);
       if (externalCache.size > EXTERNAL_CACHE_MAX) {
         externalCache.delete(externalCache.keys().next().value);
       }
     }
     res.setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
-    return res.status(200).json(externalCache.get(tmdbId));
+    return res.status(200).json(ficha);
   } catch (err) {
     if (err.status === 404) return res.status(404).json({ error: "Esa película no existe en TMDB." });
     console.error("❌ Error en getExternalMovie:", err.message);

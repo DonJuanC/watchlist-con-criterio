@@ -28,8 +28,11 @@ const RECOMMEND_CONFIG = {
 };
 
 // Notas de la crítica (OMDb).
-function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
-  const hasScores = rtScore != null || imdbRating != null || metascore != null;
+function CriticScores({ rtScore, imdbRating, metascore, imdbId, tmdbVote }) {
+  const hasOmdb = rtScore != null || imdbRating != null || metascore != null;
+  // Respaldo para películas de fuera del archivo que OMDb no conoce.
+  const showTmdb = !hasOmdb && tmdbVote != null;
+  const hasScores = hasOmdb || showTmdb;
   if (!hasScores) return null;
 
   return (
@@ -40,7 +43,7 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
           La Crítica Externa
         </h4>
         <div className="flex items-center gap-1 text-[10px] font-mono text-neutral-400">
-          <span>OMDb</span>
+          <span>{showTmdb ? "TMDB" : "OMDb"}</span>
           {imdbId && (
             <a
               href={`https://www.imdb.com/title/${imdbId}/`}
@@ -76,6 +79,16 @@ function CriticScores({ rtScore, imdbRating, metascore, imdbId }) {
             <span className="font-medium text-white">
               {Number(imdbRating).toFixed(1)}
             </span>
+          </div>
+        )}
+
+        {showTmdb && (
+          <div
+            title="Nota media de usuarios en TMDB"
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 text-xs font-mono text-neutral-300"
+          >
+            <span className="font-semibold text-sky-400">TMDB</span>
+            <span className="font-medium text-white">{Number(tmdbVote).toFixed(1)}</span>
           </div>
         )}
 
@@ -362,6 +375,7 @@ export default function MovieInfo({ movieId, tmdbId }) {
         imdbRating={movie.imdb_rating}
         metascore={movie.metascore}
         imdbId={movie.imdb_id}
+        tmdbVote={movie.tmdb_vote}
       />
 
       {/* Dónde verla */}

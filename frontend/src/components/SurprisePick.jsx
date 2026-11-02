@@ -35,6 +35,24 @@ const SOURCES = [
   { key: "beyond", label: "Más allá" },
 ];
 
+/** Crítica en una línea: RT · IMDb (o la nota de TMDB si OMDb no la tiene). */
+function CriticLine({ movie }) {
+  const parts = [];
+  if (movie.rt_score != null) parts.push(["RT", `${movie.rt_score}%`, "text-red-400"]);
+  if (movie.imdb_rating != null) parts.push(["IMDb", Number(movie.imdb_rating).toFixed(1), "text-accent-400"]);
+  if (!parts.length && movie.vote_average) parts.push(["TMDB", Number(movie.vote_average).toFixed(1), "text-sky-400"]);
+  if (!parts.length) return null;
+  return (
+    <p className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] font-mono text-neutral-300" title="Crítica externa">
+      {parts.map(([k, v, c]) => (
+        <span key={k} className="inline-flex items-center gap-1 rounded border border-white/[0.08] px-1.5 py-0.5">
+          <span className={`font-semibold ${c}`}>{k}</span> {v}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 /** @param {{ onPick: (id: number) => void, onPickExternal: (movie: object) => void }} props */
 export default function SurprisePick({ onPick, onPickExternal }) {
   const seen = useVisitorSeen();
@@ -198,6 +216,7 @@ export default function SurprisePick({ onPick, onPickExternal }) {
                   .filter(Boolean)
                   .join(" · ")}
               </p>
+              <CriticLine movie={movie} />
               {isExternal && movie.because?.length > 0 && (
                 <p className="mt-2 text-xs text-neutral-300">
                   No la he visto. Sale porque recomiendo{" "}
