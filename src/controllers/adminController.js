@@ -19,6 +19,7 @@ const {
   syncNotionCatalog,
 } = require("../services/notionSync");
 const { buildMovieSemanticText } = require("../services/embeddings");
+const { getAutoSyncStatus } = require("./notionWebhookController");
 
 let isSyncInProgress = false;
 
@@ -72,6 +73,7 @@ async function getMe(req, res) {
   return res.status(200).json({
     authenticated: true,
     role: "admin",
+    autoSync: getAutoSyncStatus(),
   });
 }
 
@@ -187,8 +189,11 @@ async function createMovie(req, res) {
         notionPageId = notionResult.pageId;
         notionEditedAt = notionResult.editedAt;
       } catch (notionErr) {
-        console.warn("⚠️ Advertencia al crear página en Notion:", notionErr.message);
-        notionWarning = `Guardado localmente, pero falló sincronización con Notion: ${notionErr.message}`;
+        // Sin página en Notion la película quedaría huérfana y el próximo sync la pisaría.
+        console.error("❌ No se pudo crear la página en Notion:", notionErr.message);
+        return res.status(502).json({
+          error: `No se guardó: Notion rechazó la creación (${notionErr.message}). Intenta de nuevo.`,
+        });
       }
     }
 
@@ -298,8 +303,11 @@ async function updateMovie(req, res) {
         });
         notionEditedAt = notionResult.editedAt;
       } catch (notionErr) {
-        console.warn("⚠️ Advertencia al actualizar en Notion:", notionErr.message);
-        notionWarning = `Actualizado localmente, pero falló sincronización con Notion: ${notionErr.message}`;
+        // Si Notion no se actualiza, tampoco Neon: así las dos fuentes nunca quedan distintas.
+        console.error("❌ No se pudo actualizar en Notion:", notionErr.message);
+        return res.status(502).json({
+          error: `No se guardó: Notion rechazó el cambio (${notionErr.message}). Intenta de nuevo.`,
+        });
       }
     }
 

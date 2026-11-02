@@ -266,6 +266,25 @@ function parseRow(page) {
   };
 }
 
+// Escribe solo la reseña en Notion, sin tocar el resto de propiedades.
+async function pushReview(pageId, review, notionToken) {
+  const page = await notionFetch(
+    `/pages/${pageId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        properties: {
+          "Reseña personal": {
+            rich_text: [{ text: { content: review.slice(0, 2000) } }],
+          },
+        },
+      }),
+    },
+    notionToken,
+  );
+  return page.last_edited_time;
+}
+
 async function writeBack(pageId, { tmdbId, match, appTitle }, notionToken) {
   const properties = {
     "TMDB ID": { number: tmdbId },
@@ -412,6 +431,7 @@ async function upsertMovie(m, row, embedding) {
 async function syncNotionCatalog({
   dryRun = false,
   prune = false,
+  pruneLimit = Infinity,
   limit = Infinity,
   reembed = false,
   log = console.log,
@@ -466,11 +486,34 @@ async function syncNotionCatalog({
       Boolean(prev) &&
       (row.review || "").trim() !== (prev.review || "").trim();
 
+    const notionNewer =
+      !prev || new Date(row.editedAt) > new Date(prev.notion_edited_at);
+
+    // Notion no cambió desde el último sync pero la app tiene otra reseña: la app va adelante
+    // (p. ej. un guardado del Admin cuyo envío a Notion falló). Se sube a Notion en vez de borrarla.
+    if (prev && reviewChanged && !notionNewer && (prev.review || "").trim()) {
+      try {
+        if (!dryRun) {
+          const editedAt = await pushReview(row.pageId, prev.review, notionToken);
+          await query("UPDATE movies SET notion_edited_at = $1 WHERE notion_page_id = $2", [
+            editedAt,
+            row.pageId,
+          ]);
+        }
+        log(`↑ Reseña de la app subida a Notion: ${row.title}`);
+      } catch (err) {
+        stats.errors++;
+        log(`❌ No se pudo subir la reseña de ${row.title} a Notion: ${err.message}`);
+      }
+      stats.skipped++;
+      continue;
+    }
+
     if (
       !reembed &&
       prev &&
       row.tmdbId === prev.tmdb_id &&
-      new Date(row.editedAt) <= new Date(prev.notion_edited_at) &&
+      !notionNewer &&
       !reviewChanged
     ) {
       stats.skipped++;
@@ -551,11 +594,18 @@ async function syncNotionCatalog({
     const { rows: stale } = await query(
       "SELECT id, title, notion_page_id FROM movies",
     );
+    // Las filas sin notion_page_id nunca llegaron a Notion: no se borran, se avisan.
+    const unlinked = stale.filter((m) => !m.notion_page_id);
+    if (unlinked.length) {
+      log(`⚠️ Sin página en Notion (no se borran): ${unlinked.map((m) => m.title).join(", ")}`);
+    }
     const toDelete = stale.filter(
-      (m) => !m.notion_page_id || !keepPageIds.has(m.notion_page_id),
+      (m) => m.notion_page_id && !keepPageIds.has(m.notion_page_id),
     );
     log(`🧹 Prune: ${toDelete.length} películas en Neon que no están en Notion`);
-    if (!dryRun && toDelete.length) {
+    if (toDelete.length > pruneLimit) {
+      log(`⚠️ Prune omitido: ${toDelete.length} supera el límite de ${pruneLimit}. Revísalo a mano.`);
+    } else if (!dryRun && toDelete.length) {
       await query("DELETE FROM movies WHERE id = ANY($1::int[])", [
         toDelete.map((m) => m.id),
       ]);

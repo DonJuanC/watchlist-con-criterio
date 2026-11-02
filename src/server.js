@@ -65,6 +65,14 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   }),
 );
+// Webhook de Notion: necesita el body crudo para verificar la firma, así que va antes de express.json.
+const { handleNotionWebhook } = require("./controllers/notionWebhookController");
+app.post(
+  "/api/webhooks/notion",
+  express.raw({ type: "application/json", limit: "100kb" }),
+  handleNotionWebhook,
+);
+
 app.use(express.json({ limit: "50kb" }));
 
 // Limitador de peticiones global para la API (300 peticiones / 15 minutos por IP)
