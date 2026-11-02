@@ -3,18 +3,23 @@
 // Es el diferencial del archivo, así que va antes que cualquier otra lista.
 
 import { useMemo, useState } from "react";
-import { Star } from "lucide-react";
 import useCineStore from "../../store/useCineStore";
 import MoviePosterCard from "../MoviePosterCard";
 import { VERDICT } from "./verdict";
+import { CriterionStar } from "../brand/BrandIcons";
 
 const INITIAL_VISIBLE = 4;
 
 function Stars({ value }) {
   return (
-    <span className="flex gap-0.5" aria-label={`${value} de 5`}>
+    <span className="flex items-center gap-0.5" aria-label={`${value} de 5`}>
       {Array.from({ length: 5 }).map((_, i) => (
-        <Star key={i} size={11} className={i < value ? "fill-accent-400 text-accent-400" : "text-neutral-600"} />
+        <CriterionStar
+          key={i}
+          size={11}
+          filled={i < value}
+          className={i < value ? "text-accent-400" : "text-neutral-700"}
+        />
       ))}
     </span>
   );

@@ -23,6 +23,7 @@ import LegalModal from "./LegalModal";
 import ConnectionDemo from "./landing/ConnectionDemo";
 import CriterioSection from "./landing/CriterioSection";
 import NextUpBanner from "./landing/NextUpBanner";
+import { SharedLink } from "./brand/BrandIcons";
 
 const RESULTS_LIMIT = 6;
 const SUGGESTIONS_LIMIT = 5;
@@ -741,13 +742,24 @@ export default function HomeSearch({
         </button>
 
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[10px] uppercase tracking-[0.14em] text-neutral-400 sm:justify-end">
-          <button type="button" onClick={onShowSelector} className="uppercase tracking-[0.14em] hover:text-white transition-colors focus-ring-cinematic rounded">
+          <a
+            href="https://musicaconcriterio.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Ir a Música con Criterio"
+            className="inline-flex items-center gap-1.5 uppercase tracking-[0.14em] text-neutral-400 hover:text-white transition-colors focus-ring-cinematic"
+          >
+            <SharedLink size={13} className="text-accent-400" />
+            <span>Música con Criterio</span>
+          </a>
+          <span className="text-neutral-700 hidden sm:inline">·</span>
+          <button type="button" onClick={onShowSelector} className="uppercase tracking-[0.14em] hover:text-white transition-colors focus-ring-cinematic">
             Quién elige
           </button>
-          <button type="button" onClick={() => setShowLegal(true)} className="uppercase tracking-[0.14em] hover:text-white transition-colors focus-ring-cinematic rounded">
-            Aviso legal y atribución
+          <button type="button" onClick={() => setShowLegal(true)} className="uppercase tracking-[0.14em] hover:text-white transition-colors focus-ring-cinematic">
+            Aviso legal
           </button>
-          <span>Datos de TMDB</span>
+          <span>Datos TMDB</span>
         </div>
         <LegalModal isOpen={showLegal} onClose={() => setShowLegal(false)} />
       </footer>

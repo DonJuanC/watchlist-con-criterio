@@ -4,10 +4,11 @@
 // estilizadas (OMDb) y enlaces de streaming por país (JustWatch).
 
 import { useState, useEffect } from "react";
-import { Star, Compass, Award, ExternalLink, Play, X } from "lucide-react";
+import { Award, ExternalLink, Play, X } from "lucide-react";
 import useMovieDetail from "../hooks/useMovieDetail";
 import WatchProviders from "./WatchProviders";
 import ShareMovieButton from "./ShareMovieButton";
+import { CriterionStar, PenAndLens } from "./brand/BrandIcons";
 
 const RECOMMEND_CONFIG = {
   1: {
@@ -117,7 +118,7 @@ function MyCriteria({ rating, recommend, review }) {
     <section className="relative rounded-xl border border-white/[0.08] bg-surface/80 p-4 inner-bevel-subtle">
       <div className="mb-2.5 flex items-center justify-between">
         <h4 className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-neutral-400">
-          <Compass size={13} className="text-accent-400" />
+          <PenAndLens size={13} className="text-accent-400" />
           Mi Criterio Personal
         </h4>
 
@@ -127,14 +128,11 @@ function MyCriteria({ rating, recommend, review }) {
             aria-label={`${rating} de 5 estrellas`}
           >
             {Array.from({ length: 5 }, (_, i) => (
-              <Star
+              <CriterionStar
                 key={i}
                 size={11}
-                className={
-                  i < rating
-                    ? "fill-accent-400 text-accent-400"
-                    : "text-neutral-700"
-                }
+                filled={i < rating}
+                className={i < rating ? "text-accent-400" : "text-neutral-700"}
               />
             ))}
           </div>

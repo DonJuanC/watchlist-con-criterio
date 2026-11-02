@@ -8,7 +8,7 @@
     
     <!-- Metatags y SEO -->
     <meta name="description" content="Dime una película que te gustó y te digo cuál ver después. Una selección de El Selector: casi 300 películas conectadas por director y por cómo se sienten, con nota y reseña." />
-    <meta name="theme-color" content="#121316" />
+    <meta name="theme-color" content="#0b0f17" />
     <script>
       // Aplica el tema antes del primer paint para evitar el destello del modo equivocado.
       (function () {
@@ -19,7 +19,7 @@
         }
         document.documentElement.dataset.theme = t;
         document.documentElement.style.colorScheme = t;
-        if (t === "light") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#F4F1EA");
+        if (t === "light") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#f8fafc");
       })();
     </script>
 
@@ -38,9 +38,9 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-amber-400/25 selection:text-white">
+  <body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-accent-500/30 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

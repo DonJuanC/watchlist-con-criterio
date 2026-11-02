@@ -3,7 +3,8 @@
 // badges de criterio y estados de fallback accesibles.
 
 import { useState } from "react";
-import { Star, Film, Check, Minus, X } from "lucide-react";
+import { Film, Check, Minus, X } from "lucide-react";
+import { CriterionStar } from "./brand/BrandIcons";
 
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/";
 
@@ -114,7 +115,7 @@ export default function MoviePosterCard({
       {/* Badge de estrellas si tiene rating personal */}
       {showBadge && movie?.rating != null && (
         <div className="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-1 rounded bg-neutral-950/85 px-1.5 py-0.5 text-[9px] font-mono font-medium text-accent-300/90 backdrop-blur-sm border border-white/10">
-          <Star size={9} className="fill-accent-400 text-accent-400" />
+          <CriterionStar size={9} filled className="text-accent-400" />
           <span>{movie.rating}</span>
         </div>
       )}

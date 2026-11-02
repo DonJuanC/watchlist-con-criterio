@@ -1,136 +1,140 @@
 @import "tailwindcss";
 
 @layer base {
-  .font-serif { font-weight: 600; letter-spacing: -0.015em; }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    letter-spacing: -0.02em;
+  }
 }
 
 /* ==========================================================================
-   Sistema de color claro/oscuro
-   La paleta de Tailwind se remapea a tokens semánticos: en ambos modos
-   "white" significa tinta principal y "neutral-950" significa el fondo.
-   Así las ~740 clases existentes cambian de tema sin tocarlas una a una.
-   Oscuro = "sala con luces bajas". Claro = "programa de mano".
+   Sistema de color claro/oscuro — Identidad "Cuarto Oscuro del Editor"
+   La paleta de Tailwind se remapea a tokens semánticos:
+   Oscuro = Cuarto Oscuro de edición y proyección (#0b0f17 base + #111827 superficie).
+   Claro = Linotipo y papel editorial (#f8fafc base + #ffffff superficie).
+   Acentos: Azul Tinta Puro (#1e3a8a) y Tinta Digital (#3b82f6 / #60a5fa).
    ========================================================================== */
 @theme {
-  /* Una sola familia: Bricolage Grotesque. font-serif queda como alias de "display"
-     (títulos y citas, con más peso vía @layer base); sans y mono apuntan a la misma
-     familia para no tocar cada componente. Paleta: "Tinta y papel" (acento cobalto
-     en los tokens accent-*). */
-  --font-serif: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-sans: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Tríada tipográfica:
+     Sans: Inter (Arquitectura, Headings, UI suizo)
+     Serif: Lora (Voz editorial de El Selector, reseñas, citas)
+     Mono: JetBrains Mono (Metadatos técnicos, chips, timestamps) */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Lora", Georgia, Cambria, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Superficies semánticas */
-  --color-canvas: #121316;
-  --color-surface: #1B1C20;
+  /* Superficies semánticas — Cuarto Oscuro */
+  --color-canvas: #0b0f17;
+  --color-surface: #111827;
 
-  /* Tinta y escala neutra cálida (oscuro) */
-  --color-white: #EDEBE6;
+  /* Tinta y escala neutra fría / acero (Deep Charcoal & Blanco Roto) */
+  --color-white: #f8fafc;
   --color-black: #000000;
-  --color-neutral-50: #F5F4F0;
-  --color-neutral-100: #EDEBE6;
-  --color-neutral-200: #D6D5D0;
-  --color-neutral-300: #BDBCB6;
-  --color-neutral-400: #9A9890;
-  --color-neutral-500: #78776F;
-  --color-neutral-600: #5A5B5F;
-  --color-neutral-700: #3F4046;
-  --color-neutral-800: #2A2C32;
-  --color-neutral-900: #1B1C20;
-  --color-neutral-950: #121316;
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #111827;
+  --color-neutral-950: #0b0f17;
 
-  /* Ámbar tungsteno: acción primaria, estado activo y calificación */
-  --color-accent-200: #C9D3FF;
-  --color-accent-300: #A6B6FF;
-  --color-accent-400: #7D97FF;
-  --color-accent-500: #5F7CF2;
-  --color-accent-600: #4763DB;
-  --color-accent-950: #121A3A;
+  /* Tinta Digital y Azul Tinta Puro */
+  --color-accent-200: #bfdbfe;
+  --color-accent-300: #93c5fd;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-accent-900: #1e3a8a;
+  --color-accent-950: #0f172a;
 
   /* Semánticos: recomendada / no recomendada */
-  --color-emerald-200: #B5E8CF;
-  --color-emerald-300: #8FD9B6;
-  --color-emerald-400: #5CC89A;
-  --color-emerald-500: #34AE7C;
-  --color-emerald-950: #0D2219;
-  --color-red-200: #F8C4C4;
-  --color-red-300: #F5A3A3;
-  --color-red-400: #EE7B7B;
-  --color-red-500: #E05656;
-  --color-red-950: #2A1010;
+  --color-emerald-200: #bbf7d0;
+  --color-emerald-300: #86efac;
+  --color-emerald-400: #4ade80;
+  --color-emerald-500: #22c55e;
+  --color-emerald-950: #052e16;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-950: #450a0a;
 }
 
 /* Tokens fuera de la paleta de Tailwind (canvas del grafo, ambiente, sombras) */
 :root {
   color-scheme: dark;
-  --graph-bg: #121316;
-  --graph-node: #8E8D87;
-  --graph-label: rgba(237, 235, 230, 0.85);
-  --graph-match: #7D97FF;
-  --graph-director: rgba(125, 151, 255, 0.6);
-  --graph-semantic: rgba(237, 235, 230, 0.28);
-  --ambient-dot: rgba(237, 235, 230, 0.15);
-  --ambient-beam: rgba(125, 151, 255, 0.10);
-  --ambient-beam-edge: rgba(71, 99, 219, 0.04);
-  --ambient-cursor: rgba(125, 151, 255, 0.08);
-  --ambient-vignette: rgba(0, 0, 0, 0.55);
+  --graph-bg: #0b0f17;
+  --graph-node: #64748b;
+  --graph-label: rgba(248, 250, 252, 0.88);
+  --graph-match: #3b82f6;
+  --graph-director: rgba(96, 165, 250, 0.65);
+  --graph-semantic: rgba(248, 250, 252, 0.25);
+  --ambient-dot: rgba(248, 250, 252, 0.12);
+  --ambient-beam: rgba(59, 130, 246, 0.12);
+  --ambient-beam-edge: rgba(30, 58, 138, 0.05);
+  --ambient-cursor: rgba(59, 130, 246, 0.08);
+  --ambient-vignette: rgba(11, 15, 23, 0.70);
   --shadow-color: 0, 0, 0;
-  --shadow-alpha-a: 0.4;
-  --shadow-alpha-b: 0.7;
+  --shadow-alpha-a: 0.5;
+  --shadow-alpha-b: 0.85;
   --bevel: rgba(255, 255, 255, 0.06);
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --color-canvas: #F4F1EA;
-  --color-surface: #FCFAF6;
+  --color-canvas: #f8fafc;
+  --color-surface: #ffffff;
 
-  --color-white: #141414;
-  --color-neutral-50: #0B0B0B;
-  --color-neutral-100: #141414;
-  --color-neutral-200: #262624;
-  --color-neutral-300: #383734;
-  --color-neutral-400: #5E5B55;
-  --color-neutral-500: #75726B;
-  --color-neutral-600: #99958D;
-  --color-neutral-700: #BCB8AF;
-  --color-neutral-800: #DDD8CE;
-  --color-neutral-900: #FCFAF6;
-  --color-neutral-950: #F4F1EA;
+  --color-white: #0f172a;
+  --color-neutral-50: #020617;
+  --color-neutral-100: #0f172a;
+  --color-neutral-200: #1e293b;
+  --color-neutral-300: #334155;
+  --color-neutral-400: #475569;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #94a3b8;
+  --color-neutral-700: #cbd5e1;
+  --color-neutral-800: #e2e8f0;
+  --color-neutral-900: #f1f5f9;
+  --color-neutral-950: #f8fafc;
 
-  --color-accent-200: #182F8F;
-  --color-accent-300: #1F3CB0;
-  --color-accent-400: #2B4EDB;
-  --color-accent-500: #3A5CE6;
-  --color-accent-600: #4B6BEE;
-  --color-accent-950: #E4E9FB;
+  --color-accent-200: #1e3a8a;
+  --color-accent-300: #1d4ed8;
+  --color-accent-400: #2563eb;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #60a5fa;
+  --color-accent-950: #eff6ff;
 
-  --color-emerald-200: #0F5139;
-  --color-emerald-300: #17694B;
-  --color-emerald-400: #1B7A57;
-  --color-emerald-500: #23905F;
-  --color-emerald-950: #E1F2E9;
-  --color-red-200: #7F1F1F;
-  --color-red-300: #A83232;
-  --color-red-400: #B93A3A;
-  --color-red-500: #C94444;
-  --color-red-950: #FBE6E6;
+  --color-emerald-200: #14532d;
+  --color-emerald-300: #166534;
+  --color-emerald-400: #15803d;
+  --color-emerald-500: #16a34a;
+  --color-emerald-950: #f0fdf4;
+  --color-red-200: #7f1d1d;
+  --color-red-300: #991b1b;
+  --color-red-400: #b91c1c;
+  --color-red-500: #dc2626;
+  --color-red-950: #fef2f2;
 
-  --graph-bg: #F4F1EA;
-  --graph-node: #8A877F;
-  --graph-label: rgba(20, 20, 20, 0.85);
-  --graph-match: #2B4EDB;
-  --graph-director: rgba(43, 78, 219, 0.55);
-  --graph-semantic: rgba(20, 20, 20, 0.22);
-  --ambient-dot: rgba(20, 20, 20, 0.12);
-  --ambient-beam: rgba(43, 78, 219, 0.08);
-  --ambient-beam-edge: rgba(43, 78, 219, 0.03);
-  --ambient-cursor: rgba(43, 78, 219, 0.06);
-  --ambient-vignette: rgba(60, 60, 70, 0.10);
-  --shadow-color: 30, 30, 40;
+  --graph-bg: #f8fafc;
+  --graph-node: #64748b;
+  --graph-label: rgba(15, 23, 42, 0.88);
+  --graph-match: #2563eb;
+  --graph-director: rgba(37, 99, 235, 0.6);
+  --graph-semantic: rgba(15, 23, 42, 0.22);
+  --ambient-dot: rgba(15, 23, 42, 0.12);
+  --ambient-beam: rgba(59, 130, 246, 0.08);
+  --ambient-beam-edge: rgba(30, 58, 138, 0.03);
+  --ambient-cursor: rgba(59, 130, 246, 0.06);
+  --ambient-vignette: rgba(15, 23, 42, 0.12);
+  --shadow-color: 15, 23, 42;
   --shadow-alpha-a: 0.08;
   --shadow-alpha-b: 0.14;
-  --bevel: rgba(255, 255, 255, 0.7);
+  --bevel: rgba(255, 255, 255, 0.8);
 }
 
 html, body, #root {

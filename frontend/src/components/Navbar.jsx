@@ -6,6 +6,7 @@
 import { Film, Popcorn, Network, Compass, UserRound, Sun, Moon, SlidersHorizontal } from "lucide-react";
 import useThemeStore from "../store/useThemeStore";
 import useAdminStore from "../store/useAdminStore";
+import { BrandIsotype, BrandLockup } from "./brand/BrandIcons";
 
 const NAV_ITEMS = [
   { view: "home", label: "Explorar", icon: Compass },
@@ -38,17 +39,12 @@ export default function Navbar({ currentView, onNavigate, onResetAll }) {
           type="button"
           onClick={handleBrandClick}
           aria-label="Cine con Criterio, ir al inicio"
-          className="group flex shrink-0 items-center gap-2.5 rounded-lg p-1 text-left focus-ring-cinematic"
+          className="group flex shrink-0 items-center gap-2.5 p-1 text-left focus-ring-cinematic"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-neutral-300 transition-colors group-hover:border-white/20 group-hover:text-white">
-            <Film size={14} />
+          <span className="flex h-7 w-7 items-center justify-center border border-white/[0.08] bg-white/[0.03] text-accent-500 transition-colors group-hover:border-accent-500/40 group-hover:text-accent-400">
+            <BrandIsotype size={16} />
           </span>
-          <span className="flex items-baseline gap-1.5 whitespace-nowrap">
-            <span className="font-serif text-[15px] text-white">Cine</span>
-            <span className="hidden text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400 sm:inline">
-              con Criterio
-            </span>
-          </span>
+          <BrandLockup size="sm" />
         </button>
 
         <div className="flex items-center gap-1">
