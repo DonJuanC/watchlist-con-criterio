@@ -3,6 +3,7 @@
 
 const { query } = require("../db");
 const { generateMovieEmbedding } = require("../services/embeddings");
+const { detectEmotions } = require("../services/emotions");
 
 const DEFAULT_LIMIT = 10;
 // Umbral de similitud coseno calibrado para gemini-embedding-001 (768 dimensiones).
@@ -23,6 +24,10 @@ const RELATIVE_BAND = 0.05;
 const MAX_TOTAL_RESULTS = 24;
 const GENRE_BOOST = 0.05;
 const WORD_BOOST = 0.02;
+// Emociones (services/emotions.js): resta a géneros que contradicen la emoción ("feliz" →
+// Terror, Bélica, Crimen), salvo que la película también tenga un género reforzado
+// (Zombieland es Terror pero también Comedia).
+const GENRE_PENALTY = 0.05;
 const GENRE_HINTS = {
   Romance: ["amor", "romance", "romantica", "enamor", "pareja"],
   Comedia: ["comedia", "reir", "risa", "divertid", "graciosa", "humor", "chistos"],
@@ -110,9 +115,19 @@ async function semanticSearch(req, res) {
     Number.isInteger(limit) && limit > 0 ? Math.min(limit, 50) : DEFAULT_LIMIT;
 
   try {
-    const vectorLiteral = await queryVector(cleanQuery);
+    // Si la consulta nombra una emoción, se embebe el tipo de película que la produce
+    // (ver services/emotions.js) y sus géneros entran al refuerzo.
+    const emotion = detectEmotions(cleanQuery);
+    const vectorLiteral = await queryVector(emotion ? emotion.embedText : cleanQuery);
 
-    const { genres: hintGenres, words: hintWords } = lexicalHints(cleanQuery);
+    const lexical = lexicalHints(cleanQuery);
+    const hintGenres = [...new Set([...lexical.genres, ...(emotion?.boost ?? [])])];
+    const penalizeGenres = emotion?.penalize.filter((g) => !hintGenres.includes(g)) ?? [];
+    // La palabra de la emoción no se busca en la sinopsis: "feliz" en una sinopsis suele
+    // hablar de una familia feliz que se rompe, no de una película que te pone feliz.
+    const hintWords = lexical.words.filter(
+      (w) => !emotion || ![...emotion.emotionWords].some((e) => w.startsWith(e) || e.startsWith(w)),
+    );
     // \m = inicio de palabra en Postgres: "amor" encaja con "amores", no con "clamor".
     const wordPattern = hintWords.length ? `\\m(${hintWords.join("|")})` : null;
 
@@ -124,6 +139,7 @@ async function semanticSearch(req, res) {
                        + CASE WHEN genres && $7::text[] THEN $9::float8 ELSE 0 END
                        + CASE WHEN $8::text IS NOT NULL
                                    AND translate(lower(COALESCE(overview, '')), 'áéíóúüñ', 'aeiouun') ~ $8::text THEN $10::float8 ELSE 0 END
+                       - CASE WHEN genres && $12::text[] AND NOT (genres && $7::text[]) THEN $13::float8 ELSE 0 END
                        AS score
               FROM movies
               WHERE status = $4 AND embedding IS NOT NULL
@@ -144,6 +160,8 @@ async function semanticSearch(req, res) {
       GENRE_BOOST,
       WORD_BOOST,
       MAX_TOTAL_RESULTS,
+      penalizeGenres,
+      GENRE_PENALTY,
     ];
     let { rows } = await query(sql, [
       vectorLiteral,
@@ -172,6 +190,7 @@ async function semanticSearch(req, res) {
       .status(200)
       .json({
         query: searchQuery,
+        emotions: emotion?.keys ?? [],
         count: Math.min(rows.length, resultLimit),
         hasMore: rows.length > resultLimit,
         results: rows.slice(0, resultLimit),

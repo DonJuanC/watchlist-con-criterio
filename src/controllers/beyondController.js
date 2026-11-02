@@ -8,6 +8,7 @@
 const { query } = require("../db");
 const { beyondFromSeeds } = require("../services/beyond");
 const { queryVector } = require("./searchController");
+const { detectEmotions } = require("../services/emotions");
 const { parseExclude } = require("../services/neighborRanking");
 
 const DEFAULT_LIMIT = 6;
@@ -61,7 +62,9 @@ async function beyond(req, res) {
       if (!seeds.length) return res.status(200).json({ results: [], hasMore: false });
     }
     const text = typeof req.body?.query === "string" ? req.body.query.trim().slice(0, 250) : "";
-    const refVector = text ? JSON.parse(await queryVector(text)) : null;
+    // Misma lectura de emociones que la búsqueda: "feliz" re-ordena por películas que dan felicidad.
+    const refText = text ? detectEmotions(text)?.embedText ?? text : "";
+    const refVector = refText ? JSON.parse(await queryVector(refText)) : null;
     const ranked = (
       await beyondFromSeeds(await expandSeeds(seeds), exclude, {
         primaryCount: seeds.length,
