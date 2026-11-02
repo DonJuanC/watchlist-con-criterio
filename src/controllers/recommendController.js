@@ -8,10 +8,13 @@
 const { query } = require("../db");
 const { getMovieForEmbedding } = require("../services/tmdb");
 const { generateEmbedding, buildMovieSemanticText } = require("../services/embeddings");
-const { pickNeighbors } = require("../services/neighborRanking");
+const {
+  pickNeighborsPage,
+  parseExclude,
+  SEMANTIC_POOL,
+} = require("../services/neighborRanking");
 
 const LIMIT = 6;
-const SEMANTIC_POOL = 20;
 const NODE_FIELDS = `m.id, m.title, m.release_year, m.poster_path, m.director,
                      m.genres[1] AS main_genre, m.recommend, m.rating`;
 
@@ -56,17 +59,18 @@ async function getExternalEmbedding(tmdbId) {
 }
 
 /**
- * POST /api/recommend   body: { tmdbId }
+ * POST /api/recommend   body: { tmdbId, exclude?: number[] }
  * Respuesta:
  *  - { source: 'catalog', movieId }
  *  - { source: 'pending' | 'external', movie: { tmdb_id, title, release_year, poster_path, director },
- *      recommendations: [{ node, type, weight, reasons }] }
+ *      recommendations: [{ node, type, weight, reasons }], hasMore }
  */
 async function recommend(req, res) {
   const tmdbId = Number(req.body?.tmdbId);
   if (!Number.isInteger(tmdbId) || tmdbId <= 0) {
     return res.status(400).json({ error: "tmdbId debe ser un entero positivo." });
   }
+  const exclude = parseExclude(req.body?.exclude);
 
   try {
     const inCatalog = await query(
@@ -120,7 +124,8 @@ async function recommend(req, res) {
         : Promise.resolve({ rows: [] }),
     ]);
 
-    const recommendations = pickNeighbors({
+    const { picked: recommendations, hasMore } = pickNeighborsPage({
+      exclude,
       semanticRows: semResult.rows,
       directorRows: dirResult.rows,
       centerDirector: movie.director,
@@ -128,7 +133,7 @@ async function recommend(req, res) {
       limit: LIMIT,
     });
 
-    return res.status(200).json({ source, movie, recommendations });
+    return res.status(200).json({ source, movie, recommendations, hasMore });
   } catch (err) {
     if (err.status === 404) {
       return res.status(404).json({ error: "Esa película no existe en TMDB." });

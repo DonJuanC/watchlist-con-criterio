@@ -166,6 +166,7 @@ export default function LegalModal({ isOpen, onClose }) {
                 <ul className="list-disc list-inside mt-1.5 space-y-1 text-neutral-400">
                   <li><code className="text-accent-300/90 font-mono">watchlist.country</code>: Recuerda su selección de país para consultar plataformas de streaming.</li>
                   <li><code className="text-accent-300/90 font-mono">watchlist_selected_providers</code>: Guarda sus plataformas preferidas en la vista <em>«¿Qué veo hoy?»</em>.</li>
+                  <li><code className="text-accent-300/90 font-mono">cc_visitor_seen</code>: Recuerda las películas que marcó como «Ya la vi» para no volver a recomendárselas. No sale de su navegador.</li>
                 </ul>
               </section>
 

@@ -4,17 +4,21 @@
 // 🔴 nunca es vecina, 🟢 sube en el ranking semántico, director con tope.
 
 const { query } = require("../db");
-const { pickNeighbors } = require("../services/neighborRanking");
+const {
+  pickNeighborsPage,
+  parseExclude,
+  SEMANTIC_POOL,
+} = require("../services/neighborRanking");
 
 const DEFAULT_LIMIT = 6;
 const MAX_LIMIT = 12;
-const SEMANTIC_POOL = 20; // candidatas semánticas antes de rankear
 const NODE_FIELDS = `m.id, m.title, m.release_year, m.poster_path, m.director,
                      m.genres[1] AS main_genre, m.recommend, m.rating`;
 
 /**
- * GET /api/movies/:id/neighbors?limit=6
- * Respuesta: { centerId, neighbors: [{ node, type, weight, reasons }] }
+ * GET /api/movies/:id/neighbors?limit=6&exclude=12,34
+ *  - exclude: ids que no deben salir (vistas por el visitante o ya mostradas).
+ * Respuesta: { centerId, neighbors: [{ node, type, weight, reasons }], hasMore }
  *  - type: 'same_director' | 'semantic_similarity' (el que define el cupo)
  *  - weight: similitud coseno real (semántica) o 1 (director)
  *  - reasons: todas las razones del vínculo, p. ej. ['same_director', 'semantic_similarity']
@@ -30,6 +34,7 @@ async function getNeighbors(req, res) {
     Math.max(Number(req.query.limit) || DEFAULT_LIMIT, 1),
     MAX_LIMIT,
   );
+  const exclude = parseExclude(req.query.exclude);
 
   try {
     const centerResult = await query(
@@ -66,7 +71,8 @@ async function getNeighbors(req, res) {
         : Promise.resolve({ rows: [] }),
     ]);
 
-    const picked = pickNeighbors({
+    const { picked, hasMore } = pickNeighborsPage({
+      exclude,
       semanticRows: semResult.rows,
       directorRows: dirResult.rows,
       centerDirector: center.director,
@@ -75,7 +81,7 @@ async function getNeighbors(req, res) {
     });
 
     res.setHeader("Cache-Control", "public, max-age=1800, stale-while-revalidate=86400");
-    return res.status(200).json({ centerId: id, neighbors: picked });
+    return res.status(200).json({ centerId: id, neighbors: picked, hasMore });
   } catch (err) {
     console.error("❌ Error en getNeighbors:", err.message);
     return res.status(500).json({ error: "Error al calcular las vecinas." });

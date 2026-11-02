@@ -2,9 +2,10 @@
 // "Si te gustó X…" para cualquier película externa de TMDB comparada con el catálogo:
 // Formato vertical 2:3, fondo ambiental cinemático y tarjetas con afinidad.
 
-import { useEffect, useState } from "react";
-import { Sparkles, User } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Sparkles, User, Check, RefreshCw, RotateCcw } from "lucide-react";
 import { fetchRecommend } from "../services/api";
+import useVisitorSeen, { markSeen, clearSeen } from "../hooks/useVisitorSeen";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 
 const REASON_LABEL = {
@@ -16,13 +17,27 @@ const REASON_LABEL = {
  * @param {{ movie: { tmdb_id: number, title: string, release_year?: number, poster_path?: string },
  *           onPick: (id: number) => void }} props
  */
+const NONE = [];
+
 export default function ExternalView({ movie, onPick }) {
   const [state, setState] = useState({ status: "loading", data: null, error: "" });
 
+  // "Otras opciones" (ids ya mostrados para ESTA película) + "Ya la vi" del visitante.
+  const [pager, setPager] = useState({ tmdbId: movie.tmdb_id, shown: [] });
+  const shown = pager.tmdbId === movie.tmdb_id ? pager.shown : NONE;
+  const seen = useVisitorSeen();
+  const exclude = useMemo(() => [...new Set([...seen, ...shown])], [seen, shown]);
+  const excludeKey = exclude.join(",");
+
   useEffect(() => {
     let cancelled = false;
-    setState({ status: "loading", data: null, error: "" });
-    fetchRecommend(movie.tmdb_id)
+    // Al paginar dentro de la misma película se conservan las tarjetas actuales mientras carga.
+    setState((prev) =>
+      prev.data && prev.data.movie?.tmdb_id === movie.tmdb_id
+        ? { ...prev, status: "refreshing" }
+        : { status: "loading", data: null, error: "" },
+    );
+    fetchRecommend(movie.tmdb_id, excludeKey ? excludeKey.split(",").map(Number) : [])
       .then((data) => {
         if (cancelled) return;
         if (data.source === "catalog") {
@@ -37,10 +52,20 @@ export default function ExternalView({ movie, onPick }) {
     return () => {
       cancelled = true;
     };
-  }, [movie.tmdb_id, onPick]);
+  }, [movie.tmdb_id, onPick, excludeKey]);
 
-  const recommendations = state.data?.recommendations ?? [];
+  const refreshing = state.status === "refreshing";
+  const recommendations = (state.data?.recommendations ?? []).filter(
+    (r) => !exclude.includes(r.node.id),
+  );
+  const hasMore = Boolean(state.data?.hasMore) && !refreshing;
   const isPending = state.data?.source === "pending";
+  const isDone = state.status === "done" || refreshing;
+  const exhausted = state.status === "done" && recommendations.length === 0 && exclude.length > 0;
+
+  const showMore = () =>
+    setPager({ tmdbId: movie.tmdb_id, shown: [...shown, ...recommendations.map((r) => r.node.id)] });
+  const restart = () => setPager({ tmdbId: movie.tmdb_id, shown: [] });
 
   return (
     <section
@@ -84,7 +109,7 @@ export default function ExternalView({ movie, onPick }) {
         </p>
       )}
 
-      {state.status === "done" && recommendations.length > 0 && (
+      {isDone && recommendations.length > 0 && (
         <div className="mt-8 w-full">
           <p className="font-serif text-base text-neutral-200 mb-6">
             De mi catálogo personal, te recomiendo:
@@ -93,8 +118,8 @@ export default function ExternalView({ movie, onPick }) {
             {recommendations.map((r) => {
               const isDirector = r.type === "same_director";
               return (
+                <div key={r.node.id} className="flex flex-col items-center">
                 <button
-                  key={r.node.id}
                   type="button"
                   onClick={() => onPick(r.node.id)}
                   aria-label={`Abrir ${r.node.title}. ${REASON_LABEL[r.type] ?? "Conectada"}`}
@@ -121,13 +146,81 @@ export default function ExternalView({ movie, onPick }) {
                     {REASON_LABEL[r.type] ?? "Conectada"}
                   </span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => markSeen(r.node.id)}
+                  aria-label={`Ya vi ${r.node.title}: muéstrame otra`}
+                  className="mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] text-neutral-400 transition-colors hover:bg-white/10 hover:text-white focus-ring-cinematic"
+                >
+                  <Check size={10} /> Ya la vi
+                </button>
+                </div>
               );
             })}
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+            {(hasMore || refreshing) && (
+              <button
+                type="button"
+                onClick={showMore}
+                disabled={refreshing}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-neutral-200 transition-all duration-200 hover:border-white/30 hover:bg-white/10 focus-ring-cinematic disabled:opacity-50"
+              >
+                <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+                Otras opciones
+              </button>
+            )}
+            {!hasMore && !refreshing && shown.length > 0 && (
+              <button
+                type="button"
+                onClick={restart}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-neutral-200 transition-all duration-200 hover:border-white/30 hover:bg-white/10 focus-ring-cinematic"
+              >
+                <RotateCcw size={14} />
+                Volver a empezar
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      {state.status === "done" && recommendations.length === 0 && (
+      {exhausted && (
+        <div className="mt-8 max-w-sm">
+          <p className="font-serif text-base text-neutral-200">
+            Ya recorriste todo lo que tengo parecido a{" "}
+            <span className="italic">{movie.title}</span>.
+          </p>
+          <p className="mt-1 text-xs text-neutral-400">
+            Busca otra película que te haya gustado o vuelve a ver las opciones.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            {shown.length > 0 && (
+              <button
+                type="button"
+                onClick={restart}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-neutral-200 hover:border-white/30 hover:bg-white/10 focus-ring-cinematic"
+              >
+                <RotateCcw size={14} /> Volver a empezar
+              </button>
+            )}
+            {seen.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  clearSeen();
+                  restart();
+                }}
+                className="text-xs text-neutral-400 underline underline-offset-4 hover:text-neutral-200"
+              >
+                Desmarcar las que ya vi ({seen.length})
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {state.status === "done" && recommendations.length === 0 && exclude.length === 0 && (
         <p className="mt-8 max-w-sm text-sm text-neutral-400">
           No encontré películas parecidas entre lo que he visto en el catálogo.
         </p>

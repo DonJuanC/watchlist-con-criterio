@@ -4,10 +4,11 @@
 // microinteracción de resplandor en hover y fondo ambiental inmersivo.
 
 import { useMemo, useState } from "react";
-import { ChevronDown, Sparkles, User, Info } from "lucide-react";
+import { ChevronDown, Sparkles, User, Info, Check, RefreshCw, Eye, RotateCcw } from "lucide-react";
 import { useEgoGraph } from "../store/useCineStore";
 import MovieInfo from "./MovieInfo";
 import useNeighbors from "../hooks/useNeighbors";
+import useVisitorSeen, { markSeen, clearSeen } from "../hooks/useVisitorSeen";
 import MoviePosterCard from "./MoviePosterCard";
 import ShareMovieButton from "./ShareMovieButton";
 
@@ -27,8 +28,34 @@ const REASON_LABEL = {
  */
 export default function EgoView({ centerId, onSelect }) {
   const { center, neighbors: localNeighbors } = useEgoGraph(centerId);
-  const { data: remoteNeighbors, loading, error } = useNeighbors(centerId);
-  const neighbors = remoteNeighbors ?? (error ? localNeighbors : NO_NEIGHBORS);
+
+  // "Otras opciones": ids ya mostrados en páginas anteriores de ESTA película.
+  const [pager, setPager] = useState({ center: centerId, shown: [] });
+  const shown = pager.center === centerId ? pager.shown : NO_NEIGHBORS;
+  const seen = useVisitorSeen(); // "Ya la vi" del visitante (localStorage)
+  const [mark, setMark] = useState({ center: centerId, on: false });
+  const markMode = mark.center === centerId && mark.on; // se apaga solo al cambiar de película
+  const setMarkMode = (v) =>
+    setMark({ center: centerId, on: typeof v === "function" ? v(markMode) : v });
+  const exclude = useMemo(() => [...new Set([...seen, ...shown])], [seen, shown]);
+
+  const { data: remoteNeighbors, hasMore, loading, error } = useNeighbors(centerId, exclude);
+  const neighbors = useMemo(
+    () =>
+      remoteNeighbors ??
+      (error ? localNeighbors.filter((n) => !exclude.includes(n.node.id)) : NO_NEIGHBORS),
+    [remoteNeighbors, error, localNeighbors, exclude],
+  );
+  const exhausted = !loading && !error && neighbors.length === 0 && exclude.length > 0;
+
+  const showMore = () => {
+    setMarkMode(false);
+    setPager({ center: centerId, shown: [...shown, ...neighbors.map((n) => n.node.id)] });
+  };
+  const restart = () => {
+    setMarkMode(false);
+    setPager({ center: centerId, shown: [] });
+  };
 
   const [showInfo, setShowInfo] = useState(false);
   const [hoveredNeighborId, setHoveredNeighborId] = useState(null);
@@ -136,26 +163,37 @@ export default function EgoView({ centerId, onSelect }) {
             <button
               key={p.node.id}
               type="button"
-              onClick={() => onSelect(p.node.id)}
+              onClick={() => (markMode ? markSeen(p.node.id) : onSelect(p.node.id))}
               onMouseEnter={() => setHoveredNeighborId(p.node.id)}
               onMouseLeave={() => setHoveredNeighborId(null)}
               onFocus={() => setHoveredNeighborId(p.node.id)}
               onBlur={() => setHoveredNeighborId(null)}
-              aria-label={`Ir a ${p.node.title}. ${REASON_LABEL[p.type] ?? "Conectada"}`}
+              aria-label={
+                markMode
+                  ? `Marcar ${p.node.title} como vista`
+                  : `Ir a ${p.node.title}. ${REASON_LABEL[p.type] ?? "Conectada"}`
+              }
               style={{ left: `${p.x}%`, top: `${p.y}%` }}
               className="group absolute flex w-24 sm:w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center focus-ring-cinematic rounded-lg z-20 p-1"
             >
               <div
-                className={`transition-all duration-300 ${
+                className={`relative transition-all duration-300 ${
                   isHovered ? "-translate-y-1" : ""
                 }`}
               >
                 <MoviePosterCard
                   movie={p.node}
                   size="sm"
-                  selected={isHovered}
+                  selected={isHovered || markMode}
                   showBadge={false}
                 />
+                {markMode && (
+                  <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-canvas/55">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-white/40 bg-canvas/90 px-2 py-1 text-[10px] font-semibold text-neutral-100 shadow-lg">
+                      <Eye size={11} /> ¿Ya la viste?
+                    </span>
+                  </span>
+                )}
               </div>
 
               {/* Etiqueta flotante con estilo editorial */}
@@ -179,18 +217,86 @@ export default function EgoView({ centerId, onSelect }) {
         })}
       </div>
 
-      {loading ? (
+      {loading && placed.length === 0 ? (
         <p className="mt-8 text-center text-xs font-medium text-neutral-400">
           Descubriendo afinidades y conexiones...
         </p>
+      ) : exhausted ? (
+        <div className="mt-8 max-w-xs text-center">
+          <p className="font-serif text-base text-neutral-200">
+            Ya recorriste todo lo que tengo parecido a{" "}
+            <span className="italic">{center.title}</span>.
+          </p>
+          <p className="mt-1 text-xs text-neutral-400">
+            Busca otra película que te haya gustado o vuelve a ver las opciones.
+          </p>
+        </div>
       ) : placed.length === 0 ? (
         <p className="mt-8 text-center text-xs text-neutral-400">
           Esta película todavía no tiene conexiones en el catálogo. Prueba con otra.
         </p>
       ) : (
         <p className="mt-14 text-center text-xs text-neutral-400">
-          Toca cualquier vecina para moverla al centro y seguir navegando
+          {markMode
+            ? "Toca las que ya viste: salen y entra otra en su lugar"
+            : !hasMore && shown.length > 0 && !loading
+              ? `Son las últimas que tengo parecidas a ${center.title}`
+              : "Toca cualquier vecina para moverla al centro y seguir navegando"}
         </p>
+      )}
+
+      {/* Recargar: "Ya la vi" por película y "Otras opciones" por página */}
+      {!error && (placed.length > 0 || exhausted) && (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          {placed.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setMarkMode((v) => !v)}
+              aria-pressed={markMode}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-medium transition-all duration-200 focus-ring-cinematic ${
+                markMode
+                  ? "border-white bg-white text-neutral-900"
+                  : "border-white/15 bg-white/5 text-neutral-200 hover:border-white/30 hover:bg-white/10"
+              }`}
+            >
+              {markMode ? <Check size={14} /> : <Eye size={14} />}
+              {markMode ? "Listo" : "Ya vi algunas"}
+            </button>
+          )}
+          {hasMore && placed.length > 0 && (
+            <button
+              type="button"
+              onClick={showMore}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-neutral-200 transition-all duration-200 hover:border-white/30 hover:bg-white/10 focus-ring-cinematic disabled:opacity-50"
+            >
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+              Otras opciones
+            </button>
+          )}
+          {!hasMore && shown.length > 0 && !loading && (
+            <button
+              type="button"
+              onClick={restart}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-neutral-200 transition-all duration-200 hover:border-white/30 hover:bg-white/10 focus-ring-cinematic"
+            >
+              <RotateCcw size={14} />
+              Volver a empezar
+            </button>
+          )}
+          {exhausted && seen.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                clearSeen();
+                restart();
+              }}
+              className="text-xs text-neutral-400 underline underline-offset-4 hover:text-neutral-200"
+            >
+              Desmarcar las que ya vi ({seen.length})
+            </button>
+          )}
+        </div>
       )}
 
       {/* Botones de acción central */}

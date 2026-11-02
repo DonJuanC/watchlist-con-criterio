@@ -3,8 +3,22 @@
 // Entradas ya filtradas por SQL (solo 'seen', sin 🔴). Aquí: 🟢 sube, tope de director,
 // la película que es director + semántica cuenta en el cupo de director con ambas razones.
 
-const MAX_DIRECTOR = 2; // tope de vecinas por mismo director
+const MAX_DIRECTOR = 2; // tope de vecinas por mismo director (por página)
 const GREEN_BOOST = 0.05; // 🟢 suma esto al score semántico
+// Profundidad semántica: más allá del puesto ~30 la similitud se aplana (~0.60) y las
+// vecinas dejan de parecerse (calibrado contra Neon). "Otras opciones" pagina dentro de este pool.
+const SEMANTIC_POOL = 30;
+const MAX_EXCLUDE = 300;
+
+/** Normaliza `exclude` (CSV "1,2,3" o array) a un Set de ids enteros positivos. */
+function parseExclude(raw) {
+  const list = Array.isArray(raw) ? raw : String(raw ?? "").split(",");
+  const ids = list
+    .map(Number)
+    .filter((n) => Number.isInteger(n) && n > 0)
+    .slice(0, MAX_EXCLUDE);
+  return new Set(ids);
+}
 
 /**
  * @param {object} p
@@ -75,4 +89,27 @@ function pickNeighbors({
   return picked;
 }
 
-module.exports = { pickNeighbors, MAX_DIRECTOR, GREEN_BOOST };
+/**
+ * pickNeighbors con exclusión ("Ya la vi" / páginas anteriores) y señal de si queda más.
+ * El pool semántico se corta por puesto ANTES de excluir, para que paginar no arrastre
+ * películas cada vez menos parecidas.
+ * @returns {{ picked: Array, hasMore: boolean }}
+ */
+function pickNeighborsPage({ semanticRows, directorRows, exclude, ...rest }) {
+  const keep = (r) => !exclude.has(r.id);
+  const sem = semanticRows.filter(keep);
+  const dir = directorRows.filter(keep);
+  const picked = pickNeighbors({ semanticRows: sem, directorRows: dir, ...rest });
+  const pickedIds = new Set(picked.map((p) => p.node.id));
+  const left = new Set([...sem, ...dir].map((r) => r.id).filter((id) => !pickedIds.has(id)));
+  return { picked, hasMore: left.size > 0 };
+}
+
+module.exports = {
+  pickNeighbors,
+  pickNeighborsPage,
+  parseExclude,
+  MAX_DIRECTOR,
+  GREEN_BOOST,
+  SEMANTIC_POOL,
+};
