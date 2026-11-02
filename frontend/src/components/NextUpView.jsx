@@ -1,189 +1,188 @@
 // src/components/NextUpView.jsx
-// Fase 2: "¿Qué veo hoy?" — recomendador cinéfilo sobre la lista de pendientes:
-// Formato vertical 2:3, razones de afinidad destacadas como sellos de recomendación,
-// esqueletos de carga animados y filtro por las plataformas del visitante (JustWatch vía TMDB).
-// País y plataformas son los de "Cómo ves cine" (useCountry): los mismos de la ficha.
+// "¿Qué veo hoy?": la versión amplia de "Sorpréndeme". Los mismos 6 ánimos y las mismas
+// fuentes, pero en lista y filtrable por las plataformas del visitante (país y plataformas
+// de "Cómo ves cine", compartidos con la ficha). El filtro corre en el servidor sobre toda
+// la lista, así que "Ver otras opciones" sigue filtrado.
+//
+// Fuentes: Las recomiendo (vistas 🟢/🟡, con mi nota) · En mi radar (mis pendientes) ·
+// Más allá (TMDB a partir de las mías; no las he visto).
+// La URL guarda ánimo y fuente (#/que-veo-hoy?animo=reir&fuente=radar): se puede compartir y
+// "Sorpréndeme → Ver más opciones" llega con lo que el visitante ya eligió.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RefreshCw, Search, X, Popcorn, Tv, Filter, Sparkles, User } from "lucide-react";
-import { fetchNextUp, semanticSearch, fetchWatchProviders } from "../services/api";
+import { RefreshCw, Tv, Filter, Star, Compass, Popcorn } from "lucide-react";
+import { fetchNextUp } from "../services/api";
 import useCountry, { useMyPlatforms } from "../hooks/useCountry";
 import useRegionPlatforms from "../hooks/useRegionPlatforms";
+import useVisitorSeen, { useVisitorSeenExternal } from "../hooks/useVisitorSeen";
 import { countryName } from "../lib/countries";
 import { isMine, LOGO_BASE, normalizePlatformName } from "../lib/platforms";
+import { MOODS, MOOD_LABEL, SOURCES, isMood, sourceFromSlug, nextUpQuery } from "../lib/moods";
 import CountrySelect from "./CountrySelect";
 import PlatformPicker from "./PlatformPicker";
 import MovieInfo from "./MovieInfo";
 import MoviePosterCard, { MovieCardSkeleton } from "./MoviePosterCard";
 
-const LIMIT = 12; // 12 opciones para dar suficiente variedad al filtrar por plataforma
-// Filtro de disponibilidad: todo, solo en mis plataformas, o en cualquier suscripción.
+const LIMIT = 12;
 const FILTERS = { ALL: "all", MINE: "mine", ANY: "any" };
 
-export default function NextUpView() {
-  const [state, setState] = useState({
-    status: "loading",
-    items: [],
-    error: "",
-    offset: 0,
-    hasMore: false,
-  });
-  const [mood, setMood] = useState("");
-  const [activeMood, setActiveMood] = useState("");
-  const [recommendMode, setRecommendMode] = useState("affinity"); // "affinity" | "director"
+const INTRO = {
+  archive: "Las vi y las recomiendo. Cambian cada día.",
+  radar: "Las que tengo en la mira y aún no veo, ordenadas por parecido con las que sí recomiendo.",
+  beyond:
+    "No las he visto: TMDB las sugiere a partir de las mías y dejo solo las que de verdad se parecen. Con 50% o más en Rotten Tomatoes.",
+};
+// Con ánimo, catálogo: qué son y el orden (por cercanía al ánimo).
+const WITH_MOOD = {
+  archive: "las que vi y recomiendo",
+  radar: "las que tengo en la mira y aún no veo",
+};
+
+function readHash() {
+  const q = new URLSearchParams((window.location.hash.split("?")[1] || ""));
+  return {
+    mood: isMood(q.get("animo")) ? q.get("animo") : null,
+    source: sourceFromSlug(q.get("fuente")) ?? "archive",
+  };
+}
+
+/** Línea de razón bajo el título, según de dónde sale la película. */
+function Reason({ node, because, source }) {
+  const base =
+    "mt-1.5 flex max-w-[130px] items-center justify-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium leading-tight";
+  if (source === "archive") {
+    if (!node.rating && node.recommend == null) return null;
+    return (
+      <span className={`${base} border border-accent-500/30 bg-accent-950/60 text-accent-300`}>
+        {node.rating ? (
+          <>
+            <Star size={9} className="shrink-0 fill-current" /> {node.rating}/5 ·{" "}
+          </>
+        ) : null}
+        {node.recommend === 1 ? "La recomiendo" : "Con reservas"}
+      </span>
+    );
+  }
+  if (!because?.length) return null;
+  const text =
+    source === "beyond" ? `No la he visto · por ${because[0].title}` : `Porque me gustó ${because[0].title}`;
+  return (
+    <span
+      title={text}
+      className={`${base} border border-emerald-500/30 bg-emerald-950/70 text-emerald-300`}
+    >
+      <span className="block h-1 w-1 shrink-0 rounded-full bg-emerald-400" />
+      <span className="truncate">{text}</span>
+    </span>
+  );
+}
+
+/** @param {{ onPickExternal?: (movie: object, opts?: object) => void }} props */
+export default function NextUpView({ onPickExternal }) {
+  const initial = useRef(readHash()).current;
+  const [mood, setMood] = useState(initial.mood);
+  const [source, setSource] = useState(initial.source);
+  const [state, setState] = useState({ status: "loading", items: [], error: "", offset: 0, hasMore: false });
   const [selectedId, setSelectedId] = useState(null);
-  const mine = useMyPlatforms();
-  // Con plataformas elegidas, la vista arranca filtrando por ellas.
-  const [filter, setFilter] = useState(() => (mine.length ? FILTERS.MINE : FILTERS.ALL));
-  const [pickerOpen, setPickerOpen] = useState(() => mine.length === 0);
-  const [providersMap, setProvidersMap] = useState({});
-  const [providersLoading, setProvidersLoading] = useState(false);
 
   const country = useCountry((s) => s.country);
+  const mine = useMyPlatforms();
   const { platforms: regionPlatforms } = useRegionPlatforms(country);
+  const [filter, setFilter] = useState(() => (mine.length ? FILTERS.MINE : FILTERS.ALL));
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const seen = useVisitorSeen();
+  const seenExt = useVisitorSeenExternal();
+  const seenRef = useRef({ seen, seenExt });
+  seenRef.current = { seen, seenExt };
+
   const mineNames = useMemo(
     () => mine.map((k) => regionPlatforms.find((p) => p.key === k)?.name ?? k),
     [mine, regionPlatforms],
   );
 
-  const requestIdRef = useRef(0);
-  const infoRef = useRef(null);
-  // Disponibilidad vigente para la próxima carga: el servidor filtra sobre toda la lista.
-  const availRef = useRef({ country, filter, mine });
-  availRef.current = { country, filter, mine };
-
-  const load = useCallback(async (moodText, offset = 0, overrideMode = null) => {
-    const requestId = ++requestIdRef.current;
-    setState((s) => ({ ...s, status: "loading", error: "" }));
-    setSelectedId(null);
-    setActiveMood(moodText);
-    const targetMode = overrideMode || recommendMode;
-    try {
-      let items;
-      let data;
-      // La búsqueda por sensación aún no filtra en el servidor: ahí se filtra el lote cargado.
-      let serverFiltered = false;
-      if (moodText) {
-        data = await semanticSearch(moodText, LIMIT, "pending", offset);
-        items = (data.results ?? []).map((node) => ({ node }));
-      } else {
-        const { country: c, filter: f, mine: m } = availRef.current;
-        const avail = f === FILTERS.MINE && m.length ? "mine" : f === FILTERS.ANY ? "any" : undefined;
-        data = await fetchNextUp(LIMIT, offset, targetMode, { country: c, avail, providers: m });
-        items = data.results ?? [];
-        serverFiltered = true;
-      }
-      if (requestId !== requestIdRef.current) return;
-      setState({ status: "done", items, error: "", offset, hasMore: Boolean(data.hasMore), serverFiltered });
-    } catch (err) {
-      if (requestId !== requestIdRef.current) return;
-      setState({ status: "error", items: [], error: err.message, offset, hasMore: false });
-    }
-  }, [recommendMode]);
-
-  useEffect(() => {
-    load("");
-  }, [load]);
-
-  // Cambió el filtro, el país o mis plataformas: se pide de nuevo la lista (ya filtrada).
-  const activeMoodRef = useRef(activeMood);
-  activeMoodRef.current = activeMood;
-  const availKey = `${country}|${filter}|${filter === FILTERS.MINE ? mine.join(",") : ""}`;
-  const firstAvailKey = useRef(availKey);
-  useEffect(() => {
-    if (availKey === firstAvailKey.current) return;
-    firstAvailKey.current = null; // desde aquí, cada cambio recarga
-    load(activeMoodRef.current, 0);
-  }, [availKey, load]);
-
-  useEffect(() => {
-    if (selectedId != null) {
-      infoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [selectedId]);
-
-  // Disponibilidad de cada película: la trae la respuesta (node.stream); solo se consulta
-  // aparte la que no la tiene (búsqueda por sensación o aún no guardada en el servidor).
-  useEffect(() => {
-    const known = {};
-    for (const it of state.items) {
-      if (Array.isArray(it.node.stream)) known[it.node.tmdb_id] = { stream: it.node.stream };
-    }
-    const tmdbIds = state.items
-      .map((it) => it.node.tmdb_id)
-      .filter((id) => id && !known[id]);
-    if (!tmdbIds.length) {
-      setProvidersMap(known);
-      setProvidersLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setProvidersLoading(true);
-
-    Promise.allSettled(
-      tmdbIds.map((id) =>
-        fetchWatchProviders(id, country).then((data) => ({ id, data }))
-      )
-    ).then((results) => {
-      if (cancelled) return;
-      const map = { ...known };
-      for (const res of results) {
-        if (res.status === "fulfilled" && res.value) {
-          map[res.value.id] = res.value.data;
-        }
-      }
-      setProvidersMap(map);
-      setProvidersLoading(false);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [state.items, country]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    load(mood.trim());
-  };
-
-  const handleClearMood = () => {
-    setMood("");
-    load("");
-  };
-
-  const handleModeChange = (newMode) => {
-    setRecommendMode(newMode);
-    setMood("");
-    setActiveMood("");
-    load("", 0, newMode);
-  };
-
-  const { status, items, error, offset, hasMore } = state;
-
-  const handleMore = () => load(activeMood, hasMore ? offset + LIMIT : 0);
-
-  // Si quita todas sus plataformas, el filtro "las mías" deja de tener sentido.
-  useEffect(() => {
-    if (!mine.length && filter === FILTERS.MINE) setFilter(FILTERS.ALL);
-  }, [mine.length, filter]);
-
-  // Elegir la primera plataforma activa el filtro: es lo que el visitante vino a hacer.
+  // Si quita todas sus plataformas, "En mis plataformas" deja de tener sentido; si elige la
+  // primera, se activa: es lo que vino a hacer.
   const prevMineCount = useRef(mine.length);
   useEffect(() => {
+    if (!mine.length && filter === FILTERS.MINE) setFilter(FILTERS.ALL);
     if (prevMineCount.current === 0 && mine.length > 0) setFilter(FILTERS.MINE);
     prevMineCount.current = mine.length;
-  }, [mine.length]);
+  }, [mine.length, filter]);
 
-  const filteredItems = useMemo(() => {
-    if (filter === FILTERS.ALL || state.serverFiltered) return items;
-    return items.filter((it) => {
-      const streamList = providersMap[it.node.tmdb_id]?.stream;
-      if (!Array.isArray(streamList) || streamList.length === 0) return false;
-      return filter === FILTERS.ANY || streamList.some((p) => isMine(p, mine));
-    });
-  }, [items, providersMap, filter, mine, state.serverFiltered]);
+  // La URL refleja ánimo y fuente (replaceState: no dispara hashchange ni llena el historial).
+  useEffect(() => {
+    const qs = nextUpQuery({ mood, source });
+    const next = `#/que-veo-hoy${qs ? `?${qs}` : ""}`;
+    if (window.location.hash !== next) window.history.replaceState(null, "", next);
+  }, [mood, source]);
 
+  const requestIdRef = useRef(0);
+  const infoRef = useRef(null);
+  const moodsRef = useRef(null);
+  useEffect(() => {
+    moodsRef.current
+      ?.querySelector("[aria-pressed=true]")
+      ?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [mood]);
+  const avail = filter === FILTERS.MINE && mine.length ? "mine" : filter === FILTERS.ANY ? "any" : undefined;
+  const mineKey = mine.join(",");
+
+  const load = useCallback(
+    async (offset = 0) => {
+      const requestId = ++requestIdRef.current;
+      setState((s) => ({ ...s, status: "loading", error: "" }));
+      setSelectedId(null);
+      try {
+        const { seen: ex, seenExt: exExt } = seenRef.current;
+        const data = await fetchNextUp({
+          source,
+          mood,
+          limit: LIMIT,
+          offset,
+          country,
+          avail,
+          providers: mineKey ? mineKey.split(",") : [],
+          exclude: ex,
+          excludeExt: exExt,
+        });
+        if (requestId !== requestIdRef.current) return;
+        setState({
+          status: "done",
+          items: data.results ?? [],
+          error: "",
+          offset,
+          hasMore: Boolean(data.hasMore),
+        });
+      } catch (err) {
+        if (requestId !== requestIdRef.current) return;
+        setState({ status: "error", items: [], error: err.message, offset, hasMore: false });
+      }
+    },
+    [source, mood, country, avail, mineKey],
+  );
+
+  useEffect(() => {
+    load(0);
+  }, [load]);
+
+  useEffect(() => {
+    if (selectedId != null) infoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selectedId]);
+
+  const { status, items, error, offset, hasMore } = state;
+  const handleMore = () => load(hasMore ? offset + LIMIT : 0);
+
+  const openItem = (node) => {
+    if (node.external) onPickExternal?.(node, { openInfo: true });
+    else setSelectedId((id) => (id === node.id ? null : node.id));
+  };
+
+  const chip = (active) =>
+    `shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs transition-all duration-150 active:scale-95 focus-ring-cinematic ${
+      active
+        ? "border-accent-400/70 bg-accent-950/40 text-accent-300"
+        : "border-white/[0.1] bg-white/[0.03] text-neutral-300 hover:border-white/25 hover:text-white"
+    }`;
   const filterChip = (active) =>
     `inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
       active
@@ -191,124 +190,107 @@ export default function NextUpView() {
         : "bg-white/5 text-neutral-400 hover:text-white border border-white/5 hover:bg-white/10"
     }`;
 
+  const sourceLabel = SOURCES.find((s) => s.key === source)?.label;
+  const where = filter === FILTERS.MINE ? mineNames.join(", ") : "suscripción";
+
   return (
     <section
       className="mx-auto flex w-full max-w-2xl flex-col items-center px-4 pb-16 pt-4 text-center"
       aria-label="Qué ver hoy"
     >
-      <div className="space-y-2 mb-2">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-3 py-1 text-xs font-medium text-emerald-300 backdrop-blur-sm">
-          <Popcorn size={13} className="text-emerald-400" />
-          <span>Curaduría de tu lista de pendientes</span>
-        </div>
-        <h2 className="font-serif text-3xl font-semibold tracking-tight text-white">
-          ¿Qué veo hoy?
-        </h2>
-        <p className="mx-auto max-w-md text-xs sm:text-sm text-neutral-400">
-          {activeMood
-            ? `Pendientes que más se acercan a “${activeMood}”.`
-            : recommendMode === "director"
-              ? "Obras pendientes dirigidas por los mismos autores presentes en tu catálogo."
-              : "Pendientes que mejor encajan con tus películas mejor valoradas del catálogo."}
+      <header className="mb-2 space-y-2">
+        <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-400">
+          Una selección de <span className="text-accent-400">El Selector</span>
+        </span>
+        <h2 className="font-serif text-3xl font-semibold tracking-tight text-white">¿Qué veo hoy?</h2>
+        <p className="mx-auto max-w-md text-xs text-neutral-400 sm:text-sm">
+          {mood && WITH_MOOD[source]
+            ? `${MOOD_LABEL[mood]}: ${WITH_MOOD[source]}, de la más cercana a ese ánimo a la menos.`
+            : `${mood ? `${MOOD_LABEL[mood]}. ` : ""}${INTRO[source]}`}
         </p>
-      </div>
+      </header>
 
-      {/* Selector de modo de recomendación */}
-      <div className="mt-3 flex items-center justify-center gap-1.5 p-1 rounded-full border border-white/10 bg-neutral-900/60 backdrop-blur-md">
-        <button
-          type="button"
-          onClick={() => handleModeChange("affinity")}
-          className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
-            recommendMode === "affinity" && !activeMood
-              ? "bg-white/15 text-white shadow-sm border border-white/20"
-              : "text-neutral-400 hover:text-white"
-          }`}
-        >
-          <Sparkles size={13} className="text-emerald-400" />
-          <span>Por afinidad estética</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleModeChange("director")}
-          className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
-            recommendMode === "director" && !activeMood
-              ? "bg-white/15 text-white shadow-sm border border-white/20"
-              : "text-neutral-400 hover:text-white"
-          }`}
-        >
-          <User size={13} className="text-accent-400" />
-          <span>De autores en tu archivo</span>
-        </button>
-      </div>
-
-      {/* Barra de búsqueda por sensación */}
-      <form
-        onSubmit={handleSubmit}
-        className="mt-4 flex w-full max-w-xl items-center gap-2 rounded-full border border-white/15 bg-neutral-900/90 px-4 py-2.5 shadow-xl backdrop-blur-md transition-all focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/20"
+      {/* Ánimo: los mismos de Sorpréndeme */}
+      <div
+        ref={moodsRef}
+        role="group"
+        aria-label="Ánimo"
+        className="-mx-4 mt-3 flex w-[calc(100%+2rem)] flex-nowrap items-center gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:w-auto sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0"
       >
-        <Search size={16} className="shrink-0 text-neutral-400" />
-        <input
-          type="text"
-          value={mood}
-          onChange={(e) => setMood(e.target.value)}
-          placeholder="¿Cómo te quieres sentir? (ej. ciencia ficción existencial)"
-          aria-label="Cómo te quieres sentir"
-          autoComplete="off"
-          className="flex-1 bg-transparent text-xs sm:text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
-        />
-        {activeMood && (
+        <button type="button" onClick={() => setMood(null)} aria-pressed={!mood} className={chip(!mood)}>
+          Lo que sea
+        </button>
+        {MOODS.map((m) => (
           <button
+            key={m.key}
             type="button"
-            onClick={handleClearMood}
-            aria-label="Quitar sensación y volver a la lista por gusto"
-            className="rounded-full p-1 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors"
+            onClick={() => setMood((cur) => (cur === m.key ? null : m.key))}
+            aria-pressed={mood === m.key}
+            className={chip(mood === m.key)}
           >
-            <X size={14} />
+            {m.label}
           </button>
-        )}
-      </form>
+        ))}
+      </div>
+
+      {/* Fuente */}
+      <div
+        role="radiogroup"
+        aria-label="De dónde salen"
+        className="mt-3 inline-flex rounded-full border border-white/[0.1] bg-white/[0.03] p-0.5 text-[11px]"
+      >
+        {SOURCES.map((s) => (
+          <button
+            key={s.key}
+            type="button"
+            role="radio"
+            aria-checked={source === s.key}
+            onClick={() => setSource(s.key)}
+            className={`rounded-full px-3 py-1 font-medium transition-all ${
+              source === s.key ? "bg-white/[0.12] text-white" : "text-neutral-400 hover:text-neutral-200"
+            }`}
+          >
+            {s.key === "beyond" && <Compass size={11} className="mr-1 inline" />}
+            {s.label}
+          </button>
+        ))}
+      </div>
 
       {/* Disponibilidad: país, mis plataformas y filtro */}
-      <div className="mt-5 w-full max-w-xl flex flex-col gap-2.5 rounded-2xl border border-white/10 bg-white/[0.02] p-3 text-left backdrop-blur-md">
+      <div className="mt-5 flex w-full max-w-xl flex-col gap-2.5 rounded-2xl border border-white/10 bg-white/[0.02] p-3 text-left backdrop-blur-md">
         <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-neutral-400">
           <span className="flex items-center gap-1.5 font-medium">
             <Filter size={12} className="text-emerald-400" />
             Dónde verlas
-            {providersLoading && (
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" title="Cargando plataformas..." />
-            )}
           </span>
           <CountrySelect />
         </div>
 
-        {status === "done" && (items.length > 0 || filter !== FILTERS.ALL) && (
-          <div className="flex flex-wrap items-center gap-1.5 px-1">
-            <button type="button" onClick={() => setFilter(FILTERS.ALL)} className={filterChip(filter === FILTERS.ALL)}>
-              Todas
+        <div className="flex flex-wrap items-center gap-1.5 px-1">
+          <button type="button" onClick={() => setFilter(FILTERS.ALL)} className={filterChip(filter === FILTERS.ALL)}>
+            Todas
+          </button>
+          {mine.length > 0 && (
+            <button type="button" onClick={() => setFilter(FILTERS.MINE)} className={filterChip(filter === FILTERS.MINE)}>
+              En mis plataformas
             </button>
-            {mine.length > 0 && (
-              <button type="button" onClick={() => setFilter(FILTERS.MINE)} className={filterChip(filter === FILTERS.MINE)}>
-                En mis plataformas
-              </button>
-            )}
-            <button type="button" onClick={() => setFilter(FILTERS.ANY)} className={filterChip(filter === FILTERS.ANY)}>
-              <Tv size={11} />
-              Cualquier suscripción
-            </button>
-          </div>
-        )}
+          )}
+          <button type="button" onClick={() => setFilter(FILTERS.ANY)} className={filterChip(filter === FILTERS.ANY)}>
+            <Tv size={11} />
+            Cualquier suscripción
+          </button>
+        </div>
 
         <div className="border-t border-white/10 px-1 pt-2">
           <button
             type="button"
             onClick={() => setPickerOpen((v) => !v)}
             aria-expanded={pickerOpen}
-            className="text-[11px] text-neutral-400 hover:text-white focus-ring-cinematic rounded"
+            className="rounded text-[11px] text-neutral-400 hover:text-white focus-ring-cinematic"
           >
             {mine.length
               ? `Mis plataformas en ${countryName(country)}: ${mineNames.join(", ")} · ${pickerOpen ? "Listo" : "Editar"}`
-              : `¿Qué plataformas tienes en ${countryName(country)}?`}
+              : `¿Qué plataformas tienes en ${countryName(country)}? ${pickerOpen ? "· Listo" : "Elegirlas"}`}
           </button>
           {pickerOpen && (
             <div className="mt-2">
@@ -320,7 +302,7 @@ export default function NextUpView() {
 
       {status === "loading" && (
         <div className="mt-8 grid w-full grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 sm:gap-x-4" aria-label="Cargando recomendaciones">
-          {Array.from({ length: 6 }).map((_, idx) => (
+          {Array.from({ length: 8 }).map((_, idx) => (
             <div key={idx} className="flex flex-col items-center">
               <MovieCardSkeleton size="md" />
               <div className="mt-2.5 h-3 w-20 rounded bg-white/10 animate-shimmer" />
@@ -337,88 +319,68 @@ export default function NextUpView() {
         </p>
       )}
 
-      {status === "done" && items.length === 0 && (filter === FILTERS.ALL || !state.serverFiltered) && (
-        <p className="mt-8 max-w-sm text-sm text-neutral-400">
-          No encontré películas en tu lista con esa atmósfera. Prueba con otras palabras.
-        </p>
-      )}
-
-      {status === "done" &&
-        filteredItems.length === 0 &&
-        filter !== FILTERS.ALL &&
-        (items.length > 0 || state.serverFiltered) && (
-        <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center max-w-md">
-          <Tv size={24} className="mx-auto text-neutral-400 mb-2" />
+      {status === "done" && items.length === 0 && (
+        <div className="mt-10 max-w-md rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+          <Tv size={24} className="mx-auto mb-2 text-neutral-400" />
           <p className="text-sm font-medium text-neutral-300">
-            {state.serverFiltered
-              ? filter === FILTERS.MINE
-                ? `Ninguna de mis pendientes está en ${mineNames.join(", ")} en ${countryName(country)}.`
-                : `Ninguna de mis pendientes está en suscripción en ${countryName(country)}.`
-              : filter === FILTERS.MINE
-                ? `Ninguna de estas está en ${mineNames.join(", ")} en ${countryName(country)}.`
-                : `Ninguna de estas está en suscripción en ${countryName(country)}.`}
+            {filter === FILTERS.ALL
+              ? `No encontré nada en «${sourceLabel}»${mood ? ` para «${MOOD_LABEL[mood]}»` : ""}.`
+              : `En «${sourceLabel}»${mood ? ` para «${MOOD_LABEL[mood]}»` : ""} no hay nada en ${where} en ${countryName(country)}.`}
           </p>
-          <div className="mt-4 flex justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => setFilter(FILTERS.ALL)}
-              className="rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs text-white hover:bg-white/20 transition-all focus-ring-cinematic"
-            >
-              Ver todas
-            </button>
-            {hasMore && !state.serverFiltered && (
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {filter !== FILTERS.ALL && (
               <button
                 type="button"
-                onClick={handleMore}
-                className="rounded-full border border-emerald-500/40 bg-emerald-950/60 px-4 py-1.5 text-xs text-emerald-300 hover:bg-emerald-950 transition-all focus-ring-cinematic"
+                onClick={() => setFilter(FILTERS.ALL)}
+                className="rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs text-white transition-all hover:bg-white/20 focus-ring-cinematic"
               >
-                Cargar otras opciones
+                Ver todas
               </button>
             )}
+            {SOURCES.filter((s) => s.key !== source).map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setSource(s.key)}
+                className="rounded-full border border-emerald-500/40 bg-emerald-950/60 px-4 py-1.5 text-xs text-emerald-300 transition-all hover:bg-emerald-950 focus-ring-cinematic"
+              >
+                Probar «{s.label}»
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      {status === "done" && filteredItems.length > 0 && (
+      {status === "done" && items.length > 0 && (
         <div className="mt-8 grid w-full grid-cols-3 gap-x-3 gap-y-7 sm:grid-cols-4 sm:gap-x-4">
-          {filteredItems.map(({ node, because }) => {
-            const isSelected = selectedId === node.id;
-            const watchInfo = providersMap[node.tmdb_id];
+          {items.map(({ node, because }) => {
+            const isSelected = !node.external && selectedId === node.id;
             // Las plataformas del visitante primero.
-            const streamList = [...(watchInfo?.stream || [])].sort(
-              (a, b) => isMine(b, mine) - isMine(a, mine),
-            );
-
+            const streamList = [...(node.stream || [])].sort((a, b) => isMine(b, mine) - isMine(a, mine));
             return (
               <button
-                key={node.id}
+                key={node.external ? `ext-${node.tmdb_id}` : node.id}
                 type="button"
-                onClick={() => setSelectedId((id) => (id === node.id ? null : node.id))}
-                aria-pressed={isSelected}
+                onClick={() => openItem(node)}
+                aria-pressed={node.external ? undefined : isSelected}
                 aria-label={`Ver ficha de ${node.title}`}
-                className="group flex flex-col items-center focus-ring-cinematic rounded-xl p-1"
+                className="group flex flex-col items-center rounded-xl p-1 focus-ring-cinematic"
               >
                 <div className={`transition-all duration-300 ${isSelected ? "scale-105" : "group-hover:-translate-y-1"}`}>
-                  <MoviePosterCard
-                    movie={node}
-                    size="md"
-                    selected={isSelected}
-                    accentColor={recommendMode === "director" && !activeMood ? "accent" : "emerald"}
-                  />
+                  <MoviePosterCard movie={node} size="md" selected={isSelected} showBadge={false} />
                 </div>
-                <span className="mt-2.5 line-clamp-2 max-w-[125px] text-xs font-medium leading-snug text-neutral-200 group-hover:text-white transition-colors">
+                <span className="mt-2.5 line-clamp-2 max-w-[125px] text-xs font-medium leading-snug text-neutral-200 transition-colors group-hover:text-white">
                   {node.title}
                 </span>
-                <span className="mt-0.5 text-[11px] text-neutral-400">
-                  {[node.release_year, recommendMode === "director" && !activeMood ? node.director : null].filter(Boolean).join(" · ")}
+                <span className="mt-0.5 max-w-[125px] truncate text-[11px] text-neutral-400">
+                  {[node.release_year, node.director].filter(Boolean).join(" · ")}
                 </span>
 
-                {/* Plataformas de Streaming disponibles */}
                 {streamList.length > 0 && (
-                  <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1 max-w-[120px]">
+                  <div className="mt-1.5 flex max-w-[120px] flex-wrap items-center justify-center gap-1">
                     {streamList.slice(0, 2).map((p) => (
                       <span
-                        key={p.id}
+                        key={p.key || p.id}
                         title={`En suscripción: ${p.name}`}
                         className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-medium ${
                           isMine(p, mine)
@@ -427,44 +389,18 @@ export default function NextUpView() {
                         }`}
                       >
                         {p.logo_path && (
-                          <img
-                            src={`${LOGO_BASE}${p.logo_path}`}
-                            alt=""
-                            className="h-2.5 w-2.5 rounded-xs object-cover"
-                          />
+                          <img src={`${LOGO_BASE}${p.logo_path}`} alt="" className="h-2.5 w-2.5 rounded-xs object-cover" />
                         )}
-                        <span className="truncate max-w-[50px]">{normalizePlatformName(p.name)}</span>
+                        <span className="max-w-[50px] truncate">{normalizePlatformName(p.name)}</span>
                       </span>
                     ))}
                     {streamList.length > 2 && (
-                      <span className="text-[9px] text-neutral-400 font-medium">
-                        +{streamList.length - 2}
-                      </span>
+                      <span className="text-[9px] font-medium text-neutral-400">+{streamList.length - 2}</span>
                     )}
                   </div>
                 )}
 
-                {because?.length > 0 && (
-                  <span
-                    title={
-                      recommendMode === "director" && !activeMood
-                        ? `Del realizador de ${because[0].title} (${node.director})`
-                        : `Afinidad con ${because[0].title}`
-                    }
-                    className={`mt-1.5 flex items-center justify-center gap-1 max-w-[125px] rounded-full px-2 py-0.5 text-[9px] font-medium leading-tight ${
-                      recommendMode === "director" && !activeMood
-                        ? "bg-accent-950/70 border border-accent-500/30 text-accent-300"
-                        : "bg-emerald-950/70 border border-emerald-500/30 text-emerald-300"
-                    }`}
-                  >
-                    {recommendMode === "director" && !activeMood ? (
-                      <User size={9} className="shrink-0 text-accent-400" />
-                    ) : (
-                      <span className="block h-1 w-1 rounded-full bg-emerald-400 shrink-0" />
-                    )}
-                    <span className="truncate">{because[0].title}</span>
-                  </span>
-                )}
+                <Reason node={node} because={because} source={source} />
               </button>
             );
           })}
@@ -489,6 +425,15 @@ export default function NextUpView() {
         >
           <MovieInfo movieId={selectedId} />
         </div>
+      )}
+
+      {status === "done" && source !== "beyond" && items.length > 0 && !hasMore && (
+        <p className="mt-6 inline-flex items-center gap-1.5 text-xs text-neutral-400">
+          <Popcorn size={12} /> ¿Ya las viste todas?{" "}
+          <button type="button" onClick={() => setSource("beyond")} className="text-accent-400 hover:underline">
+            Busca más allá de mi archivo
+          </button>
+        </p>
       )}
     </section>
   );

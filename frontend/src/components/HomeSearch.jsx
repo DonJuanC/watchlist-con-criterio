@@ -134,7 +134,7 @@ function findCatalogSuggestions(nodes, rawQuery) {
  * @param {{
  *   onPick: (id: number) => void,
  *   onPickExternal: (movie: object) => void,
- *   onShowNextUp: () => void,
+ *   onShowNextUp: (query?: string) => void,   query: "animo=reir&fuente=radar" (ver lib/moods.js)
  *   onShowMap: () => void,
  *   onSpotlightPosterChange?: (posterPath: string | null) => void
  * }} props
@@ -166,9 +166,11 @@ export default function HomeSearch({
   const requestIdRef = useRef(0);
 
   // Consultar recomendaciones de películas pendientes afines al gusto marcado con 🟢
+  // (solo alimenta el spotlight; apagado, no se gasta la consulta).
   useEffect(() => {
+    if (!SHOW_SPOTLIGHT) return undefined;
     let cancelled = false;
-    fetchNextUp(10, 0, "affinity")
+    fetchNextUp({ source: "radar", limit: 10 })
       .then((data) => {
         if (cancelled) return;
         const valid = (data.results || [])
@@ -960,7 +962,7 @@ export default function HomeSearch({
       )}
 
       {/* 3b. Sin película en mente: una sola, al azar o por ánimo */}
-      {status === "idle" && <SurprisePick onPick={onPick} onPickExternal={onPickExternal} />}
+      {status === "idle" && <SurprisePick onPick={onPick} onPickExternal={onPickExternal} onMore={onShowNextUp} />}
 
       {/* 4. Así funciona (ejemplo real) y Mi criterio (reseñas) */}
       {status === "idle" && <ConnectionDemo onPick={onPick} />}

@@ -106,14 +106,29 @@ export function fetchRecommend(tmdbId, exclude = []) {
 
 /** GET /api/recommend/next — "¿Qué veo hoy?": pendientes por afinidad de 🟢 o directores compartidos. */
 /**
- * GET /api/recommend/next — "¿Qué veo hoy?". Con `country`, cada película trae `stream`
- * (sus plataformas ahí) y `avail` filtra en el servidor: "mine" (con `providers`) o "any".
+ * GET /api/recommend/next — "¿Qué veo hoy?".
+ * source: "archive" | "radar" | "beyond"; mood: clave de src/lib/moods.js.
+ * Con `country`, cada película trae `stream` y `avail` filtra en el servidor: "mine" (con
+ * `providers`) o "any". exclude / excludeExt: lo que el visitante marcó como visto.
  */
-export function fetchNextUp(limit = 6, offset = 0, mode = "affinity", { country, avail, providers } = {}) {
-  const qs = new URLSearchParams({ limit, offset, mode });
+export function fetchNextUp({
+  source = "archive",
+  mood,
+  limit = 12,
+  offset = 0,
+  country,
+  avail,
+  providers = [],
+  exclude = [],
+  excludeExt = [],
+} = {}) {
+  const qs = new URLSearchParams({ source, limit, offset });
+  if (mood) qs.set("mood", mood);
   if (country) qs.set("country", country);
   if (avail) qs.set("avail", avail);
-  if (providers?.length) qs.set("providers", providers.join(","));
+  if (providers.length) qs.set("providers", providers.join(","));
+  if (exclude.length) qs.set("exclude", exclude.join(","));
+  if (excludeExt.length) qs.set("exclude_ext", excludeExt.join(","));
   return fetchWithColdStartHandling(`/api/recommend/next?${qs}`, { method: "GET" });
 }
 

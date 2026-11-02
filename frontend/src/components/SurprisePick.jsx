@@ -12,28 +12,19 @@ import useVisitorSeen, {
   useVisitorSeenExternal,
 } from "../hooks/useVisitorSeen";
 import MoviePosterCard from "./MoviePosterCard";
+import { MOODS, MOOD_LABEL, nextUpQuery } from "../lib/moods";
 
-// Las claves deben existir en MOODS de src/controllers/surpriseController.js
-const MOODS = [
-  { key: "pensar", label: "Para pensar" },
-  { key: "reir", label: "Para reír" },
-  { key: "adrenalina", label: "Adrenalina" },
-  { key: "llorar", label: "Para llorar" },
-  { key: "miedo", label: "Miedo" },
-  { key: "culto", label: "Rara y de culto" },
+// Sorpréndeme solo ofrece dos fuentes; "En mi radar" vive en "¿Qué veo hoy?".
+const SOURCES = [
+  { key: "archive", label: "Mi archivo" },
+  { key: "beyond", label: "Más allá" },
 ];
-const MOOD_LABEL = Object.fromEntries(MOODS.map((m) => [m.key, m.label]));
 
 function clip(text, max = 220) {
   if (!text) return "";
   const t = text.trim();
   return t.length > max ? `${t.slice(0, max).replace(/\s+\S*$/, "")}…` : t;
 }
-
-const SOURCES = [
-  { key: "archive", label: "Mi archivo" },
-  { key: "beyond", label: "Más allá" },
-];
 
 /** Crítica en una línea: RT · IMDb (o la nota de TMDB si OMDb no la tiene). */
 function CriticLine({ movie }) {
@@ -53,8 +44,12 @@ function CriticLine({ movie }) {
   );
 }
 
-/** @param {{ onPick: (id: number) => void, onPickExternal: (movie: object) => void }} props */
-export default function SurprisePick({ onPick, onPickExternal }) {
+/**
+ * @param {{ onPick: (id: number) => void, onPickExternal: (movie: object) => void,
+ *           onMore?: (query: string) => void }} props
+ *  onMore: abre "¿Qué veo hoy?" con el mismo ánimo y la misma fuente.
+ */
+export default function SurprisePick({ onPick, onPickExternal, onMore }) {
   const seen = useVisitorSeen();
   const seenExt = useVisitorSeenExternal();
   const [source, setSource] = useState("archive"); // de mi archivo o fuera de él
@@ -277,6 +272,20 @@ export default function SurprisePick({ onPick, onPickExternal }) {
               </div>
             </div>
           </article>
+        )}
+
+        {onMore && (state.status === "shown" || state.status === "empty") && (
+          <p className="mt-3 text-center text-xs text-neutral-400">
+            ¿Prefieres elegir tú?{" "}
+            <button
+              type="button"
+              onClick={() => onMore(nextUpQuery({ mood: state.mood, source }))}
+              className="inline-flex items-center gap-1 font-medium text-accent-300 hover:text-accent-200 hover:underline focus-ring-cinematic rounded"
+            >
+              Ver más opciones{state.mood ? ` «${MOOD_LABEL[state.mood]}»` : ""}, por tus plataformas
+              <ArrowRight size={12} />
+            </button>
+          </p>
         )}
 
         {state.status === "empty" && (

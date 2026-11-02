@@ -72,7 +72,7 @@ function parseRouteFromHash() {
       return { view: "ego", centerId: id };
     }
   }
-  if (hash === "#/que-veo-hoy") {
+  if (hash === "#/que-veo-hoy" || hash.startsWith("#/que-veo-hoy?")) {
     return { view: "next", centerId: null };
   }
   if (hash === "#/mapa") {
@@ -167,7 +167,8 @@ export default function App() {
       window.location.hash = `#/movie/${targetId}`;
       setView("ego");
     } else if (targetView === "next") {
-      window.location.hash = "#/que-veo-hoy";
+      // targetId puede traer ánimo y fuente ("animo=reir&fuente=radar"), ver src/lib/moods.js.
+      window.location.hash = `#/que-veo-hoy${typeof targetId === "string" && targetId ? `?${targetId}` : ""}`;
       setView("next");
     } else if (targetView === "map") {
       window.location.hash = "#/mapa";
@@ -198,7 +199,12 @@ export default function App() {
     navigate("ego", id);
   }, [navigate]);
 
+  // Desde "¿Qué veo hoy?", "Volver" en la ficha externa regresa a la lista (el hash no cambió).
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const externalFromRef = useRef("home");
   const handlePickExternal = useCallback((movie, opts) => {
+    if (viewRef.current !== "external") externalFromRef.current = viewRef.current;
     setExternalOpenInfo(Boolean(opts?.openInfo));
     setExternalMovie(movie);
     setView("external");
@@ -233,7 +239,7 @@ export default function App() {
             key={homeKey}
             onPick={handlePick}
             onPickExternal={handlePickExternal}
-            onShowNextUp={() => navigate("next")}
+            onShowNextUp={(query) => navigate("next", typeof query === "string" ? query : null)}
             onShowMap={() => navigate("map")}
             onShowSelector={() => navigate("selector")}
             onSpotlightPosterChange={setHomeSpotlightPoster}
@@ -245,7 +251,7 @@ export default function App() {
             <nav className="mx-auto flex w-full max-w-xl items-center px-4 pt-2">
               <button
                 type="button"
-                onClick={() => navigate("home")}
+                onClick={() => (externalFromRef.current === "next" ? setView("next") : navigate("home"))}
                 className={PILL_BUTTON}
               >
                 <ArrowLeft size={14} />
@@ -281,7 +287,7 @@ export default function App() {
 
         {view === "next" && (
           <div className="h-full overflow-y-auto pt-2 animate-view-enter">
-            <NextUpView />
+            <NextUpView onPickExternal={handlePickExternal} />
           </div>
         )}
 
