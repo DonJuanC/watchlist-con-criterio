@@ -11,14 +11,19 @@ export const SELECTOR = {
   tagline: "Veo cine, lo anoto y lo conecto.",
 
   // Foto o ilustración: pon el archivo en frontend/public/ y escribe la ruta,
-  // por ejemplo "/selector.jpg". Con null se muestra el monograma.
+  // por ejemplo "/selector.jpg". Con null se muestra el monograma ("ES").
   portrait: null,
 
   // Quién eres. Tu bio, en tus palabras.
-  bio: [],
+  bio: [
+    "Hola, soy Juan Camilo: un mortal más con pasiones divididas entre la música y la pantalla.",
+  ],
 
   // Por qué surge este archivo.
-  origin: [],
+  origin: [
+    "Siempre me ha apasionado hablar de cine y de música; esta vez le tocó el turno a la pantalla y a las ganas de compartir lo que voy descubriendo.",
+    "Todos nos hemos quedado en blanco en el sofá, con la tele encendida y sin saber qué poner. Creé este archivo para romper ese bucle: películas que he visto, calificadas con honestidad y conectadas entre sí para que elegir sea fácil y valga la pena.",
+  ],
 
   // Cómo calificas. Redactado a partir de lo que ya muestra la ficha;
   // ajústalo a tu criterio real.
@@ -32,11 +37,24 @@ export const SELECTOR = {
     ],
     verdicts: [
       { value: 1, label: "Imprescindible", text: "Muy recomendada." },
-      { value: 0, label: "Interesante", text: "Recomendada con reservas: depende de a quién." },
+      {
+        value: 0,
+        label: "Interesante",
+        text: "Recomendada con reservas: depende de a quién.",
+      },
       { value: -1, label: "Prescindible", text: "Poco recomendable." },
     ],
   },
 
   // Enlaces opcionales. Ejemplo: { label: "Instagram", href: "https://instagram.com/..." }
-  links: [],
+  links: [
+    {
+      label: "Instagram (@musicaconcriterio)",
+      href: "https://www.instagram.com/musicaconcriterio",
+    },
+    {
+      label: "GitHub (@DonJuanC)",
+      href: "https://github.com/DonJuanC",
+    },
+  ],
 };
