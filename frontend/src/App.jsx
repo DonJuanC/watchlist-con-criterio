@@ -239,6 +239,7 @@ export default function App() {
             onShowNextUp={(query) => navigate("next", typeof query === "string" ? query : null)}
             onShowMap={() => navigate("map")}
             onShowSelector={() => navigate("selector")}
+            onShowAdmin={() => navigate("admin")}
           />
         </div>
 

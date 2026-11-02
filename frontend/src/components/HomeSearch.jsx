@@ -12,6 +12,7 @@ import {
   X,
   Sparkles,
   RotateCcw,
+  Lock,
 } from "lucide-react";
 import { semanticSearch } from "../services/api";
 import useCineStore from "../store/useCineStore";
@@ -87,6 +88,7 @@ export default function HomeSearch({
   onShowNextUp,
   onShowMap,
   onShowSelector,
+  onShowAdmin,
 }) {
   const catalog = useCineStore((s) => s.rawGraph.nodes);
   const [inputValue, setInputValue] = useState("");
@@ -760,6 +762,20 @@ export default function HomeSearch({
             Aviso legal
           </button>
           <span>Datos TMDB</span>
+          <span className="text-neutral-700 hidden sm:inline">·</span>
+          <a
+            href="#/admin"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onShowAdmin) onShowAdmin();
+              else window.location.hash = "#/admin";
+            }}
+            title="Acceso de administración (Criterio Studio)"
+            className="inline-flex items-center gap-1 uppercase tracking-[0.14em] text-neutral-400 hover:text-white transition-colors focus-ring-cinematic"
+          >
+            <Lock size={11} className="text-neutral-400" />
+            <span>Admin</span>
+          </a>
         </div>
         <LegalModal isOpen={showLegal} onClose={() => setShowLegal(false)} />
       </footer>
