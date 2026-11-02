@@ -1,7 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <rect width="32" height="32" rx="4" fill="#0b0f17" />
-  <!-- Isotipo Oficial Cine con Criterio: C Anamórfica (2.35:1) -->
-  <path d="M25 6H7V26H25V20H20V21.5H12V10.5H20V12H25V6Z" fill="#f8fafc" />
-  <!-- Destello / Acento Tinta Digital interior -->
-  <rect x="14" y="14" width="9.4" height="4" fill="#3b82f6" />
+  <!-- Fondo base Deep Charcoal -->
+  <rect width="32" height="32" rx="6" fill="#0b0f17" />
+  <rect x="0.5" y="0.5" width="31" height="31" rx="5.5" stroke="#1e293b" stroke-width="1" />
+  
+  <!-- Isotipo Oficial Cine con Criterio: C Mayúscula con contraforma 2.35:1 (18.8px x 8px) -->
+  <path d="M27 5H5V27H27V20H8.2V12H27V5Z" fill="#f8fafc" />
+  
+  <!-- Destello / Acento óptico anamórfico en Tinta Digital -->
+  <path d="M17.6 13L18.4 15.2L20.6 16L18.4 16.8L17.6 19L16.8 16.8L14.6 16L16.8 15.2L17.6 13Z" fill="#3b82f6" />
 </svg>
